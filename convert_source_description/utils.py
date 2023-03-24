@@ -587,6 +587,50 @@ def _get_items(paras: List[Tag]) -> List[ContentItem]:
 
 
 ############################################
+# Helper function: _get_paragraph_content_by_label
+############################################
+def _get_paragraph_content_by_label(label: str, paras: List[Tag]) -> str:
+    """
+    Returns the content of the paragraph containing the specified label 
+    within the BeautifulSoup object. If the label is not found, an empty string is returned.
+
+    Args:
+        label (str): The label to search for within the BeautifulSoup object.
+        paras (List[Tag]): The list of BeautifulSoup tags to search within.
+
+    Returns:
+        str: The content of the BeautifulSoup `p` tag containing the label, 
+             with leading and trailing whitespace removed.
+    """
+    content_paragraph = _find_tag_with_label_in_soup(label, paras)
+
+    if content_paragraph is None:
+        return ''
+
+    stripped_content = _strip_tag(content_paragraph, 'p')
+    content = _strip_by_delimiter(stripped_content, label)[1]
+
+    if content.endswith(';'):
+        # Check for sibling paragraphs that belong to the same content
+        # (separated by semicolons)
+        sibling = content_paragraph.next_sibling
+
+        while sibling is not None and sibling.name == 'p':
+            sibling_content = _strip_tag(sibling, 'p')
+            if sibling_content.endswith('.'):
+                content += '<br />' + sibling_content
+                break
+            elif sibling_content.endswith(';'):
+                content += '<br />' + sibling_content
+            else:
+                break
+
+            sibling = sibling.next_sibling
+
+    return content.strip()
+
+
+############################################
 # Helper function: _get_paragraph_index_by_label
 ############################################
 def _get_paragraph_index_by_label(label: str, paras: List[Tag]) -> int:
@@ -605,34 +649,6 @@ def _get_paragraph_index_by_label(label: str, paras: List[Tag]) -> int:
         return paras.index(tag_with_label)
     except ValueError:
         return -1
-
-
-############################################
-# Helper function: _get_paragraph_content_by_label
-############################################
-def _get_paragraph_content_by_label(label: str, paras: List[Tag]) -> str:
-    """
-    Returns the content of the paragraph containing the specified label 
-    within the BeautifulSoup object. If the label is not found, an empty string is returned.
-
-    Args:
-        label (str): The label to search for within the BeautifulSoup object.
-        paras (List[Tag]): The list of BeautifulSoup tags to search within.
-
-    Returns:
-        str: The content of the BeautifulSoup `p` tag containing the label, 
-             with leading and trailing whitespace removed.
-    """
-    content_paragraph = _find_tag_with_label_in_soup(label, paras)
-    if content_paragraph is not None:
-        stripped_content = _strip_tag(content_paragraph, 'p')
-        content = _strip_by_delimiter(stripped_content, label)[1]
-        if content.endswith(';'):
-            content += '<br />'
-            content += _strip_tag(content_paragraph.next_sibling, 'p')
-    else:
-        content = ''
-    return content.strip()
 
 
 ############################################
@@ -736,11 +752,15 @@ def _strip_tag(tag: Tag, tag_str: str) -> str:
     Returns:
       str: The content within the specified tags, with leading and trailing whitespace removed.
     """
-    stripped_str = ''
-    input_str = str(tag) if tag is not None else ''
+    stripped_str = str(tag) if tag is not None else ''
+
     # Strip opening and closing tags from input
-    input_str = input_str.lstrip('<' + tag_str + '>').rstrip('</' + tag_str + '>')
+    opening_tag = '<' + tag_str + '>'
+    closing_tag = '</' + tag_str + '>'
+    stripped_str = stripped_str.removeprefix(opening_tag)
+    stripped_str = stripped_str.removesuffix(closing_tag)
+
     # Strip trailing white space
-    input_str = input_str.strip()
-    stripped_str = input_str
+    stripped_str = stripped_str.strip()
+
     return stripped_str

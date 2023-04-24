@@ -201,7 +201,7 @@ class ConversionUtils:
         return source_list
 
     ############################################
-    # Helper function: pprint
+    # Public class function: pprint
     ############################################
 
     def pprint(self, output: Dict) -> None:
@@ -239,7 +239,8 @@ class ConversionUtils:
                 result = mammoth.convert_to_html(source_file)
                 return result.value  # The generated HTML
             except ValueError as error:
-                raise ValueError('Error converting file: ' + str(error)) from error
+                raise ValueError('Error converting file: ' +
+                                 str(error)) from error
 
     ############################################
     # Public class function: write_json
@@ -299,9 +300,12 @@ def _create_source_description(paras: List[Tag]) -> SourceDescription:
     description['desc'].append(desc)
 
     # Get writing material and instruments
-    writing_material = _get_paragraph_content_by_label('Beschreibstoff:', paras)
-    writing_instruments_text = _get_paragraph_content_by_label('Schreibstoff:', paras)
-    writing_instruments = _extract_writing_instruments(writing_instruments_text)
+    writing_material = _get_paragraph_content_by_label(
+        'Beschreibstoff:', paras)
+    writing_instruments_content = _get_paragraph_content_by_label(
+        'Schreibstoff:', paras)
+    writing_instruments = _extract_writing_instruments(
+        writing_instruments_content)
 
     description['writingMaterial'] = writing_material
     description['writingInstruments'] = writing_instruments
@@ -309,17 +313,22 @@ def _create_source_description(paras: List[Tag]) -> SourceDescription:
     # Get title, date, measureNumbers, instrumentation, and annotations
     description['title'] = _get_paragraph_content_by_label('Titel:', paras)
     description['date'] = _get_paragraph_content_by_label('Datierung:', paras)
-    description['pagination'] = _get_paragraph_content_by_label('Paginierung:', paras)
-    description['measureNumbers'] = _get_paragraph_content_by_label('Taktzahlen:', paras)
-    description['instrumentation'] = _get_paragraph_content_by_label('Besetzung:', paras)
-    description['annotations'] = _get_paragraph_content_by_label('Eintragungen:', paras)
+    description['pagination'] = _get_paragraph_content_by_label(
+        'Paginierung:', paras)
+    description['measureNumbers'] = _get_paragraph_content_by_label(
+        'Taktzahlen:', paras)
+    description['instrumentation'] = _get_paragraph_content_by_label(
+        'Besetzung:', paras)
+    description['annotations'] = _get_paragraph_content_by_label(
+        'Eintragungen:', paras)
 
     # Get content items
     content_index = _get_paragraph_index_by_label('Inhalt:', paras)
     comments_index = _get_paragraph_index_by_label(
         'Textkritischer Kommentar:', paras) or len(paras) - 1
 
-    description['content'] = _get_items(paras[(content_index + 1):comments_index])
+    description['content'] = _get_items(
+        paras[(content_index + 1):comments_index])
 
     source_description['description'] = description
 
@@ -345,7 +354,8 @@ def _extract_writing_instruments(writing_instruments_text: str) -> WritingInstru
     # Default value for empty writing instruments
     writing_instruments = {'main': '', 'secondary': []}
     if writing_instruments_text is not None:
-        stripped_writing_instruments = _strip_by_delimiter(writing_instruments_text, ';')
+        stripped_writing_instruments = _strip_by_delimiter(
+            writing_instruments_text, ';')
 
         # Strip . from last main and secondary writing instruments
         main = stripped_writing_instruments[0].strip().rstrip('.')
@@ -356,28 +366,6 @@ def _extract_writing_instruments(writing_instruments_text: str) -> WritingInstru
             secondary = []
         writing_instruments = {'main': main, 'secondary': secondary}
     return writing_instruments
-
-
-############################################
-# Helper function: _find_tag_with_label_in_soup
-############################################
-def _find_tag_with_label_in_soup(label: str, paras: List[Tag]) -> Optional[Tag]:
-    """
-    Searches for a specific label in a list of BeautifulSoup tags.
-
-    Args:
-      label (str): The label to search for.
-      paras (List[Tag]): The list of BeautifulSoup tags to search within.
-
-    Returns:
-      The BeautifulSoup.Tag with the specified label, or None if not found.
-    """
-    if not label:
-        return None
-    for para in paras:
-        if para.find(string=re.compile(label)):
-            return para
-    return None
 
 
 ############################################
@@ -430,10 +418,33 @@ def _find_siglum_indices(paras: List[Tag]) -> List[int]:
     siglum_indices = []
 
     for index, para in enumerate(paras):
-        if siglum_pattern.match(str(para)):  # if para contains the pattern for a siglum
+        # if para contains the pattern for a siglum
+        if siglum_pattern.match(str(para)):
             siglum_indices.append(index)
 
     return siglum_indices
+
+
+############################################
+# Helper function: _find_tag_with_label_in_soup
+############################################
+def _find_tag_with_label_in_soup(label: str, paras: List[Tag]) -> Optional[Tag]:
+    """
+    Searches for a specific label in a list of BeautifulSoup tags.
+
+    Args:
+      label (str): The label to search for.
+      paras (List[Tag]): The list of BeautifulSoup tags to search within.
+
+    Returns:
+      The BeautifulSoup.Tag with the specified label, or None if not found.
+    """
+    if not label:
+        return None
+    for para in paras:
+        if para.find(string=re.compile(label)):
+            return para
+    return None
 
 
 ############################################
@@ -486,7 +497,8 @@ def _get_folios(sibling_paras: List[Tag]) -> List[Folio]:
             # Create folio object
             folio = copy.deepcopy(emptyFolio)
 
-            folio['folio'] = _get_folio_label(stripped_para_text[0].strip(), FOLIO_STR)
+            folio['folio'] = _get_folio_label(
+                stripped_para_text[0].strip(), FOLIO_STR)
             folio['systemGroups'] = [_get_system_group(stripped_para_text)]
 
             # Add folio to folios
@@ -680,7 +692,8 @@ def _get_system_group(stripped_para_text: List[str]) -> List[System]:
         # Extract system label
         if SYSTEM_STR in para:
             stripped_system_text = _strip_by_delimiter(para, ':')
-            system_label = stripped_system_text[0].replace(SYSTEM_STR, '').strip()
+            system_label = stripped_system_text[0].replace(
+                SYSTEM_STR, '').strip()
 
             system['system'] = system_label
 
@@ -733,7 +746,8 @@ def _strip_by_delimiter(input_str: str, delimiter: str) -> List[str]:
     Returns:
         List[str]: A list of stripped substrings.
     """
-    stripped_substring_list: List[str] = [s.strip() for s in input_str.split(delimiter)]
+    stripped_substring_list: List[str] = [
+        s.strip() for s in input_str.split(delimiter)]
     return stripped_substring_list
 
 

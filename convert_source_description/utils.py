@@ -10,7 +10,7 @@ import re
 from typing import Dict, List, NotRequired, Optional, TypedDict
 
 import mammoth
-from bs4 import Tag
+from bs4 import BeautifulSoup, Tag
 
 
 ############################################
@@ -82,9 +82,39 @@ class SourceList(TypedDict):
     sources: List[SourceDescription]
 
 
+class LinkBox(TypedDict):
+    """A typed dictionary that represents a link box."""
+    svgGroupId: str
+    linkTo: str
+
+
+class TextcriticalComment(TypedDict):
+    """A typed dictionary that represents a textcritical comment."""
+    svgGroupId: str
+    measure: str
+    system: str
+    position: str
+    comment: str
+
+
+class TextCritics(TypedDict):
+    """A typed dictionary that represents a textcritics object."""
+    id: str
+    label: str
+    description: List
+    rowTable: bool
+    comments: List[TextcriticalComment]
+    linkBoxes: List[LinkBox]
+
+
+class TextcriticsList(TypedDict):
+    """A typed dictionary that represents a list of textcritics objects."""
+    textcritics: List[TextCritics]
+
 ############################################
 # Helper variables: Strings & Objects
 ############################################
+
 
 SYSTEM_STR = 'System'
 MEASURE_STR = 'T.'
@@ -146,6 +176,32 @@ emptyRow: Row = {
     "rowNumber": ""
 }
 
+emptyTextcriticsList: TextcriticsList = {
+    "textcritics": []
+}
+
+emptyTextcritics: TextCritics = {
+    "id": "",
+    "label": "",
+    "description": [],
+    # "rowTable": False,
+    "comments": [],
+    "linkBoxes": []
+}
+
+emptyTextcriticalComment: TextcriticalComment = {
+    "svgGroupId": "TODO",
+    "measure": "",
+    "system": "",
+    "position": "",
+    "comment": ""
+}
+
+emptyLinkBox: LinkBox = {
+    "svgGroupId": "",
+    "linkTo": ""
+}
+
 ############################################
 # Public class: ConversionUtils
 ############################################
@@ -158,19 +214,21 @@ class ConversionUtils:
     ############################################
     # Public class function: create_source_list
     ############################################
-    def create_source_list(self, paras: List[Tag]) -> SourceList:
+    def create_source_list(self, soup: BeautifulSoup) -> SourceList:
         """
-        Creates a list of source descriptions based on the given paragraph tags.
+        Creates a list of source descriptions based on the given soup elements.
 
         Args:
-            paras (List[Tag]): A list of BeautifulSoup `Tag` objects 
-                                representing the paragraphs in the document.
+            soup (BeautifulSoup): A BeautifulSoup object representing the document.
 
         Returns:
             A SourceList object containing a list of SourceDescription objects.
         """
         source_list = copy.deepcopy(emptySourceList)
         sources = source_list['sources']
+
+        # Find all p tags in soup
+        paras = soup.find_all('p')
 
         # Find all siglum indices
         siglum_indices = _find_siglum_indices(paras)
@@ -199,6 +257,49 @@ class ConversionUtils:
                 sources.append(source_description)
 
         return source_list
+
+    ############################################
+    # Public class function: create_textcritics
+    ############################################
+    def create_textcritics(self, soup: BeautifulSoup) -> TextCritics:
+        """
+        Creates a list of textcritics based on the given soup elements.
+
+        Args:
+            soup (BeautifulSoup): A BeautifulSoup object representing the document.
+
+        Returns:
+            A SourceList object containing a list of SourceDescription objects.
+        """
+        textcritics_list = copy.deepcopy(emptyTextcriticsList)
+
+        # Find all table tags in soup
+        tables = soup.find_all('table')
+
+        # Iterate over tables and create textcritics
+        for table_index, table in enumerate(tables):
+            textcritics = copy.deepcopy(emptyTextcritics)
+
+            table_rows = table.find_all('tr')
+            for row in table_rows[1:]:
+                comment = copy.deepcopy(emptyTextcriticalComment)
+                table_cols = row.find_all('td')
+                comment['measure'] = _strip_tag(
+                    _strip_tag(table_cols[0], 'td'), 'p')
+                comment['system'] = _strip_tag(
+                    _strip_tag(table_cols[1], 'td'), 'p')
+                comment['position'] = _strip_tag(
+                    _strip_tag(table_cols[2], 'td'), 'p')
+                comment['comment'] = _strip_tag(
+                    _strip_tag(table_cols[3], 'td'), 'p')
+
+                textcritics['comments'].append(comment)
+
+            print(
+                f"Appending textcritics for table {table_index + 1}...")
+            textcritics_list['textcritics'].append(textcritics)
+
+        return textcritics_list
 
     ############################################
     # Public class function: pprint

@@ -72,14 +72,15 @@ def convert_source_description(directory: str, file_name: str):
     # Parse HTML
     soup = BeautifulSoup(html, 'html.parser')
 
-    # Find all p tags
-    paras = soup.find_all('p')
-
     # Create the full sourceList object
-    source_list = ConversionUtils().create_source_list(paras)
+    source_list = ConversionUtils().create_source_list(soup)
+
+    # Create the full textcritics object
+    textcritics = ConversionUtils().create_textcritics(soup)
 
     # Output
-    ConversionUtils().write_json(source_list, file_path)
+    ConversionUtils().write_json(source_list, file_path + '_source-description')
+    ConversionUtils().write_json(textcritics, file_path + '_textcritics')
 
 
 def main():

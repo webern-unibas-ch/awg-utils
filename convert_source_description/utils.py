@@ -385,7 +385,7 @@ def _create_source_description(paras: List[Tag]) -> SourceDescription:
     """
     # Get siglum, id, type, and location
     siglum = paras[0].text.strip() or ''
-    source_id = 'source' + siglum if siglum else ''
+    source_id = 'source_' + siglum if siglum else ''
     source_type = paras[1].text.strip() or ''
     location = paras[2].text.strip() or ''
 

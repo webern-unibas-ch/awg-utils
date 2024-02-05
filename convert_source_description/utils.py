@@ -488,13 +488,12 @@ def _find_siblings(sibling_para: Tag, paras: List[Tag]) -> List[Tag]:
     if sibling_para.find('strong'):
         return paras
     # Check if the current paragraph ends with a period
-    elif sibling_para.text.endswith('.'):
+    if sibling_para.text.endswith('.'):
         paras.append(sibling_para)
         return paras
     # If the current paragraph does not meet the criteria, recursively search the next sibling
-    else:
-        paras.append(sibling_para)
-        return _find_siblings(sibling_para.next_sibling, paras)
+    paras.append(sibling_para)
+    return _find_siblings(sibling_para.next_sibling, paras)
 
 
 ############################################
@@ -733,7 +732,7 @@ def _get_paragraph_content_by_label(label: str, paras: List[Tag]) -> str:
             if sibling_content.endswith('.'):
                 content += '<br />' + sibling_content
                 break
-            elif sibling_content.endswith(';'):
+            if sibling_content.endswith(';'):
                 content += '<br />' + sibling_content
             else:
                 break

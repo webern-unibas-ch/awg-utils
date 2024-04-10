@@ -371,9 +371,9 @@ class ConversionUtils:
             print(f"Error writing data to {target_file_name}.")
 
 
-############################################
+#############################################
 # Helper function: _create_source_description
-############################################
+#############################################
 def _create_source_description(paras: List[Tag]) -> SourceDescription:
     """Create a source description dictionary from a list of BeautifulSoup `Tag` objects.
 
@@ -397,7 +397,7 @@ def _create_source_description(paras: List[Tag]) -> SourceDescription:
 
     # Get description
     description = copy.deepcopy(emptyDescription)
-    desc = paras[3].text.strip() or ''
+    desc = _strip_tag(paras[3], 'p') or ''
     description['desc'].append(desc)
 
     # Get writing material and instruments

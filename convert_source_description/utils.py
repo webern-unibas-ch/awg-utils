@@ -384,14 +384,21 @@ def _create_source_description(paras: List[Tag]) -> SourceDescription:
         SourceDescription: A dictionary representing the source description.
     """
     # Get siglum, id, type, and location
-    siglum = paras[0].text.strip() or ''
-    source_id = 'source_' + siglum if siglum else ''
-    source_type = paras[1].text.strip() or ''
-    location = paras[2].text.strip() or ''
+    siglum_sup_tag = paras[0].find('sup')  # Get sup tag from first paragraph
+    siglum_addendum = siglum_sup_tag.get_text(
+        strip=True) if siglum_sup_tag else ''  # Get siglum addendum from sup tag
+    if siglum_sup_tag:
+        siglum_sup_tag.extract()  # Remove sup tag from siglum
+    siglum = paras[0].get_text(strip=True)  # Get siglum without sup tag
+    siglum_string = siglum + siglum_addendum
+    source_id = 'source_' + siglum_string if siglum_string else ''
+    source_type = _strip_tag(paras[1], 'p') or ''
+    location = _strip_tag(paras[2], 'p') or ''
 
     source_description = copy.deepcopy(emptySourceDescription)
     source_description['id'] = source_id
     source_description['siglum'] = siglum
+    source_description['siglumAddendum'] = siglum_addendum
     source_description['type'] = source_type
     source_description['location'] = location
 
@@ -513,7 +520,7 @@ def _find_siglum_indices(paras: List[Tag]) -> List[int]:
     """
     # pattern for bold formatted single siglum with optional addition, like A or Ac
     siglum_pattern = re.compile(
-        r'^<p><strong>([A-Z])([a-z])?</strong></p>$')
+        r'^<p><strong>([A-Z])(<sup>)?([a-zA-Z][0-9]?(–[0-9])?)?(</sup>)?</strong></p>$')
 
     siglum_indices = []
 

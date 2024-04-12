@@ -7,7 +7,7 @@ import copy
 import json
 import os
 import re
-from typing import Dict, List, NotRequired, Optional, TypedDict
+from typing import Dict, List, NotRequired, Optional, Tuple, TypedDict
 
 import mammoth
 from bs4 import BeautifulSoup, Tag
@@ -235,26 +235,25 @@ class ConversionUtils:
 
         # Iterate over siglum ranges and create source descriptions
         for i, current_siglum_index in enumerate(siglum_indices):
-            try:
-                next_siglum_index = siglum_indices[i + 1]
-            except IndexError:
-                next_siglum_index = len(paras) - 1
+            next_siglum_index = next(
+                (siglum_indices[i + 1] for i in range(i, len(siglum_indices) - 1)), len(paras))
 
-            filtered_paras = paras[current_siglum_index:next_siglum_index]
-            source_description = _create_source_description(filtered_paras)
-            siglum = source_description['siglum']
+            if current_siglum_index < next_siglum_index:
+                filtered_paras = paras[current_siglum_index:next_siglum_index]
 
-            try:
-                source = next(
-                    source for source in sources if source['siglum'] == siglum)
-                print(
-                    f"Source description for {siglum} already included. "
-                    f"Overwriting with latest changes...")
-                source.update(source_description)
-            except StopIteration:
-                print(
-                    f"Appending source description for {siglum}...")
-                sources.append(source_description)
+                source_description = _create_source_description(filtered_paras)
+                source_id = source_description['id']
+
+                try:
+                    next(
+                        source for source in sources if source['id'] == source_id)
+                    print(
+                        f"Duplication: Source description for {source_id} included."
+                        f"Please check the source file.")
+                except StopIteration:
+                    print(
+                        f"Appending source description for {source_id}...")
+                    sources.append(source_description)
 
         return source_list
 
@@ -383,69 +382,127 @@ def _create_source_description(paras: List[Tag]) -> SourceDescription:
     Returns:
         SourceDescription: A dictionary representing the source description.
     """
-    # Get siglum, id, type, and location
-    siglum_sup_tag = paras[0].find('sup')  # Get sup tag from first paragraph
-    siglum_addendum = siglum_sup_tag.get_text(
-        strip=True) if siglum_sup_tag else ''  # Get siglum addendum from sup tag
-    if siglum_sup_tag:
-        siglum_sup_tag.extract()  # Remove sup tag from siglum
-    siglum = paras[0].get_text(strip=True)  # Get siglum without sup tag
+    source_description = copy.deepcopy(emptySourceDescription)
+
+    # Get siglum
+    siglum, siglum_addendum = _get_siglum(paras)
+
+    # Check if siglum is enclosed in square brackets and remove them; set missing flag on the way
+    if siglum.startswith('[') and siglum.endswith(']'):
+        siglum = siglum[1:-1]
+        items = list(source_description.items())
+        items.insert(3, ('missing', True))
+        source_description = dict(items)
+
     siglum_string = siglum + siglum_addendum
     source_id = 'source_' + siglum_string if siglum_string else ''
-    source_type = _strip_tag(paras[1], 'p') or ''
-    location = _strip_tag(paras[2], 'p') or ''
 
-    source_description = copy.deepcopy(emptySourceDescription)
+    # Update source description
     source_description['id'] = source_id
     source_description['siglum'] = siglum
     source_description['siglumAddendum'] = siglum_addendum
-    source_description['type'] = source_type
-    source_description['location'] = location
-
-    # Get description
-    description = copy.deepcopy(emptyDescription)
-    desc = _strip_tag(paras[3], 'p') or ''
-    description['desc'].append(desc)
-
-    # Get writing material and instruments
-    writing_material = _get_paragraph_content_by_label(
-        'Beschreibstoff:', paras)
-    writing_instruments_content = _get_paragraph_content_by_label(
-        'Schreibstoff:', paras)
-    writing_instruments = _extract_writing_instruments(
-        writing_instruments_content)
-
-    description['writingMaterial'] = writing_material
-    description['writingInstruments'] = writing_instruments
-
-    # Get title, date, measureNumbers, instrumentation, and annotations
-    description['title'] = _get_paragraph_content_by_label('Titel:', paras)
-    description['date'] = _get_paragraph_content_by_label('Datierung:', paras)
-    description['pagination'] = _get_paragraph_content_by_label(
-        'Paginierung:', paras)
-    description['measureNumbers'] = _get_paragraph_content_by_label(
-        'Taktzahlen:', paras)
-    description['instrumentation'] = _get_paragraph_content_by_label(
-        'Besetzung:', paras)
-    description['annotations'] = _get_paragraph_content_by_label(
-        'Eintragungen:', paras)
-
-    # Get content items
-    content_index = _get_paragraph_index_by_label('Inhalt:', paras)
-    comments_index = _get_paragraph_index_by_label(
-        'Textkritischer Kommentar:', paras) or len(paras) - 1
-
-    description['content'] = _get_items(
-        paras[(content_index + 1):comments_index])
-
-    source_description['description'] = description
+    source_description['type'] = _strip_tag(paras[1], 'p') or ''
+    source_description['location'] = _strip_tag(paras[2], 'p') or ''
+    source_description['description'] = _get_description(paras, source_id)
 
     return source_description
 
 
 ############################################
+# Helper function: _get_siglum
+############################################
+def _get_siglum(paras: List[Tag]) -> Tuple[str, str]:
+    """
+    Extracts the siglum from a list of BeautifulSoup `Tag` objects representing paragraphs.
+
+    Args:
+        paras (List[Tag]): A list of BeautifulSoup `Tag` objects representing paragraphs.
+
+    Returns:
+        Tuple[str, str]: A tuple containing the siglum and the siglum addendum.
+    """
+    siglum_sup_tag = paras[0].find('sup') or ''
+    siglum_addendum = siglum_sup_tag.get_text(strip=True) if siglum_sup_tag else ''
+    if siglum_sup_tag:
+        siglum_sup_tag.extract()
+    siglum = paras[0].get_text(strip=True)
+    return siglum, siglum_addendum
+
+
+############################################
+# Helper function: _get_description
+############################################
+def _get_description(paras: List[Tag], source_id: str) -> Description:
+    """
+    Extracts the description of a source description from a list of BeautifulSoup `Tag` objects.
+
+    Args:
+        paras (List[Tag]): A list of BeautifulSoup `Tag` objects representing paragraphs.
+        source_id (str): The ID of the source description.
+
+    Returns:
+        Description: A dictionary representing the description of the source description.
+    """
+    description = copy.deepcopy(emptyDescription)
+    desc = _strip_tag(paras[3], 'p') or ''
+    description['desc'].append(desc)
+
+    # Define labels and corresponding keys in the description dictionary
+    description_labels_keys = [
+        ('Beschreibstoff:', 'writingMaterial'),
+        ('Schreibstoff:', 'writingInstruments'),
+        ('Titel:', 'title'),
+        ('Datierung:', 'date'),
+        ('Paginierung:', 'pagination'),
+        ('Taktzahlen:', 'measureNumbers'),
+        ('Besetzung:', 'instrumentation'),
+        ('Eintragungen:', 'annotations')
+    ]
+
+    # Get content for each label and assign it to the corresponding key
+    for label, key in description_labels_keys:
+        content = _get_paragraph_content_by_label(label, paras)
+        if key == 'writingInstruments':
+            content = _extract_writing_instruments(content)
+        description[key] = content
+
+    # Get content items
+    description['content'] = _get_content_items(paras, source_id)
+
+    return description
+
+
+############################################
+# Helper function: _get_content_items
+############################################
+def _get_content_items(paras: List[Tag], source_id: str) -> List[str]:
+    """
+    Extracts the content items from a list of BeautifulSoup `Tag` objects representing paragraphs.
+
+    Args:
+        paras (List[Tag]): A list of BeautifulSoup `Tag` objects representing paragraphs.
+        source_id (str): The ID of the source description.
+
+    Returns:
+        List[str]: A list of content items extracted from the paragraphs.
+    """
+    # Get indices of content and comments
+    content_index = _get_paragraph_index_by_label('Inhalt:', paras)
+    comments_index = _get_paragraph_index_by_label('Textkritischer Kommentar:', paras)
+    if comments_index == -1:
+        comments_index = len(paras) - 1
+
+    if content_index == -1:
+        print('No content found for', source_id)
+        return []
+
+    return _get_items(paras[(content_index + 1):comments_index])
+
+############################################
 # Helper function: _extract_writing_instruments
 ############################################
+
+
 def _extract_writing_instruments(writing_instruments_text: str) -> WritingInstruments:
     """
     Extracts the main and secondary writing instruments from the given text.
@@ -520,13 +577,25 @@ def _find_siglum_indices(paras: List[Tag]) -> List[int]:
     """
     # pattern for bold formatted single siglum with optional addition, like A or Ac
     siglum_pattern = re.compile(
-        r'^<p><strong>([A-Z])(<sup>)?([a-zA-Z][0-9]?(–[0-9])?)?(</sup>)?</strong></p>$')
+        r'^<p><strong>([A-Z])</strong></p>$')
+
+    siglum_missing_pattern = re.compile(
+        r'^<p><strong>\[([A-Z])\]</strong></p>$')
+
+    siglum_with_addendum_pattern = re.compile(
+        r'^<p><strong>([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup></strong></p>$')
+
+    siglum_with_addendum_missing_pattern = re.compile(
+        r'^<p><strong>\[([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup>\]</strong></p>$')
 
     siglum_indices = []
 
     for index, para in enumerate(paras):
         # if para contains the pattern for a siglum
-        if siglum_pattern.match(str(para)):
+        if (siglum_pattern.match(str(para)) or
+            siglum_missing_pattern.match(str(para)) or
+            siglum_with_addendum_pattern.match(str(para)) or
+                siglum_with_addendum_missing_pattern.match(str(para))):
             siglum_indices.append(index)
 
     return siglum_indices

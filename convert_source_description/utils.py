@@ -725,6 +725,10 @@ def _get_item(para: Tag) -> ContentItem:
     Returns:
         ContentItem: A dictionary containing the extracted content item information.
     """
+    # Initialize variables
+    item_label = ''
+    item_link_to = ''
+    item_description = ''
     delimiter = '('
 
     # Get content of para with inner tags
@@ -734,29 +738,33 @@ def _get_item(para: Tag) -> ContentItem:
     # Get text content of para without inner tags
     stripped_para_text = _strip_by_delimiter(para.text, delimiter)
 
-    # Extract itemLabel
-    item_label = stripped_para_text[0].strip()
+    if len(stripped_para_content) > 1:        
+        if para_content.find('strong') and stripped_para_text[0].startswith('M '):
+            # Extract itemLabel
+            item_label = stripped_para_text[0].strip()
 
-    # When there is a slash in the item label,
-    # it means that we probably have multiple sketch items for a row table.
-    # In that case, link to 'SkRT'
-    if item_label.find('/') != -1:
-        item_link_to = 'SkRT'
-    # In all other cases, link to the id created from the itemLabel
-    else:
-        item_link_to = item_label.replace(' ', '_').replace('.', '_')
+            # When there is a slash in the item label,
+            # it means that we probably have multiple sketch items for a row table.
+            # In that case, link to 'SkRT'
+            if item_label.find('/') != -1:
+                item_link_to = 'SkRT'
+            # In all other cases, link to the id created from the itemLabel
+            else:
+                item_link_to = item_label.replace(' ', '_').replace('.', '_')
 
-    # Extract itemDescription
-    # (re-add delimiter that was removed in the stripping action above; and remove trailing colon)
-    if len(stripped_para_content) == 1:
-        print('Something went wrong. Maybe there is some bold formatting in line:', para)
-    item_description = delimiter + stripped_para_content[1].strip().rstrip(':')
+        # Extract itemDescription
+        # (re-add delimiter that was removed in the stripping action above; and remove trailing colon)
+        item_description = delimiter + \
+            stripped_para_content[1].strip().rstrip(':')
+
+    elif len(stripped_para_content) == 1:
+        item_description = stripped_para_content[0].strip().rstrip(':')
 
     # Create item object
     item = copy.deepcopy(emptyContentItem)
-    item['item'] = item_label or ''
-    item['itemLinkTo'] = item_link_to or ''
-    item['itemDescription'] = item_description or ''
+    item['item'] = item_label
+    item['itemLinkTo'] = item_link_to
+    item['itemDescription'] = item_description
 
     return item
 

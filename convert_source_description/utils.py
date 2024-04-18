@@ -119,6 +119,7 @@ class TextcriticsList(TypedDict):
 SYSTEM_STR = 'System'
 MEASURE_STR = 'T.'
 FOLIO_STR = 'Bl.'
+PAGE_STR = 'S.'
 
 ########
 emptySourceList: SourceList = {
@@ -422,7 +423,8 @@ def _get_siglum(paras: List[Tag]) -> Tuple[str, str]:
         Tuple[str, str]: A tuple containing the siglum and the siglum addendum.
     """
     siglum_sup_tag = paras[0].find('sup') or ''
-    siglum_addendum = siglum_sup_tag.get_text(strip=True) if siglum_sup_tag else ''
+    siglum_addendum = siglum_sup_tag.get_text(
+        strip=True) if siglum_sup_tag else ''
     if siglum_sup_tag:
         siglum_sup_tag.extract()
     siglum = paras[0].get_text(strip=True)
@@ -488,7 +490,8 @@ def _get_content_items(paras: List[Tag], source_id: str) -> List[str]:
     """
     # Get indices of content and comments
     content_index = _get_paragraph_index_by_label('Inhalt:', paras)
-    comments_index = _get_paragraph_index_by_label('Textkritischer Kommentar:', paras)
+    comments_index = _get_paragraph_index_by_label(
+        'Textkritischer Kommentar:', paras)
     if comments_index == -1:
         comments_index = len(paras) - 1
 
@@ -626,23 +629,30 @@ def _find_tag_with_label_in_soup(label: str, paras: List[Tag]) -> Optional[Tag]:
 ############################################
 # Helper function: _get_folio_label
 ############################################
-def _get_folio_label(stripped_para_text: str, folio_str: str) -> str:
+def _get_folio_label(stripped_para_text: str) -> str:
     """
     Extracts the folio label from a paragraph of text containing a folio number.
 
     Args:
         stripped_para_text (str): The text of the paragraph with whitespace removed.
-        folio_str (str): The string indicating the folio number, such as 'Bl.'.
+        folio_str (str): The string indicating the folio or page marker, such as 'Bl.' or 'S.'.
 
     Returns:
         str: The extracted folio label if found in the paragraph text, otherwise an empty string.
     """
+    def process_text(text, string):
+        text = text.lstrip('\t')
+        text = text.replace(string + '\xa0', '').strip()
+        text = text.replace(string, '').strip()
+        return text
+
     folio_label = ''
 
-    if folio_str in stripped_para_text:
-        folio_label = stripped_para_text.lstrip('\t')
-        folio_label = folio_label.replace(folio_str + '\xa0', '').strip()
-        folio_label = folio_label.replace(folio_str, '').strip()
+    if FOLIO_STR in stripped_para_text:
+        folio_label = process_text(stripped_para_text, FOLIO_STR)
+    
+    if PAGE_STR in stripped_para_text:
+        folio_label = process_text(stripped_para_text, PAGE_STR)
 
     return folio_label
 
@@ -667,15 +677,29 @@ def _get_folios(sibling_paras: List[Tag]) -> List[Folio]:
         if len(stripped_para_text) == 1:
             stripped_para_text = _strip_by_delimiter(para.text, '\t')
 
-        # Check sibling paragraph for folioStr to create a new folio entry
-        has_folio_str = para.find(string=re.compile(FOLIO_STR))
+        # Check sibling paragraph for folioStr or pageStr to create a new folio entry
+        folio_found = re.search(FOLIO_STR, para.text) is not None
+        page_found = re.search(r'S\.', para.text) is not None
+        has_folio_str = folio_found or page_found
+        
         if has_folio_str:
             # Create folio object
             folio = copy.deepcopy(emptyFolio)
 
-            folio['folio'] = _get_folio_label(
-                stripped_para_text[0].strip(), FOLIO_STR)
-            folio['systemGroups'] = [_get_system_group(stripped_para_text)]
+            # Extract folio label
+            folio['folio'] = _get_folio_label(stripped_para_text[0].strip())
+
+            # Check if the paragraph contains a page marker
+            if page_found:
+                items = list(folio.items())
+                items.insert(1, ('isPage', True))
+                folio = dict(items)
+
+            # Check if the paragraph contains no systemStr, then add folioDescription
+            if not para.find(string=re.compile(SYSTEM_STR)):
+                folio['folioDescription'] = stripped_para_text[1].strip()
+            else:
+                folio['systemGroups'] = [_get_system_group(stripped_para_text)]
 
             # Add folio to folios
             folios.append(folio)
@@ -757,7 +781,8 @@ def _get_items(paras: List[Tag]) -> List[ContentItem]:
     items = []
 
     for para in paras:
-        if para.find('strong'):
+
+        if not para.text.startswith('\t') and not para.text.startswith(PAGE_STR) and not para.text.startswith(FOLIO_STR):
             # Find item
             item = _get_item(para)
 
@@ -862,6 +887,9 @@ def _get_system_group(stripped_para_text: List[str]) -> List[System]:
         if FOLIO_STR in para:
             continue
 
+        if PAGE_STR in para:
+            continue
+
         # Create system object
         system = copy.deepcopy(emptySystem)
 
@@ -901,9 +929,6 @@ def _get_system_group(stripped_para_text: List[str]) -> List[System]:
                     system['row'] = row
 
             system_group.append(system)
-
-        else:
-            print('No', SYSTEM_STR, 'found in', para)
 
     return system_group
 

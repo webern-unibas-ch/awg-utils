@@ -650,7 +650,7 @@ def _get_folio_label(stripped_para_text: str) -> str:
 
     if FOLIO_STR in stripped_para_text:
         folio_label = process_text(stripped_para_text, FOLIO_STR)
-    
+
     if PAGE_STR in stripped_para_text:
         folio_label = process_text(stripped_para_text, PAGE_STR)
 
@@ -681,7 +681,7 @@ def _get_folios(sibling_paras: List[Tag]) -> List[Folio]:
         folio_found = re.search(FOLIO_STR, para.text) is not None
         page_found = re.search(r'S\.', para.text) is not None
         has_folio_str = folio_found or page_found
-        
+
         if has_folio_str:
             # Create folio object
             folio = copy.deepcopy(emptyFolio)
@@ -738,7 +738,7 @@ def _get_item(para: Tag) -> ContentItem:
     # Get text content of para without inner tags
     stripped_para_text = _strip_by_delimiter(para.text, delimiter)
 
-    if len(stripped_para_content) > 1:        
+    if len(stripped_para_content) > 1:
         if para_content.find('strong') and stripped_para_text[0].startswith('M '):
             # Extract itemLabel
             item_label = stripped_para_text[0].strip()
@@ -753,7 +753,8 @@ def _get_item(para: Tag) -> ContentItem:
                 item_link_to = item_label.replace(' ', '_').replace('.', '_')
 
         # Extract itemDescription
-        # (re-add delimiter that was removed in the stripping action above; and remove trailing colon)
+        # (re-add delimiter that was removed in the stripping action above
+        # and remove trailing colon)
         item_description = delimiter + \
             stripped_para_content[1].strip().rstrip(':')
 
@@ -790,7 +791,9 @@ def _get_items(paras: List[Tag]) -> List[ContentItem]:
 
     for para in paras:
 
-        if not para.text.startswith('\t') and not para.text.startswith(PAGE_STR) and not para.text.startswith(FOLIO_STR):
+        if (not para.text.startswith('\t') and
+            not para.text.startswith(PAGE_STR) and
+                not para.text.startswith(FOLIO_STR)):
             # Find item
             item = _get_item(para)
 

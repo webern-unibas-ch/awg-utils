@@ -56,7 +56,7 @@ class WritingInstruments(TypedDict):
 class Description(TypedDict):
     """A typed dictionary that represents a description of a source description."""
     desc: List[str]
-    writingMaterial: str
+    writingMaterialString: str
     writingInstruments: WritingInstruments
     title: str
     date: str
@@ -137,7 +137,7 @@ emptySourceDescription: SourceDescription = {
 
 emptyDescription: Description = {
     "desc": [],
-    "writingMaterial": "",
+    "writingMaterialString": "",
     "writingInstruments": {
         "main": "",
         "secondary": []
@@ -451,7 +451,7 @@ def _get_description(paras: List[Tag], source_id: str) -> Description:
 
     # Define labels and corresponding keys in the description dictionary
     description_labels_keys = [
-        ('Beschreibstoff:', 'writingMaterial'),
+        ('Beschreibstoff:', 'writingMaterialString'),
         ('Schreibstoff:', 'writingInstruments'),
         ('Titel:', 'title'),
         ('Datierung:', 'date'),

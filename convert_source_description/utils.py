@@ -739,7 +739,9 @@ def _get_item(para: Tag) -> ContentItem:
     stripped_para_text = _strip_by_delimiter(para.text, delimiter)
 
     if len(stripped_para_content) > 1:
-        if para_content.find('strong') and (stripped_para_text[0].startswith('M ') or stripped_para_text[0].startswith('M* ')):
+        if (para_content.find('strong') and
+            (stripped_para_text[0].startswith('M ') or
+             stripped_para_text[0].startswith('M* '))):
             # Extract itemLabel
             item_label = stripped_para_text[0].strip()
 

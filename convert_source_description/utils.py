@@ -674,7 +674,7 @@ def _get_folios(sibling_paras: List[Tag]) -> List[Folio]:
 
     for para in sibling_paras:
         stripped_para_text = _strip_by_delimiter(para.text, ' \t')
-        if len(stripped_para_text) == 1:
+        if len(stripped_para_text) != 2:
             stripped_para_text = _strip_by_delimiter(para.text, '\t')
 
         # Check sibling paragraph for folioStr or pageStr to create a new folio entry
@@ -687,7 +687,11 @@ def _get_folios(sibling_paras: List[Tag]) -> List[Folio]:
             folio = copy.deepcopy(emptyFolio)
 
             # Extract folio label
-            folio['folio'] = _get_folio_label(stripped_para_text[0].strip())
+            if stripped_para_text:
+                if FOLIO_STR in stripped_para_text[0] or PAGE_STR in stripped_para_text[0]:
+                    folio['folio'] = _get_folio_label(stripped_para_text[0].strip())
+                elif len(stripped_para_text) > 2 and (FOLIO_STR in stripped_para_text[1] or PAGE_STR in stripped_para_text[1]):
+                    folio['folio'] = _get_folio_label(stripped_para_text[1].strip())
 
             # Check if the paragraph contains a page marker
             if page_found:

@@ -12,10 +12,11 @@ from typing import Dict, List, NotRequired, Optional, Tuple, TypedDict
 import mammoth
 from bs4 import BeautifulSoup, Tag
 
-
 ############################################
 # Helper variables: Typed Classes
 ############################################
+
+
 class Row(TypedDict):
     """A typed dictionary that represents a row of a system."""
     rowType: str
@@ -203,11 +204,10 @@ emptyLinkBox: LinkBox = {
     "linkTo": ""
 }
 
+
 ############################################
 # Public class: ConversionUtils
 ############################################
-
-
 class ConversionUtils:
     """A class that contains utility functions for the conversion of source descriptions 
         from Word to JSON."""
@@ -304,7 +304,6 @@ class ConversionUtils:
     ############################################
     # Public class function: pprint
     ############################################
-
     def pprint(self, output: Dict) -> None:
         """
         Pretty prints a dictionary as JSON object to the console with indentation of 2.
@@ -320,7 +319,6 @@ class ConversionUtils:
     ############################################
     # Public class function: read_html_from_word_file
     ############################################
-
     def read_html_from_word_file(self, file_path: str) -> str:
         """
         Reads a Word file in .docx format and returns its content as an HTML string.
@@ -501,11 +499,10 @@ def _get_content_items(paras: List[Tag], source_id: str) -> List[str]:
 
     return _get_items(paras[(content_index + 1):comments_index])
 
+
 ############################################
 # Helper function: _extract_writing_instruments
 ############################################
-
-
 def _extract_writing_instruments(writing_instruments_text: str) -> WritingInstruments:
     """
     Extracts the main and secondary writing instruments from the given text.
@@ -688,9 +685,12 @@ def _get_folios(sibling_paras: List[Tag]) -> List[Folio]:
 
             # Extract folio label
             if stripped_para_text:
-                if FOLIO_STR in stripped_para_text[0] or PAGE_STR in stripped_para_text[0]:
+                if (FOLIO_STR in stripped_para_text[0] or
+                        PAGE_STR in stripped_para_text[0]):
                     folio['folio'] = _get_folio_label(stripped_para_text[0].strip())
-                elif len(stripped_para_text) > 2 and (FOLIO_STR in stripped_para_text[1] or PAGE_STR in stripped_para_text[1]):
+                elif (len(stripped_para_text) > 2 and
+                      (FOLIO_STR in stripped_para_text[1] or
+                       PAGE_STR in stripped_para_text[1])):
                     folio['folio'] = _get_folio_label(stripped_para_text[1].strip())
 
             # Check if the paragraph contains a page marker
@@ -775,11 +775,10 @@ def _get_item(para: Tag) -> ContentItem:
 
     return item
 
+
 ############################################
 # Helper function: _getItems
 ############################################
-
-
 def _get_items(paras: List[Tag]) -> List[ContentItem]:
     """
     Given a list of BeautifulSoup Tag objects representing paragraphs, 

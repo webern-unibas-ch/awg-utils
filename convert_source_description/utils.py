@@ -12,100 +12,20 @@ from typing import Dict, List, Optional, Tuple
 import mammoth
 from bs4 import BeautifulSoup, Tag
 
-from typed_classes import (Row, System, Folio, ContentItem, WritingInstruments,
-                           Description, SourceDescription, SourceList, LinkBox,
-                           TextcriticalComment, TextCritics, TextcriticsList)
-
+from typed_classes import (System, Folio, ContentItem, WritingInstruments,
+                           Description, SourceDescription, SourceList, TextCritics)
+from default_objects import (defaultSourceList, defaultSourceDescription, defaultDescription,
+                             defaultContentItem, defaultFolio, defaultSystem, defaultRow,
+                             defaultTextcriticsList, defaultTextcritics,
+                             defaultTextcriticalComment)
 
 ############################################
-# Helper variables: Strings & Objects
+# Helper strings
 ############################################
 SYSTEM_STR = 'System'
 MEASURE_STR = 'T.'
 FOLIO_STR = 'Bl.'
 PAGE_STR = 'S.'
-
-########
-emptySourceList: SourceList = {
-    "sources": []
-}
-
-emptySourceDescription: SourceDescription = {
-    "id": "",
-    "siglum": "",
-    "siglumAddendum": "",
-    "type": "",
-    "location": "",
-    "description": {}
-}
-
-emptyDescription: Description = {
-    "desc": [],
-    "writingMaterialString": "",
-    "writingInstruments": {
-        "main": "",
-        "secondary": []
-    },
-    "title": "",
-    "date": "",
-    "pagination": "",
-    "measureNumbers": "",
-    "instrumentation": "",
-    "annotations": "",
-    "content": []
-}
-
-emptyContentItem: ContentItem = {
-    "item": "",
-    "itemLinkTo": "",
-    "itemDescription": "",
-    "folios": []
-}
-
-emptyFolio: Folio = {
-    "folio": "",
-    "folioLinkTo": "",
-    "folioDescription": "",
-    "systemGroups": []
-}
-
-emptySystem: System = {
-    "system": "",
-    "measure": "",
-    "linkTo": ""
-}
-
-emptyRow: Row = {
-    "rowType": "",
-    "rowBase": "",
-    "rowNumber": ""
-}
-
-emptyTextcriticsList: TextcriticsList = {
-    "textcritics": []
-}
-
-emptyTextcritics: TextCritics = {
-    "id": "",
-    "label": "",
-    "description": [],
-    # "rowTable": False,
-    "comments": [],
-    "linkBoxes": []
-}
-
-emptyTextcriticalComment: TextcriticalComment = {
-    "svgGroupId": "TODO",
-    "measure": "",
-    "system": "",
-    "position": "",
-    "comment": ""
-}
-
-emptyLinkBox: LinkBox = {
-    "svgGroupId": "",
-    "linkTo": ""
-}
 
 
 ############################################
@@ -128,7 +48,7 @@ class ConversionUtils:
         Returns:
             A SourceList object containing a list of SourceDescription objects.
         """
-        source_list = copy.deepcopy(emptySourceList)
+        source_list = copy.deepcopy(defaultSourceList)
         sources = source_list['sources']
 
         # Find all p tags in soup
@@ -174,18 +94,18 @@ class ConversionUtils:
         Returns:
             A SourceList object containing a list of SourceDescription objects.
         """
-        textcritics_list = copy.deepcopy(emptyTextcriticsList)
+        textcritics_list = copy.deepcopy(defaultTextcriticsList)
 
         # Find all table tags in soup
         tables = soup.find_all('table')
 
         # Iterate over tables and create textcritics
         for table_index, table in enumerate(tables):
-            textcritics = copy.deepcopy(emptyTextcritics)
+            textcritics = copy.deepcopy(defaultTextcritics)
 
             table_rows = table.find_all('tr')
             for row in table_rows[1:]:
-                comment = copy.deepcopy(emptyTextcriticalComment)
+                comment = copy.deepcopy(defaultTextcriticalComment)
                 table_cols = row.find_all('td')
                 comment['measure'] = _strip_tag(
                     _strip_tag(table_cols[0], 'td'), 'p')
@@ -284,7 +204,7 @@ def _create_source_description(paras: List[Tag]) -> SourceDescription:
     Returns:
         SourceDescription: A dictionary representing the source description.
     """
-    source_description = copy.deepcopy(emptySourceDescription)
+    source_description = copy.deepcopy(defaultSourceDescription)
 
     # Get siglum
     siglum, siglum_addendum = _get_siglum(paras)
@@ -346,7 +266,7 @@ def _get_description(paras: List[Tag], source_id: str) -> Description:
     Returns:
         Description: A dictionary representing the description of the source description.
     """
-    description = copy.deepcopy(emptyDescription)
+    description = copy.deepcopy(defaultDescription)
     desc = _strip_tag(paras[3], 'p') or ''
     description['desc'].append(desc)
 
@@ -584,7 +504,7 @@ def _get_folios(sibling_paras: List[Tag]) -> List[Folio]:
 
         if has_folio_str:
             # Create folio object
-            folio = copy.deepcopy(emptyFolio)
+            folio = copy.deepcopy(defaultFolio)
 
             # Extract folio label
             if stripped_para_text:
@@ -671,7 +591,7 @@ def _get_item(para: Tag) -> ContentItem:
         item_description = stripped_para_content[0].strip().rstrip(':')
 
     # Create item object
-    item = copy.deepcopy(emptyContentItem)
+    item = copy.deepcopy(defaultContentItem)
     item['item'] = item_label
     item['itemLinkTo'] = item_link_to
     item['itemDescription'] = item_description
@@ -810,7 +730,7 @@ def _get_system_group(stripped_para_text: List[str]) -> List[System]:
             continue
 
         # Create system object
-        system = copy.deepcopy(emptySystem)
+        system = copy.deepcopy(defaultSystem)
 
         # Extract system label
         if SYSTEM_STR in para:
@@ -839,7 +759,7 @@ def _get_system_group(stripped_para_text: List[str]) -> List[System]:
                 if re.search(pattern, stripped_system_text[1]):
                     row_text = re.findall(pattern, stripped_system_text[1])[0]
 
-                    row = copy.deepcopy(emptyRow)
+                    row = copy.deepcopy(defaultRow)
                     row['rowType'] = row_text[0]
                     row['rowBase'] = row_text[1]
                     if len(row_text) > 3:

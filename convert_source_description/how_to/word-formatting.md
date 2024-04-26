@@ -49,15 +49,21 @@
 
   1) Main cateogry name: "Inhalt:"
   2) Some naming of the content unit, e.g. "I „Das dunkle Herz“ M 314: einzige Textfassung:". This may include sketch sigla which should appear in bold formatting, e.g. "**M 286 Sk# / M 287 Sk#** (Reihentabelle op. 19):" 
-	3) Indication of the folio or page on which the content unit can be found, including system and measure numbers: "Bl. 1r 	System 8–9 (rechts): T. 15.", "S. 2  System 1–2: T. 18." This line starts with a `TAB`.
-  4) If needed, more systems on the same folio/page can be appended in the following lines. Multiple line are starting with a double `TAB` and are separated by semicolon at the line ending. The final system line has a dot.
+  3) Indication of the folio or page on which the content unit can be found, including system and measure numbers: "Bl. 1r 	System 8–9 (rechts): T. 15.", "S. 2  System 1–2: T. 18." This line starts with a `TAB`.
+  4) If needed, more systems on the same folio/page can be appended in the following lines. Multiple line are starting with a double `TAB` and are separated by semicolon at the line ending.
+  5) If needed, more folios/pages can be appended in the following lines, too. (Repeat from 3)
+  6) Only the final system line of an entire content unit has a dot.
 
   Example: 
 
-  <img width="182" alt="SourceDesc_Content" src="https://github.com/webern-unibas-ch/awg-utils/assets/21059419/5cbd66d8-5652-4feb-914e-b83f7ffa35b3">
+  <img width="182" alt="SourceDesc_Content" src="https://github.com/webern-unibas-ch/awg-utils/assets/21059419/4665666b-5b78-4141-abae-8f922d005221">
 
 > [!CAUTION]
-> There must be a TAB before the "Bl." or "S.". There must be another TAB before the word "System", and a colon after the system number(s).
+> There must be a TAB before the "Bl." or "S.".
+>
+> There must be another TAB before the word "System", and a colon after the system number(s).
+>
+> Only the final system line of an entire content unit has a dot.
 
 ### END
 

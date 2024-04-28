@@ -49,6 +49,7 @@ The script expects a Word file input structured in the following way:
 import argparse
 
 from bs4 import BeautifulSoup
+from file_utils import FileUtils
 from utils import ConversionUtils
 
 
@@ -63,24 +64,27 @@ def convert_source_description(directory: str, file_name: str):
         A JSON file with the source description.
     """
 
+    file_utils = FileUtils()
+    conversion_utils = ConversionUtils()
+
     # Define file path
     file_path = directory + file_name
 
     # Get HTML from Word file
-    html = ConversionUtils().read_html_from_word_file(file_path)
+    html = file_utils.read_html_from_word_file(file_path)
 
     # Parse HTML
     soup = BeautifulSoup(html, 'html.parser')
 
     # Create the full sourceList object
-    source_list = ConversionUtils().create_source_list(soup)
+    source_list = conversion_utils.create_source_list(soup)
 
     # Create the full textcritics object
-    textcritics = ConversionUtils().create_textcritics(soup)
+    textcritics = conversion_utils.create_textcritics(soup)
 
     # Output
-    ConversionUtils().write_json(source_list, file_path + '_source-description')
-    ConversionUtils().write_json(textcritics, file_path + '_textcritics')
+    file_utils.write_json(source_list, file_path + '_source-description')
+    file_utils.write_json(textcritics, file_path + '_textcritics')
 
 
 def main():

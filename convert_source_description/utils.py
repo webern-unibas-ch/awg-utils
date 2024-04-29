@@ -99,7 +99,8 @@ class ConversionUtils:
                 comment['measure'] = self.utils_helper.strip_tag_and_clean(columns_in_row[0], 'td')
                 comment['system'] = self.utils_helper.strip_tag_and_clean(columns_in_row[1], 'td')
                 comment['position'] = self.utils_helper.strip_tag_and_clean(columns_in_row[2], 'td')
-                comment['comment'] = self.utils_helper.strip_tag_and_clean(columns_in_row[3], 'td')
+                comment_text = self.utils_helper.strip_tag_and_clean(columns_in_row[3], 'td')
+                comment['comment'] = self.utils_helper.replace_glyphs(comment_text)
 
                 textcritics['comments'].append(comment)
 

@@ -125,6 +125,28 @@ class ConversionUtilsHelper:
         return siglum_indices
 
     ############################################
+    # Public method: replace_glyphs
+    ############################################
+
+    def replace_glyphs(self, text: str) -> str:
+        """
+        Replaces glyph strings in a given text.
+
+        Args:
+            text (str): The given text.
+
+        Returns:
+            str: The replaced text.
+        """
+        glyphs = ["a", "b", "bb", "#", "x", "f", "ff", "fff", "p", "pp", "ppp"]
+        glyph_pattern = '|'.join(re.escape(glyph) for glyph in glyphs)
+
+        return re.sub(
+            rf'\[({glyph_pattern})\]',
+            lambda match: f"{{{{ref.getGlyph('{match.group(0)}')}}}}",
+            text)
+
+    ############################################
     # Public method: strip_tag_and_clean
     ############################################
 

@@ -1,4 +1,5 @@
-"""Helper functions for the utility functions of the conversion of source descriptions from Word to JSON. 
+"""
+Auxiliary functions supporting the conversion process from Word source descriptions to JSON format.
 
 This module should not be run directly. Instead, run the `convert_source_description.py` module.
 """
@@ -9,27 +10,39 @@ from typing import List, Optional, Tuple
 
 from bs4 import Tag
 
-from typed_classes import (System, Folio, ContentItem, WritingInstruments,
-                           Description, SourceDescription)
-from default_objects import (defaultSourceDescription, defaultDescription,
-                             defaultContentItem, defaultFolio, defaultSystem, defaultRow)
+from typed_classes import (
+    System,
+    Folio,
+    ContentItem,
+    WritingInstruments,
+    Description,
+    SourceDescription,
+)
+from default_objects import (
+    defaultSourceDescription,
+    defaultDescription,
+    defaultContentItem,
+    defaultFolio,
+    defaultSystem,
+    defaultRow,
+)
 
 
 ############################################
 # Helper constants
 ############################################
-SYSTEM_STR = 'System'
-MEASURE_STR = 'T.'
-FOLIO_STR = 'Bl.'
-PAGE_STR = 'S.'
+SYSTEM_STR = "System"
+MEASURE_STR = "T."
+FOLIO_STR = "Bl."
+PAGE_STR = "S."
 
 
 ############################################
 # Public class: ConversionHelperUtils
 ############################################
 class ConversionUtilsHelper:
-    """A class that contains utility helper functions for the conversion of source descriptions 
-        from Word to JSON."""
+    """A class that contains utility helper functions for the conversion of source descriptions
+    from Word to JSON."""
 
     #############################################
     # Public method: create_source_description
@@ -48,23 +61,23 @@ class ConversionUtilsHelper:
         # Get siglum
         siglum, siglum_addendum = self._get_siglum(paras)
 
-        # Check if siglum is enclosed in square brackets and remove them; set missing flag on the way
-        if siglum.startswith('[') and siglum.endswith(']'):
+        # If existing, remove square brackets from siglum and set missing flag.
+        if siglum.startswith("[") and siglum.endswith("]"):
             siglum = siglum[1:-1]
             items = list(source_description.items())
-            items.insert(3, ('missing', True))
+            items.insert(3, ("missing", True))
             source_description = dict(items)
 
         siglum_string = siglum + siglum_addendum
-        source_id = 'source_' + siglum_string if siglum_string else ''
+        source_id = "source_" + siglum_string if siglum_string else ""
 
         # Update source description
-        source_description['id'] = source_id
-        source_description['siglum'] = siglum
-        source_description['siglumAddendum'] = siglum_addendum
-        source_description['type'] = self._strip_tag(paras[1], 'p') or ''
-        source_description['location'] = self._strip_tag(paras[2], 'p') or ''
-        source_description['description'] = self._get_description(paras, source_id)
+        source_description["id"] = source_id
+        source_description["siglum"] = siglum
+        source_description["siglumAddendum"] = siglum_addendum
+        source_description["type"] = self._strip_tag(paras[1], "p") or ""
+        source_description["location"] = self._strip_tag(paras[2], "p") or ""
+        source_description["description"] = self._get_description(paras, source_id)
 
         return source_description
 
@@ -74,7 +87,7 @@ class ConversionUtilsHelper:
 
     def find_siglum_indices(self, paras: List[Tag]) -> List[int]:
         """
-        Finds the indices of paragraphs in a list of BeautifulSoup `Tag` objects 
+        Finds the indices of paragraphs in a list of BeautifulSoup `Tag` objects
             that contain a single bold siglum.
 
         Args:
@@ -85,26 +98,28 @@ class ConversionUtilsHelper:
                 that contain a single bold siglum.
         """
         # pattern for bold formatted single siglum with optional addition, like A or Ac
-        siglum_pattern = re.compile(
-            r'^<p><strong>([A-Z])</strong></p>$')
+        siglum_pattern = re.compile(r"^<p><strong>([A-Z])</strong></p>$")
 
-        siglum_missing_pattern = re.compile(
-            r'^<p><strong>\[([A-Z])\]</strong></p>$')
+        siglum_missing_pattern = re.compile(r"^<p><strong>\[([A-Z])\]</strong></p>$")
 
         siglum_with_addendum_pattern = re.compile(
-            r'^<p><strong>([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup></strong></p>$')
+            r"^<p><strong>([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup></strong></p>$"
+        )
 
         siglum_with_addendum_missing_pattern = re.compile(
-            r'^<p><strong>\[([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup>\]</strong></p>$')
+            r"^<p><strong>\[([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup>\]</strong></p>$"
+        )
 
         siglum_indices = []
 
         for index, para in enumerate(paras):
             # if para contains the pattern for a siglum
-            if (siglum_pattern.match(str(para)) or
-                siglum_missing_pattern.match(str(para)) or
-                siglum_with_addendum_pattern.match(str(para)) or
-                    siglum_with_addendum_missing_pattern.match(str(para))):
+            if (
+                siglum_pattern.match(str(para))
+                or siglum_missing_pattern.match(str(para))
+                or siglum_with_addendum_pattern.match(str(para))
+                or siglum_with_addendum_missing_pattern.match(str(para))
+            ):
                 siglum_indices.append(index)
 
         return siglum_indices
@@ -115,16 +130,16 @@ class ConversionUtilsHelper:
 
     def strip_tag_and_clean(self, content, tag):
         """
-        Strips opening and closing tags from an HTML/XML string and strips surrounding paragraph tags.
+        Strips opening and closing tags from an HTML string and strips surrounding paragraph tags.
 
         Args:
         content (str): The input string.
         tag (str): The name of the tag to strip.
 
         Returns:
-        str: The content within the specified tags, with leading and trailing whitespace removed. 
+        str: The content within the specified tags, with leading and trailing whitespace removed.
         """
-        return self._strip_tag(self._strip_tag(content, tag), 'p')
+        return self._strip_tag(self._strip_tag(content, tag), "p")
 
     ############################################
     # Helper function: _get_siglum
@@ -140,9 +155,8 @@ class ConversionUtilsHelper:
         Returns:
             Tuple[str, str]: A tuple containing the siglum and the siglum addendum.
         """
-        siglum_sup_tag = paras[0].find('sup') or ''
-        siglum_addendum = siglum_sup_tag.get_text(
-            strip=True) if siglum_sup_tag else ''
+        siglum_sup_tag = paras[0].find("sup") or ""
+        siglum_addendum = siglum_sup_tag.get_text(strip=True) if siglum_sup_tag else ""
         if siglum_sup_tag:
             siglum_sup_tag.extract()
         siglum = paras[0].get_text(strip=True)
@@ -164,30 +178,30 @@ class ConversionUtilsHelper:
             Description: A dictionary representing the description of the source description.
         """
         description = copy.deepcopy(defaultDescription)
-        desc = self._strip_tag(paras[3], 'p') or ''
-        description['desc'].append(desc)
+        desc = self._strip_tag(paras[3], "p") or ""
+        description["desc"].append(desc)
 
         # Define labels and corresponding keys in the description dictionary
         description_labels_keys = [
-            ('Beschreibstoff:', 'writingMaterialString'),
-            ('Schreibstoff:', 'writingInstruments'),
-            ('Titel:', 'title'),
-            ('Datierung:', 'date'),
-            ('Paginierung:', 'pagination'),
-            ('Taktzahlen:', 'measureNumbers'),
-            ('Besetzung:', 'instrumentation'),
-            ('Eintragungen:', 'annotations')
+            ("Beschreibstoff:", "writingMaterialString"),
+            ("Schreibstoff:", "writingInstruments"),
+            ("Titel:", "title"),
+            ("Datierung:", "date"),
+            ("Paginierung:", "pagination"),
+            ("Taktzahlen:", "measureNumbers"),
+            ("Besetzung:", "instrumentation"),
+            ("Eintragungen:", "annotations"),
         ]
 
         # Get content for each label and assign it to the corresponding key
         for label, key in description_labels_keys:
             content = self._get_paragraph_content_by_label(label, paras)
-            if key == 'writingInstruments':
+            if key == "writingInstruments":
                 content = self._extract_writing_instruments(content)
             description[key] = content
 
         # Get content items
-        description['content'] = self._get_content_items(paras, source_id)
+        description["content"] = self._get_content_items(paras, source_id)
 
         return description
 
@@ -197,27 +211,28 @@ class ConversionUtilsHelper:
 
     def _get_content_items(self, paras: List[Tag], source_id: str) -> List[str]:
         """
-        Extracts the content items from a list of BeautifulSoup `Tag` objects representing paragraphs.
+        Extracts the content items from a list of BeautifulSoup `Tag` objects
+        representing paragraphs.
 
         Args:
-            paras (List[Tag]): A list of BeautifulSoup `Tag` objects representing paragraphs.
+            paras (List[Tag]): A list of BeautifulSoup `Tag` objects
+            representing paragraphs.
             source_id (str): The ID of the source description.
 
         Returns:
             List[str]: A list of content items extracted from the paragraphs.
         """
         # Get indices of content and comments
-        content_index = self._get_paragraph_index_by_label('Inhalt:', paras)
-        comments_index = self._get_paragraph_index_by_label(
-            'Textkritischer Kommentar:', paras)
+        content_index = self._get_paragraph_index_by_label("Inhalt:", paras)
+        comments_index = self._get_paragraph_index_by_label("Textkritischer Kommentar:", paras)
         if comments_index == -1:
             comments_index = len(paras) - 1
 
         if content_index == -1:
-            print('No content found for', source_id)
+            print("No content found for", source_id)
             return []
 
-        return self._get_items(paras[(content_index + 1):comments_index])
+        return self._get_items(paras[(content_index + 1): comments_index])
 
     ############################################
     # Helper function: _extract_writing_instruments
@@ -232,24 +247,26 @@ class ConversionUtilsHelper:
 
         Returns:
             A dictionary of type WritingInstruments that represents the set of writing instruments
-                extracted from the text string. If no writing instruments are found in the input text, 
+                extracted from the text string.
+                If no writing instruments are found in the input text,
                 the default value of an empty main writing instrument and
                 an empty list of secondary writing instruments is returned.
         """
         # Default value for empty writing instruments
-        writing_instruments = {'main': '', 'secondary': []}
+        writing_instruments = {"main": "", "secondary": []}
         if writing_instruments_text is not None:
-            stripped_writing_instruments = self._strip_by_delimiter(
-                writing_instruments_text, ';')
+            stripped_writing_instruments = self._strip_by_delimiter(writing_instruments_text, ";")
 
             # Strip . from last main and secondary writing instruments
-            main = stripped_writing_instruments[0].strip().rstrip('.')
+            main = stripped_writing_instruments[0].strip().rstrip(".")
             if len(stripped_writing_instruments) > 1:
-                secondary = [instr.strip().rstrip('.')
-                             for instr in self._strip_by_delimiter(stripped_writing_instruments[1], ',')]
+                secondary = [
+                    instr.strip().rstrip(".")
+                    for instr in self._strip_by_delimiter(stripped_writing_instruments[1], ",")
+                ]
             else:
                 secondary = []
-            writing_instruments = {'main': main, 'secondary': secondary}
+            writing_instruments = {"main": main, "secondary": secondary}
         return writing_instruments
 
     ############################################
@@ -269,10 +286,10 @@ class ConversionUtilsHelper:
             List[BeautifulSoup.Tag]: A list of all sibling paragraphs.
         """
         # Check if the current paragraph contains a <strong> tag
-        if sibling_para.find('strong'):
+        if sibling_para.find("strong"):
             return paras
         # Check if the current paragraph ends with a period
-        if sibling_para.text.endswith('.'):
+        if sibling_para.text.endswith("."):
             paras.append(sibling_para)
             return paras
         # If the current paragraph does not meet the criteria, recursively search the next sibling
@@ -314,15 +331,16 @@ class ConversionUtilsHelper:
             folio_str (str): The string indicating the folio or page marker, such as 'Bl.' or 'S.'.
 
         Returns:
-            str: The extracted folio label if found in the paragraph text, otherwise an empty string.
+            str: The extracted folio label (if found), otherwise an empty string.
         """
+
         def process_text(text, string):
-            text = text.lstrip('\t')
-            text = text.replace(string + '\xa0', '').strip()
-            text = text.replace(string, '').strip()
+            text = text.lstrip("\t")
+            text = text.replace(string + "\xa0", "").strip()
+            text = text.replace(string, "").strip()
             return text
 
-        folio_label = ''
+        folio_label = ""
 
         if FOLIO_STR in stripped_para_text:
             folio_label = process_text(stripped_para_text, FOLIO_STR)
@@ -349,13 +367,13 @@ class ConversionUtilsHelper:
         folios = []
 
         for para in sibling_paras:
-            stripped_para_text = self._strip_by_delimiter(para.text, ' \t')
+            stripped_para_text = self._strip_by_delimiter(para.text, " \t")
             if len(stripped_para_text) != 2:
-                stripped_para_text = self._strip_by_delimiter(para.text, '\t')
+                stripped_para_text = self._strip_by_delimiter(para.text, "\t")
 
             # Check sibling paragraph for folioStr or pageStr to create a new folio entry
             folio_found = re.search(FOLIO_STR, para.text) is not None
-            page_found = re.search(r'S\.', para.text) is not None
+            page_found = re.search(r"S\.", para.text) is not None
             has_folio_str = folio_found or page_found
 
             if has_folio_str:
@@ -364,25 +382,24 @@ class ConversionUtilsHelper:
 
                 # Extract folio label
                 if stripped_para_text:
-                    if (FOLIO_STR in stripped_para_text[0] or
-                            PAGE_STR in stripped_para_text[0]):
-                        folio['folio'] = self._get_folio_label(stripped_para_text[0].strip())
-                    elif (len(stripped_para_text) > 2 and
-                            (FOLIO_STR in stripped_para_text[1] or
-                             PAGE_STR in stripped_para_text[1])):
-                        folio['folio'] = self._get_folio_label(stripped_para_text[1].strip())
+                    if FOLIO_STR in stripped_para_text[0] or PAGE_STR in stripped_para_text[0]:
+                        folio["folio"] = self._get_folio_label(stripped_para_text[0].strip())
+                    elif len(stripped_para_text) > 2 and (
+                        FOLIO_STR in stripped_para_text[1] or PAGE_STR in stripped_para_text[1]
+                    ):
+                        folio["folio"] = self._get_folio_label(stripped_para_text[1].strip())
 
                 # Check if the paragraph contains a page marker
                 if page_found:
                     items = list(folio.items())
-                    items.insert(1, ('isPage', True))
+                    items.insert(1, ("isPage", True))
                     folio = dict(items)
 
                 # Check if the paragraph contains no systemStr, then add folioDescription
                 if not para.find(string=re.compile(SYSTEM_STR)):
-                    folio['folioDescription'] = stripped_para_text[1].strip()
+                    folio["folioDescription"] = stripped_para_text[1].strip()
                 else:
-                    folio['systemGroups'] = [self._get_system_group(stripped_para_text)]
+                    folio["systemGroups"] = [self._get_system_group(stripped_para_text)]
 
                 # Add folio to folios
                 folios.append(folio)
@@ -390,7 +407,7 @@ class ConversionUtilsHelper:
             # If there is no folioStr, but a systemStr,
             # add a new systemGroup to the folio's systemGroups
             elif not has_folio_str and para.find(string=re.compile(SYSTEM_STR)):
-                folio['systemGroups'].append(self._get_system_group(stripped_para_text))
+                folio["systemGroups"].append(self._get_system_group(stripped_para_text))
 
         return folios
 
@@ -409,49 +426,49 @@ class ConversionUtilsHelper:
             ContentItem: A dictionary containing the extracted content item information.
         """
         # Initialize variables
-        item_label = ''
-        item_link_to = ''
-        item_description = ''
-        delimiter = '('
+        item_label = ""
+        item_link_to = ""
+        item_description = ""
+        delimiter = "("
 
         # Get content of para with inner tags
-        para_content = self._strip_tag(para, 'p')
+        para_content = self._strip_tag(para, "p")
         stripped_para_content = self._strip_by_delimiter(para_content, delimiter)
 
         # Get text content of para without inner tags
         stripped_para_text = self._strip_by_delimiter(para.text, delimiter)
 
         if len(stripped_para_content) > 1:
-            if (para_content.find('strong') and
-                (stripped_para_text[0].startswith('M ') or
-                    stripped_para_text[0].startswith('M* '))):
+            if para_content.find("strong") and (
+                stripped_para_text[0].startswith("M ") or stripped_para_text[0].startswith("M* ")
+            ):
                 # Extract itemLabel
                 item_label = stripped_para_text[0].strip()
 
                 # When there is a slash in the item label,
                 # it means that we probably have multiple sketch items for a row table.
                 # In that case, link to 'SkRT'
-                if item_label.find('/') != -1:
-                    item_link_to = 'SkRT'
+                if item_label.find("/") != -1:
+                    item_link_to = "SkRT"
                 # In all other cases, link to the id created from the itemLabel
                 else:
-                    item_link_to = item_label.replace(
-                        ' ', '_').replace('.', '_').replace('*', 'star')
+                    item_link_to = (
+                        item_label.replace(" ", "_").replace(".", "_").replace("*", "star")
+                    )
 
             # Extract itemDescription
             # (re-add delimiter that was removed in the stripping action above
             # and remove trailing colon)
-            item_description = delimiter + \
-                stripped_para_content[1].strip().rstrip(':')
+            item_description = delimiter + stripped_para_content[1].strip().rstrip(":")
 
         elif len(stripped_para_content) == 1:
-            item_description = stripped_para_content[0].strip().rstrip(':')
+            item_description = stripped_para_content[0].strip().rstrip(":")
 
         # Create item object
         item = copy.deepcopy(defaultContentItem)
-        item['item'] = item_label
-        item['itemLinkTo'] = item_link_to
-        item['itemDescription'] = item_description
+        item["item"] = item_label
+        item["itemLinkTo"] = item_link_to
+        item["itemDescription"] = item_description
 
         return item
 
@@ -461,24 +478,26 @@ class ConversionUtilsHelper:
 
     def _get_items(self, paras: List[Tag]) -> List[ContentItem]:
         """
-        Given a list of BeautifulSoup Tag objects representing paragraphs, 
-        extracts the items and their associated folios from the paragraphs 
+        Given a list of BeautifulSoup Tag objects representing paragraphs,
+        extracts the items and their associated folios from the paragraphs
         and returns a list of content item dictionaries.
 
         Parameters:
         - paras (List[Tag]): A list of BeautifulSoup Tag objects representing paragraphs.
 
         Returns:
-        - List[ContentItem]: A list of dictionaries, where each dictionary represents a content item 
+        - List[ContentItem]: A list of dictionaries, where each dictionary represents a content item
                             and its associated folios.
         """
         items = []
 
         for para in paras:
 
-            if (not para.text.startswith('\t') and
-                not para.text.startswith(PAGE_STR) and
-                    not para.text.startswith(FOLIO_STR)):
+            if (
+                not para.text.startswith("\t")
+                and not para.text.startswith(PAGE_STR)
+                and not para.text.startswith(FOLIO_STR)
+            ):
                 # Find item
                 item = self._get_item(para)
 
@@ -489,7 +508,7 @@ class ConversionUtilsHelper:
                 # Find folios of all paragraphs of an item
                 folios = self._get_folios(sibling_paras)
 
-                item['folios'] = folios
+                item["folios"] = folios
                 items.append(item)
 
         return items
@@ -500,7 +519,7 @@ class ConversionUtilsHelper:
 
     def _get_paragraph_content_by_label(self, label: str, paras: List[Tag]) -> str:
         """
-        Returns the content of the paragraph containing the specified label 
+        Returns the content of the paragraph containing the specified label
         within the BeautifulSoup object. If the label is not found, an empty string is returned.
 
         Args:
@@ -508,29 +527,29 @@ class ConversionUtilsHelper:
             paras (List[Tag]): The list of BeautifulSoup tags to search within.
 
         Returns:
-            str: The content of the BeautifulSoup `p` tag containing the label, 
+            str: The content of the BeautifulSoup `p` tag containing the label,
                 with leading and trailing whitespace removed.
         """
         content_paragraph = self._find_tag_with_label_in_soup(label, paras)
 
         if content_paragraph is None:
-            return ''
+            return ""
 
-        stripped_content = self._strip_tag(content_paragraph, 'p')
+        stripped_content = self._strip_tag(content_paragraph, "p")
         content = self._strip_by_delimiter(stripped_content, label)[1]
 
-        if content.endswith(';'):
+        if content.endswith(";"):
             # Check for sibling paragraphs that belong to the same content
             # (separated by semicolons)
             sibling = content_paragraph.next_sibling
 
-            while sibling is not None and sibling.name == 'p':
-                sibling_content = self._strip_tag(sibling, 'p')
-                if sibling_content.endswith('.'):
-                    content += '<br />' + sibling_content
+            while sibling is not None and sibling.name == "p":
+                sibling_content = self._strip_tag(sibling, "p")
+                if sibling_content.endswith("."):
+                    content += "<br />" + sibling_content
                     break
-                if sibling_content.endswith(';'):
-                    content += '<br />' + sibling_content
+                if sibling_content.endswith(";"):
+                    content += "<br />" + sibling_content
                 else:
                     break
 
@@ -551,7 +570,7 @@ class ConversionUtilsHelper:
             paras (List[Tag]): The list of BeautifulSoup tags to search within.
 
         Returns:
-            The index of the BeautifulSoup `p` tag containing the specified label, or -1 if not found.
+            Index of p tag with given label in BeautifulSoup, or -1 if absent.
         """
         tag_with_label = self._find_tag_with_label_in_soup(label, paras)
         try:
@@ -591,11 +610,10 @@ class ConversionUtilsHelper:
 
             # Extract system label
             if SYSTEM_STR in para:
-                stripped_system_text = self._strip_by_delimiter(para, ':')
-                system_label = stripped_system_text[0].replace(
-                    SYSTEM_STR, '').strip()
+                stripped_system_text = self._strip_by_delimiter(para, ":")
+                system_label = stripped_system_text[0].replace(SYSTEM_STR, "").strip()
 
-                system['system'] = system_label
+                system["system"] = system_label
 
                 # Extract measure label
                 if len(stripped_system_text) == 1:
@@ -603,9 +621,10 @@ class ConversionUtilsHelper:
 
                 if MEASURE_STR in stripped_system_text[1]:
                     # Remove leading measure string and trailing colon or dot.
-                    measure_label = stripped_system_text[1].lstrip(
-                        MEASURE_STR).rstrip('.;').strip()
-                    system['measure'] = measure_label
+                    measure_label = (
+                        stripped_system_text[1].lstrip(MEASURE_STR).rstrip(".;").strip()
+                    )
+                    system["measure"] = measure_label
                 else:
                     # Extract row label
                     # pattern matches, e.g., "Gg (1)", "KUgis (38)",
@@ -617,12 +636,12 @@ class ConversionUtilsHelper:
                         row_text = re.findall(pattern, stripped_system_text[1])[0]
 
                         row = copy.deepcopy(defaultRow)
-                        row['rowType'] = row_text[0]
-                        row['rowBase'] = row_text[1]
+                        row["rowType"] = row_text[0]
+                        row["rowBase"] = row_text[1]
                         if len(row_text) > 3:
-                            row['rowNumber'] = row_text[3]
+                            row["rowNumber"] = row_text[3]
 
-                        system['row'] = row
+                        system["row"] = row
 
                 system_group.append(system)
 
@@ -643,8 +662,7 @@ class ConversionUtilsHelper:
         Returns:
             List[str]: A list of stripped substrings.
         """
-        stripped_substring_list: List[str] = [
-            s.strip() for s in input_str.split(delimiter)]
+        stripped_substring_list: List[str] = [s.strip() for s in input_str.split(delimiter)]
         return stripped_substring_list
 
     ############################################
@@ -663,11 +681,11 @@ class ConversionUtilsHelper:
         Returns:
         str: The content within the specified tags, with leading and trailing whitespace removed.
         """
-        stripped_str = str(tag) if tag is not None else ''
+        stripped_str = str(tag) if tag is not None else ""
 
         # Strip opening and closing tags from input
-        opening_tag = '<' + tag_str + '>'
-        closing_tag = '</' + tag_str + '>'
+        opening_tag = "<" + tag_str + ">"
+        closing_tag = "</" + tag_str + ">"
         stripped_str = stripped_str.removeprefix(opening_tag)
         stripped_str = stripped_str.removesuffix(closing_tag)
 

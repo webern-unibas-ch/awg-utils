@@ -1,4 +1,6 @@
-"""Utility functions for file operations. This includes reading from WORD and writing to JSON."""
+"""
+Utility functions for file operations. This includes reading from WORD and writing to JSON.
+"""
 
 import json
 import os
@@ -11,7 +13,7 @@ import mammoth
 # Public class: FileUtils
 ############################################
 class FileUtils:
-    """A class that contains utility functions for file operations which include reading and writing files."""
+    """A class that contains utility functions for file operations like reading or writing."""
 
     ############################################
     # Public class function: read_html_from_word_file

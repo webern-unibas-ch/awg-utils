@@ -1,10 +1,10 @@
 """Convert a source description from Word to JSON.
 
-This script reads in a Word file (.docx) with source descriptions 
+This script reads in a Word file (.docx) with source descriptions
 and converts it to to a JSON file (.json).
 
 This script requires that `bs4` (BeautifulSoup) and `mammoth` be installed within the Python
-environment you are running this script in. It also requires the `utils.py` file with the 
+environment you are running this script in. It also requires the `utils.py` file with the
 `ConversionUtils` class to be in the same directory.
 
 The script expects a Word file input structured in the following way:
@@ -33,9 +33,9 @@ The script expects a Word file input structured in the following way:
     >
 
     <Section with the CONTENT of the source including the following information:
-        <LABEL of the content item in bold formatting (TYPE of item):> 
+        <LABEL of the content item in bold formatting (TYPE of item):>
             <[TAB] FOLIO label [TAB] SYSTEM numbers: T. MEASURE numbers>
-                <{TAB][TAB] if needed, multiple lines with information about systems and measures> 
+                <{TAB][TAB] if needed, multiple lines with information about systems and measures>
     Inhalt:
     M* 408 (Tintenniederschrift von Studienkomposition für Klavier M* 408):
     ->  Bl. 1r -> 	System 2–5: T. 1–9;

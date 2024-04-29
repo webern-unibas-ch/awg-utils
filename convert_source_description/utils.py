@@ -1,4 +1,5 @@
-"""Utility functions for the conversion of source descriptions from Word to JSON.
+"""
+Utility functions for the conversion of source descriptions from Word to JSON.
 
 This module should not be run directly. Instead, run the `convert_source_description.py` module.
 """

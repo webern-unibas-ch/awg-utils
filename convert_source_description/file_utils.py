@@ -36,7 +36,7 @@ class FileUtils:
             try:
                 style_map = """
                 u => u
-                small-caps => span.small-caps
+                small-caps => span.smallcaps
                 """
                 result = mammoth.convert_to_html(
                     docx_file, style_map=style_map)

@@ -28,13 +28,15 @@ class FileUtils:
         Returns:
             str: The content of the Word file as an HTML string.
         """
-        source_file_name = file_path + ".docx"
-        if not os.path.exists(source_file_name):
+        docx_file_name = file_path + ".docx"
+        if not os.path.exists(docx_file_name):
             raise FileNotFoundError("File not found: " + file_path + ".docx")
 
-        with open(source_file_name, "rb") as source_file:
+        with open(docx_file_name, "rb") as docx_file:
             try:
-                result = mammoth.convert_to_html(source_file)
+                result = mammoth.convert_to_html(
+                    docx_file, style_map=style_map)
+
                 return result.value  # The generated HTML
             except ValueError as error:
                 raise ValueError('Error converting file: ' +

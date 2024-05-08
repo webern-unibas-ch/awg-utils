@@ -244,15 +244,19 @@ class ConversionUtilsHelper:
         Returns:
             List[str]: A list of content items extracted from the paragraphs.
         """
-        # Get indices of content and comments
+        # Get indices of content
         content_index = self._get_paragraph_index_by_label("Inhalt:", paras)
-        comments_index = self._get_paragraph_index_by_label("Textkritischer Kommentar:", paras)
-        if comments_index == -1:
-            comments_index = len(paras) - 1
-
         if content_index == -1:
             print("No content found for", source_id)
             return []
+
+        # Get indices of comments by checking for possible labels
+        # If no comments labels are found, set the index to the last paragraph
+        comments_labels = ["Textkritischer Kommentar:", "Textkritische Anmerkungen:"]
+        comments_index = next(
+            (self._get_paragraph_index_by_label(
+                label, paras) for label in comments_labels if self._get_paragraph_index_by_label(
+                label, paras) != -1), len(paras) - 1)
 
         return self._get_items(paras[(content_index + 1): comments_index])
 

@@ -97,17 +97,21 @@ class ConversionUtilsHelper:
             A list of integers representing the indices of the paragraphs
                 that contain a single bold siglum.
         """
-        # pattern for bold formatted single siglum with optional addition, like A or Ac
-        siglum_pattern = re.compile(r"^<p><strong>([A-Z])</strong></p>$")
+        # pattern for bold formatted single siglum with optional addition, like A, B, or G
+        siglum_pattern = re.compile(r"^<p>\s*<strong>\s*([A-Z])\s*</strong>\s*</p>$")
 
-        siglum_missing_pattern = re.compile(r"^<p><strong>\[([A-Z])\]</strong></p>$")
+        # pattern for bold formatted single siglum with square brackets, like [A], [B], or [G]
+        siglum_missing_pattern = re.compile(r"^<p>\s*<strong>\s*\[([A-Z])\]\s*</strong>\s*</p>$")
 
+        # pattern for bold formatted siglum with superscript addition, like Ac, AH, or AF1–2
         siglum_with_addendum_pattern = re.compile(
-            r"^<p><strong>([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup></strong></p>$"
+            r"^<p>\s*<strong>\s*([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup>\s*</strong>\s*</p>$"
         )
 
+        # pattern for bold formatted siglum with superscript addition and square
+        # brackets, like [Ac], [AH], or [AF1–2]
         siglum_with_addendum_missing_pattern = re.compile(
-            r"^<p><strong>\[([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup>\]</strong></p>$"
+            r"^<p>\s*<strong>\s*\[([A-Z])<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup>\]</strong>\s*</p>$"
         )
 
         siglum_indices = []

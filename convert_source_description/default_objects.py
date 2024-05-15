@@ -36,7 +36,7 @@ defaultDescription: Description = {
 
 defaultContentItem: ContentItem = {
     "item": "",
-    "itemLinkTo": "",
+    "itemLinkTo": {},
     "itemDescription": "",
     "folios": []
 }

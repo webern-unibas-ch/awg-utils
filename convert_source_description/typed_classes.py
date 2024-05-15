@@ -29,10 +29,16 @@ class Folio(TypedDict):
     systemGroups: List[List[System]]
 
 
+class ContentItemLinkTo(TypedDict):
+    """A typed dictionary that represents a content item linkTo section."""
+    complexId: str
+    sheetId: str
+
+
 class ContentItem(TypedDict):
     """A typed dictionary that represents a content item."""
     item: str
-    itemLinkTo: str
+    itemLinkTo: ContentItemLinkTo
     itemDescription: str
     folios: List[Folio]
 

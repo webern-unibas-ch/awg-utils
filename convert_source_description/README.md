@@ -8,6 +8,9 @@ The python script `convert_source_description.py` will create a JSON file `sourc
 
 ## HOW?
 
+> [!NOTE]
+> This converter uses latest Python version (3.12 for now). Make sure to have Python installed on your system, or get it from here: [https://www.python.org/downloads/](https://www.python.org/downloads/)
+
 ### Preparation
 
 * Make sure that you have a source description file in WORD (`.docx`) formatted according to these [style guidelines](how_to/word-formatting.md).
@@ -20,7 +23,7 @@ Now you're good to run the conversion script.
 
 ### Conversion
 
-* In the terminal, type `pip install -r requirements.txt` to install the latest library versions.
+* In the terminal, type `pip install --require-hashes -r requirements.txt` to install the latest library versions with verified hashes.
 * In the terminal, type `python convert_source_description.py <SOURCEDESC_DIRECTORY> <SOURCEDESC_FILENAME>`.
 * Replace `<SOURCEDESC_DIRECTORY>` with the path to your local directory that contains the source-description (with `/` at the end).
 * Replace `<SOURCEDESC_FILENAME>` with the file name without the file type ending `.docx`.

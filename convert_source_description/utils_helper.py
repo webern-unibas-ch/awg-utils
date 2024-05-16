@@ -457,7 +457,7 @@ class ConversionUtilsHelper:
         """
         # Initialize variables
         item_label = ""
-        item_link_to = ""
+        item_link_to = {}
         item_description = ""
         delimiter = "("
 
@@ -475,16 +475,17 @@ class ConversionUtilsHelper:
                 # Extract itemLabel
                 item_label = stripped_para_text[0].strip()
 
+                # Create itemLinkTo dictionary
+                sheet_id = item_label.replace(" ", "_").replace(".", "_").replace("*", "star")
+                complex_id = "".join(sheet_id.split("_")[0:2]).lower()
+
+                item_link_to = {"complexId": complex_id, "sheetId": sheet_id}
+
                 # When there is a slash in the item label,
                 # it means that we probably have multiple sketch items for a row table.
                 # In that case, link to 'SkRT'
                 if item_label.find("/") != -1:
-                    item_link_to = "SkRT"
-                # In all other cases, link to the id created from the itemLabel
-                else:
-                    item_link_to = (
-                        item_label.replace(" ", "_").replace(".", "_").replace("*", "star")
-                    )
+                    item_link_to["sheetId"] = "SkRT"
 
             # Extract itemDescription
             # (re-add delimiter that was removed in the stripping action above

@@ -31,10 +31,26 @@ from default_objects import (
 ############################################
 # Helper constants
 ############################################
-SYSTEM_STR = "System"
-MEASURE_STR = "T."
 FOLIO_STR = "Bl."
+M_SIGLE = "M "
+M_STAR_SIGLE = "M* "
+MEASURE_STR = "T."
 PAGE_STR = "S."
+ROWTABLE_SHEET_ID = "SkRT"
+STAR_STR = "star"
+SYSTEM_STR = "System"
+
+COLON = ":"
+DOT = "."
+PARENTHESIS = "("
+SEMICOLON = ";"
+SLASH = "/"
+STAR = "*"
+UNDERSCORE = "_"
+
+P_TAG = "p"
+STRONG_TAG = "strong"
+SUP_TAG = "sup"
 
 
 ############################################
@@ -75,8 +91,8 @@ class ConversionUtilsHelper:
         source_description["id"] = source_id
         source_description["siglum"] = siglum
         source_description["siglumAddendum"] = siglum_addendum
-        source_description["type"] = self._strip_tag(paras[1], "p") or ""
-        source_description["location"] = self._strip_tag(paras[2], "p") or ""
+        source_description["type"] = self._strip_tag(paras[1], P_TAG) or ""
+        source_description["location"] = self._strip_tag(paras[2], P_TAG) or ""
         source_description["description"] = self._get_description(paras, source_id)
 
         return source_description
@@ -165,7 +181,7 @@ class ConversionUtilsHelper:
         Returns:
         str: The content within the specified tags, with leading and trailing whitespace removed.
         """
-        return self._strip_tag(self._strip_tag(content, tag), "p")
+        return self._strip_tag(self._strip_tag(content, tag), P_TAG)
 
     ############################################
     # Helper function: _get_siglum
@@ -181,7 +197,7 @@ class ConversionUtilsHelper:
         Returns:
             Tuple[str, str]: A tuple containing the siglum and the siglum addendum.
         """
-        siglum_sup_tag = paras[0].find("sup") or ""
+        siglum_sup_tag = paras[0].find(SUP_TAG) or ""
         siglum_addendum = siglum_sup_tag.get_text(strip=True) if siglum_sup_tag else ""
         if siglum_sup_tag:
             siglum_sup_tag.extract()
@@ -204,7 +220,7 @@ class ConversionUtilsHelper:
             Description: A dictionary representing the description of the source description.
         """
         description = copy.deepcopy(defaultDescription)
-        desc = self._strip_tag(paras[3], "p") or ""
+        desc = self._strip_tag(paras[3], P_TAG) or ""
         description["desc"].append(desc)
 
         # Define labels and corresponding keys in the description dictionary
@@ -285,13 +301,14 @@ class ConversionUtilsHelper:
         # Default value for empty writing instruments
         writing_instruments = {"main": "", "secondary": []}
         if writing_instruments_text is not None:
-            stripped_writing_instruments = self._strip_by_delimiter(writing_instruments_text, ";")
+            stripped_writing_instruments = self._strip_by_delimiter(
+                writing_instruments_text, SEMICOLON)
 
             # Strip . from last main and secondary writing instruments
-            main = stripped_writing_instruments[0].strip().rstrip(".")
+            main = stripped_writing_instruments[0].strip().rstrip(DOT)
             if len(stripped_writing_instruments) > 1:
                 secondary = [
-                    instr.strip().rstrip(".")
+                    instr.strip().rstrip(DOT)
                     for instr in self._strip_by_delimiter(stripped_writing_instruments[1], ",")
                 ]
             else:
@@ -316,10 +333,10 @@ class ConversionUtilsHelper:
             List[BeautifulSoup.Tag]: A list of all sibling paragraphs.
         """
         # Check if the current paragraph contains a <strong> tag
-        if sibling_para.find("strong"):
+        if sibling_para.find(STRONG_TAG):
             return paras
         # Check if the current paragraph ends with a period
-        if sibling_para.text.endswith("."):
+        if sibling_para.text.endswith(DOT):
             paras.append(sibling_para)
             return paras
         # If the current paragraph does not meet the criteria, recursively search the next sibling
@@ -459,41 +476,44 @@ class ConversionUtilsHelper:
         item_label = ""
         item_link_to = {}
         item_description = ""
-        delimiter = "("
 
         # Get content of para with inner tags
-        para_content = self._strip_tag(para, "p")
-        stripped_para_content = self._strip_by_delimiter(para_content, delimiter)
+        para_content = self._strip_tag(para, P_TAG)
 
-        # Get text content of para without inner tags
-        stripped_para_text = self._strip_by_delimiter(para.text, delimiter)
+        # Check if the paragraph starts with a strong formatted sketch sigle
+        if para_content.find(STRONG_TAG) and (
+            para.text.startswith(M_SIGLE) or para.text.startswith(M_STAR_SIGLE)
+        ):
+            # Extract itemLabel
+            # (Get first part of the text content of para, split by "(" )
+            item_label = self._strip_by_delimiter(para.text, PARENTHESIS)[0].strip()
 
-        if len(stripped_para_content) > 1:
-            if para_content.find("strong") and (
-                stripped_para_text[0].startswith("M ") or stripped_para_text[0].startswith("M* ")
-            ):
-                # Extract itemLabel
-                item_label = stripped_para_text[0].strip()
+            # Create itemLinkTo dictionary
+            sheet_id = item_label.replace(
+                " ",
+                UNDERSCORE).replace(
+                DOT,
+                UNDERSCORE).replace(
+                STAR,
+                STAR_STR)
+            complex_id = "".join(sheet_id.split(UNDERSCORE)[0:2]).lower()
 
-                # Create itemLinkTo dictionary
-                sheet_id = item_label.replace(" ", "_").replace(".", "_").replace("*", "star")
-                complex_id = "".join(sheet_id.split("_")[0:2]).lower()
+            item_link_to = {"complexId": complex_id, "sheetId": sheet_id}
 
-                item_link_to = {"complexId": complex_id, "sheetId": sheet_id}
-
-                # When there is a slash in the item label,
-                # it means that we probably have multiple sketch items for a row table.
-                # In that case, link to 'SkRT'
-                if item_label.find("/") != -1:
-                    item_link_to["sheetId"] = "SkRT"
+            # When there is a slash in the item label,
+            # it means that we probably have multiple sketch items for a row table.
+            # In that case, link to 'SkRT'
+            if item_label.find(SLASH) != -1:
+                item_link_to["sheetId"] = ROWTABLE_SHEET_ID
 
             # Extract itemDescription
-            # (re-add delimiter that was removed in the stripping action above
+            # (re-add delimiter that gets removed in the stripping action
             # and remove trailing colon)
-            item_description = delimiter + stripped_para_content[1].strip().rstrip(":")
+            item_description = PARENTHESIS + \
+                self._strip_by_delimiter(para_content, PARENTHESIS)[1].strip().rstrip(COLON)
 
-        elif len(stripped_para_content) == 1:
-            item_description = stripped_para_content[0].strip().rstrip(":")
+        else:
+            item_description = para_content.strip().rstrip(COLON)
 
         # Create item object
         item = copy.deepcopy(defaultContentItem)
@@ -566,20 +586,20 @@ class ConversionUtilsHelper:
         if content_paragraph is None:
             return ""
 
-        stripped_content = self._strip_tag(content_paragraph, "p")
+        stripped_content = self._strip_tag(content_paragraph, P_TAG)
         content = self._strip_by_delimiter(stripped_content, label)[1]
 
-        if content.endswith(";"):
+        if content.endswith(SEMICOLON):
             # Check for sibling paragraphs that belong to the same content
             # (separated by semicolons)
             sibling = content_paragraph.next_sibling
 
-            while sibling is not None and sibling.name == "p":
-                sibling_content = self._strip_tag(sibling, "p")
-                if sibling_content.endswith("."):
+            while sibling is not None and sibling.name == P_TAG:
+                sibling_content = self._strip_tag(sibling, P_TAG)
+                if sibling_content.endswith(DOT):
                     content += "<br />" + sibling_content
                     break
-                if sibling_content.endswith(";"):
+                if sibling_content.endswith(SEMICOLON):
                     content += "<br />" + sibling_content
                 else:
                     break
@@ -641,7 +661,7 @@ class ConversionUtilsHelper:
 
             # Extract system label
             if SYSTEM_STR in para:
-                stripped_system_text = self._strip_by_delimiter(para, ":")
+                stripped_system_text = self._strip_by_delimiter(para, COLON)
                 system_label = stripped_system_text[0].replace(SYSTEM_STR, "").strip()
 
                 system["system"] = system_label
@@ -651,7 +671,7 @@ class ConversionUtilsHelper:
                     continue
 
                 if MEASURE_STR in stripped_system_text[1]:
-                    # Remove leading measure string and trailing colon or dot.
+                    # Remove leading measure string and trailing dot or semicolon.
                     measure_label = (
                         stripped_system_text[1].lstrip(MEASURE_STR).rstrip(".;").strip()
                     )

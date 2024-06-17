@@ -23,9 +23,9 @@ isort==5.13.2 \
     --hash=sha256:48fdfcb9face5d58a4f6dde2e72a1fb8dcaf8ab26f95ab49fab84c2ddefb0109 \
     --hash=sha256:8ca5e72a8d85860d5a3fa69b8745237f2939afe12dbf656afbcb47fe72d947a6
     # via pylint
-mammoth==1.7.1 \
-    --hash=sha256:6eae397420707740cf01692cc09bf40774b9481a69182749a476f5333f5ce9ad \
-    --hash=sha256:d9d098d847ca211f6c7585f0a46e62d4db7aa68984bf3e70910923da606951cb
+mammoth==1.8.0 \
+    --hash=sha256:7e8aa7db53f4aa7e9620b22bf8b716f1a16c84e969de1a0b1f920c756184e3d8 \
+    --hash=sha256:b2abf2340809b13a903c8b65a27846466290b869f0dd56e4a1e3072c4be1ea86
     # via -r requirements.in
 mccabe==0.7.0 \
     --hash=sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325 \

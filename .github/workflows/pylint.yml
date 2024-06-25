@@ -1,6 +1,9 @@
 name: Pylint
 
-on: [push]
+on:   
+  push:
+  pull_request:
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -27,7 +30,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        python -m pip install --require-hashes --upgrade pip
+        python -m ensurepip --upgrade
         pip install --require-hashes -r ./convert_source_description/requirements.txt
     
     - name: Analysing the code with pylint

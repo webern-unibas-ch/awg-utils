@@ -41,6 +41,7 @@ STAR_STR = "star"
 SYSTEM_STR = "System"
 
 COLON = ":"
+COMMA = ","
 DOT = "."
 PARENTHESIS = "("
 SEMICOLON = ";"
@@ -225,25 +226,29 @@ class ConversionUtilsHelper:
 
         # Define labels and corresponding keys in the description dictionary
         description_labels_keys = [
-            ("Beschreibstoff:", "writingMaterialString"),
+            ("Beschreibstoff:", "writingMaterialStrings"),
             ("Schreibstoff:", "writingInstruments"),
-            ("Titel:", "title"),
-            ("Datierung:", "date"),
-            ("Paginierung:", "pagination"),
+            ("Titel:", "titles"),
+            ("Datierung:", "dates"),
+            ("Paginierung:", "paginations"),
             ("Taktzahlen:", "measureNumbers"),
-            ("Besetzung:", "instrumentation"),
+            ("Besetzung:", "instrumentations"),
             ("Eintragungen:", "annotations"),
         ]
 
         # Get content for each label and assign it to the corresponding key
         for label, key in description_labels_keys:
             content = self._get_paragraph_content_by_label(label, paras)
+
+            # Writing instruments require special handling
             if key == "writingInstruments":
-                content = self._extract_writing_instruments(content)
+                content = self._extract_writing_instruments(
+                    content[0]) if content else description[key]
+
             description[key] = content
 
         # Get content items
-        description["content"] = self._get_content_items(paras, source_id)
+        description["contents"] = self._get_content_items(paras, source_id)
 
         return description
 
@@ -309,7 +314,7 @@ class ConversionUtilsHelper:
             if len(stripped_writing_instruments) > 1:
                 secondary = [
                     instr.strip().rstrip(DOT)
-                    for instr in self._strip_by_delimiter(stripped_writing_instruments[1], ",")
+                    for instr in self._strip_by_delimiter(stripped_writing_instruments[1], COMMA)
                 ]
             else:
                 secondary = []
@@ -582,31 +587,33 @@ class ConversionUtilsHelper:
                 with leading and trailing whitespace removed.
         """
         content_paragraph = self._find_tag_with_label_in_soup(label, paras)
+        content_lines = []
 
         if content_paragraph is None:
-            return ""
+            return content_lines
 
         stripped_content = self._strip_tag(content_paragraph, P_TAG)
-        content = self._strip_by_delimiter(stripped_content, label)[1]
+        initial_content = self._strip_by_delimiter(stripped_content, label)[1]
 
-        if content.endswith(SEMICOLON):
+        content_lines.append(initial_content.strip().rstrip(DOT).rstrip(SEMICOLON))
+
+        if initial_content.endswith(SEMICOLON):
             # Check for sibling paragraphs that belong to the same content
             # (separated by semicolons)
             sibling = content_paragraph.next_sibling
 
             while sibling is not None and sibling.name == P_TAG:
                 sibling_content = self._strip_tag(sibling, P_TAG)
-                if sibling_content.endswith(DOT):
-                    content += "<br />" + sibling_content
-                    break
-                if sibling_content.endswith(SEMICOLON):
-                    content += "<br />" + sibling_content
+                if sibling_content.endswith(DOT) or sibling_content.endswith(SEMICOLON):
+                    content_lines.append(sibling_content.strip().rstrip(DOT).rstrip(SEMICOLON))
+                    if sibling_content.endswith(DOT):
+                        break
                 else:
                     break
 
                 sibling = sibling.next_sibling
 
-        return content.strip()
+        return content_lines
 
     ############################################
     # Helper function: _get_paragraph_index_by_label

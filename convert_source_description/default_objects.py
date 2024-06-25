@@ -20,18 +20,18 @@ defaultSourceDescription: SourceDescription = {
 
 defaultDescription: Description = {
     "desc": [],
-    "writingMaterialString": "",
+    "writingMaterialStrings": [],
     "writingInstruments": {
         "main": "",
         "secondary": []
     },
-    "title": "",
-    "date": "",
-    "pagination": "",
-    "measureNumbers": "",
-    "instrumentation": "",
-    "annotations": "",
-    "content": []
+    "titles": [],
+    "dates": [],
+    "paginations": [],
+    "measureNumbers": [],
+    "instrumentations": [],
+    "annotations": [],
+    "contents": []
 }
 
 defaultContentItem: ContentItem = {

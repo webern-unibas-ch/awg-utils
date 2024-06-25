@@ -52,15 +52,15 @@ class WritingInstruments(TypedDict):
 class Description(TypedDict):
     """A typed dictionary that represents a description of a source description."""
     desc: List[str]
-    writingMaterialString: str
+    writingMaterialStrings: List[str]
     writingInstruments: WritingInstruments
-    title: str
-    date: str
-    pagination: str
-    measureNumbers: str
-    instrumentation: str
-    annotations: str
-    content: List[ContentItem]
+    titles: List[str]
+    dates: List[str]
+    paginationss: List[str]
+    measureNumbers: List[str]
+    instrumentations: List[str]
+    annotations: List[str]
+    contents: List[ContentItem]
 
 
 class SourceDescription(TypedDict):

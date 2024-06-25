@@ -171,7 +171,7 @@ class ConversionUtilsHelper:
     # Public method: strip_tag_and_clean
     ############################################
 
-    def strip_tag_and_clean(self, content, tag):
+    def strip_tag_and_clean(self, content, tag) -> str:
         """
         Strips opening and closing tags from an HTML string and strips surrounding paragraph tags.
 
@@ -182,7 +182,8 @@ class ConversionUtilsHelper:
         Returns:
         str: The content within the specified tags, with leading and trailing whitespace removed.
         """
-        return self._strip_tag(self._strip_tag(content, tag), P_TAG)
+        stripped_content = self._strip_tag(self._strip_tag(content, tag), P_TAG)
+        return stripped_content.replace('</p><p>', ' <br /> ')
 
     ############################################
     # Helper function: _get_siglum

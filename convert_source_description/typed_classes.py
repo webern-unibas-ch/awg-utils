@@ -93,13 +93,19 @@ class TextcriticalComment(TypedDict):
     comment: str
 
 
+class TextcriticalCommentBlock(TypedDict):
+    """A typed dictionary that represents a textcritical comment block."""
+    blockHeader: str
+    blockComments: List[TextcriticalComment]
+
+
 class TextCritics(TypedDict):
     """A typed dictionary that represents a textcritics object."""
     id: str
     label: str
     description: List
     rowTable: bool
-    comments: List[TextcriticalComment]
+    comments: List[TextcriticalCommentBlock]
     linkBoxes: List[LinkBox]
 
 

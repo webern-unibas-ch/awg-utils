@@ -69,7 +69,12 @@ defaultTextcritics: TextCritics = {
     "label": "",
     "description": [],
     # "rowTable": False,
-    "comments": [],
+    "comments": [
+        {
+            "blockHeader": "",
+            "blockComments": []
+        }
+    ],
     "linkBoxes": []
 }
 

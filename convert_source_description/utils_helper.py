@@ -14,6 +14,8 @@ from typed_classes import (
     System,
     Folio,
     ContentItem,
+    TextCritics,
+    TextcriticsList,
     WritingInstruments,
     Description,
     SourceDescription,
@@ -152,7 +154,11 @@ class ConversionUtilsHelper:
     ############################################
     # Public method: process_table
     ############################################
-    def process_table(self, textcritics_list, table: Tag, table_index: int) -> None:
+    def process_table(
+            self,
+            textcritics_list: TextcriticsList,
+            table: Tag,
+            table_index: int) -> TextcriticsList:
         """
         Processes a table and extracts textcritical comments from it.
 
@@ -172,31 +178,19 @@ class ConversionUtilsHelper:
         textcritics['comments'].append(default_comment_block)
         block_index += 1
 
-        for row in rows_in_table[1:]:
-            columns_in_row = row.find_all('td')
-
-            # Check if the first td has a colspan attribute
-            if 'colspan' in columns_in_row[0].attrs:
-                # If the default comment block is empty, remove it
-                if not textcritics['comments'][0]['blockComments']:
-                    textcritics['comments'].pop(0)
-                    block_index -= 1
-
-                comment_block = copy.deepcopy(defaultTextcriticalCommentBlock)
-                comment_block['blockHeader'] = self._strip_tag_and_clean(
-                    columns_in_row[0], 'td')
-                textcritics['comments'].append(comment_block)
-                block_index += 1
-
-                continue
-
-            if block_index >= 0:
-                comment = self._get_comment(columns_in_row)
-                textcritics['comments'][block_index]['blockComments'].append(comment)
+        textcritics = self._process_table_rows(textcritics, rows_in_table, block_index)
 
         print(
             f"Appending textcritics for table {table_index + 1}...")
-        textcritics_list['textcritics'].append(textcritics)
+
+        # Determine if the table is for corrections based on the presence of "Korrektur"
+        is_corrections = "Korrektur" in rows_in_table[0].find_all('td')[-1].get_text(strip=True)
+
+        # Adjust textcritics output based on the presence of corrections
+        if is_corrections:
+            textcritics_list = self._process_corrections(textcritics_list, textcritics)
+        else:
+            textcritics_list['textcritics'].append(textcritics)
 
         return textcritics_list
 
@@ -231,7 +225,8 @@ class ConversionUtilsHelper:
         Extracts a textcritical comment object from a list of BeautifulSoup `Tag` objects.
 
         Args:
-            columns_in_row (List[Tag]): A list of BeautifulSoup `Tag` objects representing columns in a row.
+            columns_in_row (List[Tag]): A list of BeautifulSoup `Tag` objects
+                representing columns in a row.
 
         Returns:
             TextcriticalComment: A dictionary representing the textcritical comment.
@@ -765,6 +760,68 @@ class ConversionUtilsHelper:
                 system_group.append(system)
 
         return system_group
+
+    ############################################
+    # Helper function: _process_corrections
+    ############################################
+
+    def _process_corrections(self, textcritics_list: TextcriticsList,
+                             textcritics: TextCritics) -> TextcriticsList:
+        """
+        Processes textcritics as corrections and appends to the corrections list.
+
+        Args:
+            textcritics (dict): The textcritics object to process.
+            textcritics_list (dict): The dictionary containing textcritics and corrections lists.
+        """
+        textcritics_list['corrections'].append(textcritics)
+        textcritics.pop("linkBoxes", None)  # Remove linkBoxes property if it exists
+
+        # Remove svgGroupId property from textcritical comments
+        for comment_block in textcritics['comments']:
+            for comment in comment_block['blockComments']:
+                comment.pop("svgGroupId", None)  # Remove svgGroupId property if it exists
+
+        return textcritics_list
+
+    ############################################
+    # Helper function: _process_table_rows
+    ############################################
+    def _process_table_rows(self, textcritics, rows_in_table, block_index):
+        """
+        Processes the rows in a table and extracts textcritical comments from them.
+
+        Args:
+            textcritics: A dictionary representing the textcritical comments.
+            rows_in_table: A list of BeautifulSoup `Tag` objects representing rows in a table.
+            block_index: The index of the current comment block.
+
+        Returns:
+            A dictionary representing the textcritical comments.
+        """
+        for row in rows_in_table[1:]:
+            columns_in_row = row.find_all('td')
+
+            # Check if the first td has a colspan attribute
+            if 'colspan' in columns_in_row[0].attrs:
+                # If the default comment block is empty, remove it
+                if not textcritics['comments'][0]['blockComments']:
+                    textcritics['comments'].pop(0)
+                    block_index -= 1
+
+                comment_block = copy.deepcopy(defaultTextcriticalCommentBlock)
+                comment_block['blockHeader'] = self._strip_tag_and_clean(
+                    columns_in_row[0], 'td')
+                textcritics['comments'].append(comment_block)
+                block_index += 1
+
+                continue
+
+            if block_index >= 0:
+                comment = self._get_comment(columns_in_row)
+                textcritics['comments'][block_index]['blockComments'].append(comment)
+
+        return textcritics
 
     ############################################
     # Helper function: _strip_by_delimiter

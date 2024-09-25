@@ -93,4 +93,10 @@ class ConversionUtils:
         for table_index, table in enumerate(tables):
             self.utils_helper.process_table(textcritics_list, table, table_index)
 
+        # Remove empty lists if they exist
+        if not textcritics_list['textcritics']:
+            textcritics_list.pop('textcritics')
+        if not textcritics_list['corrections']:
+            textcritics_list.pop('corrections')
+
         return textcritics_list

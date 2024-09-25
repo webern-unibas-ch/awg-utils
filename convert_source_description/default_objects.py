@@ -71,7 +71,8 @@ defaultRow: Row = {
 }
 
 defaultTextcriticsList: TextcriticsList = {
-    "textcritics": []
+    "textcritics": [],
+    "corrections": []
 }
 
 defaultTextcritics: TextCritics = {

@@ -785,6 +785,24 @@ class ConversionUtilsHelper:
         return stripped_substring_list
 
     ############################################
+    # Helper function: _strip_tag_and_clean
+    ############################################
+
+    def _strip_tag_and_clean(self, content, tag) -> str:
+        """
+        Strips opening and closing tags from an HTML string and strips surrounding paragraph tags.
+
+        Args:
+        content (str): The input string.
+        tag (str): The name of the tag to strip.
+
+        Returns:
+        str: The content within the specified tags, with leading and trailing whitespace removed.
+        """
+        stripped_content = self._strip_tag(self._strip_tag(content, tag), P_TAG)
+        return stripped_content.replace('</p><p>', ' <br /> ')
+
+    ############################################
     # Helper function: _strip_tag
     ############################################
 
@@ -802,10 +820,12 @@ class ConversionUtilsHelper:
         """
         stripped_str = str(tag) if tag is not None else ""
 
-        # Strip opening and closing tags from input
-        opening_tag = "<" + tag_str + ">"
+        # Strip opening and closing tags from input (incl. attributes in opening tag)
+        opening_tag_start_index = stripped_str.find('<' + tag_str)
+        opening_tag_end_index = stripped_str.find('>', opening_tag_start_index) + 1
         closing_tag = "</" + tag_str + ">"
-        stripped_str = stripped_str.removeprefix(opening_tag)
+
+        stripped_str = stripped_str[opening_tag_end_index:]
         stripped_str = stripped_str.removesuffix(closing_tag)
 
         # Strip trailing white space

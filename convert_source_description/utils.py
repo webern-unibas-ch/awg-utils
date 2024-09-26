@@ -9,8 +9,9 @@ import copy
 from bs4 import BeautifulSoup
 
 from typed_classes import (SourceList, TextCritics)
-from default_objects import (defaultSourceList, defaultTextcriticsList,
-                             defaultTextcritics, defaultTextcriticalComment)
+from default_objects import (
+    defaultSourceList,
+    defaultTextcriticsList)
 from utils_helper import ConversionUtilsHelper
 
 ############################################
@@ -90,22 +91,12 @@ class ConversionUtils:
 
         # Iterate over tables and create textcritics
         for table_index, table in enumerate(tables):
-            textcritics = copy.deepcopy(defaultTextcritics)
+            self.utils_helper.process_table(textcritics_list, table, table_index)
 
-            rows_in_table = table.find_all('tr')
-            for row in rows_in_table[1:]:
-                comment = copy.deepcopy(defaultTextcriticalComment)
-                columns_in_row = row.find_all('td')
-                comment['measure'] = self.utils_helper.strip_tag_and_clean(columns_in_row[0], 'td')
-                comment['system'] = self.utils_helper.strip_tag_and_clean(columns_in_row[1], 'td')
-                comment['position'] = self.utils_helper.strip_tag_and_clean(columns_in_row[2], 'td')
-                comment_text = self.utils_helper.strip_tag_and_clean(columns_in_row[3], 'td')
-                comment['comment'] = self.utils_helper.replace_glyphs(comment_text)
-
-                textcritics['comments'][0]['blockComments'].append(comment)
-
-            print(
-                f"Appending textcritics for table {table_index + 1}...")
-            textcritics_list['textcritics'].append(textcritics)
+        # Remove empty lists if they exist
+        if not textcritics_list['textcritics']:
+            textcritics_list.pop('textcritics')
+        if not textcritics_list['corrections']:
+            textcritics_list.pop('corrections')
 
         return textcritics_list

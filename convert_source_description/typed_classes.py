@@ -112,3 +112,4 @@ class TextCritics(TypedDict):
 class TextcriticsList(TypedDict):
     """A typed dictionary that represents a list of textcritics objects."""
     textcritics: List[TextCritics]
+    corrections: List[TextCritics]

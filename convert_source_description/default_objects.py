@@ -1,8 +1,18 @@
 """Default objects that are used to create new source descriptions objects in the utils module."""
 
-from typed_classes import (Row, System, Folio, ContentItem, Description,
-                           SourceDescription, SourceList, LinkBox,
-                           TextcriticalComment, TextCritics, TextcriticsList)
+from typed_classes import (
+    Row,
+    System,
+    Folio,
+    ContentItem,
+    Description,
+    SourceDescription,
+    SourceList,
+    LinkBox,
+    TextcriticalComment,
+    TextCritics,
+    TextcriticalCommentBlock,
+    TextcriticsList)
 
 ########
 defaultSourceList: SourceList = {
@@ -61,7 +71,8 @@ defaultRow: Row = {
 }
 
 defaultTextcriticsList: TextcriticsList = {
-    "textcritics": []
+    "textcritics": [],
+    "corrections": []
 }
 
 defaultTextcritics: TextCritics = {
@@ -69,13 +80,13 @@ defaultTextcritics: TextCritics = {
     "label": "",
     "description": [],
     # "rowTable": False,
-    "comments": [
-        {
-            "blockHeader": "",
-            "blockComments": []
-        }
-    ],
+    "comments": [],
     "linkBoxes": []
+}
+
+defaultTextcriticalCommentBlock: TextcriticalCommentBlock = {
+    "blockHeader": "",
+    "blockComments": []
 }
 
 defaultTextcriticalComment: TextcriticalComment = {

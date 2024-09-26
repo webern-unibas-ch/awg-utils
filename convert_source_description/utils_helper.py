@@ -14,9 +14,12 @@ from typed_classes import (
     System,
     Folio,
     ContentItem,
+    TextCritics,
+    TextcriticsList,
     WritingInstruments,
     Description,
     SourceDescription,
+    TextcriticalComment
 )
 from default_objects import (
     defaultSourceDescription,
@@ -25,6 +28,9 @@ from default_objects import (
     defaultFolio,
     defaultSystem,
     defaultRow,
+    defaultTextcritics,
+    defaultTextcriticalComment,
+    defaultTextcriticalCommentBlock,
 )
 
 
@@ -146,6 +152,49 @@ class ConversionUtilsHelper:
         return siglum_indices
 
     ############################################
+    # Public method: process_table
+    ############################################
+    def process_table(
+            self,
+            textcritics_list: TextcriticsList,
+            table: Tag,
+            table_index: int) -> TextcriticsList:
+        """
+        Processes a table and extracts textcritical comments from it.
+
+        Args:
+            table (Tag): A BeautifulSoup `Tag` object representing a table.
+            table_index (int): The index of the table in the list of tables.
+        """
+        textcritics = copy.deepcopy(defaultTextcritics)
+        textcritics['comments'] = []
+
+        rows_in_table = table.find_all('tr')
+        block_index = -1
+
+        # Create a default comment block with an empty blockHeader
+        default_comment_block = copy.deepcopy(defaultTextcriticalCommentBlock)
+        default_comment_block['blockHeader'] = ""
+        textcritics['comments'].append(default_comment_block)
+        block_index += 1
+
+        textcritics = self._process_table_rows(textcritics, rows_in_table, block_index)
+
+        print(
+            f"Appending textcritics for table {table_index + 1}...")
+
+        # Determine if the table is for corrections based on the presence of "Korrektur"
+        is_corrections = "Korrektur" in rows_in_table[0].find_all('td')[-1].get_text(strip=True)
+
+        # Adjust textcritics output based on the presence of corrections
+        if is_corrections:
+            textcritics_list = self._process_corrections(textcritics_list, textcritics)
+        else:
+            textcritics_list['textcritics'].append(textcritics)
+
+        return textcritics_list
+
+    ############################################
     # Public method: replace_glyphs
     ############################################
 
@@ -168,22 +217,28 @@ class ConversionUtilsHelper:
             text)
 
     ############################################
-    # Public method: strip_tag_and_clean
+    # Helper function: _get_comment
     ############################################
 
-    def strip_tag_and_clean(self, content, tag) -> str:
+    def _get_comment(self, columns_in_row: List[Tag]) -> TextcriticalComment:
         """
-        Strips opening and closing tags from an HTML string and strips surrounding paragraph tags.
+        Extracts a textcritical comment object from a list of BeautifulSoup `Tag` objects.
 
         Args:
-        content (str): The input string.
-        tag (str): The name of the tag to strip.
+            columns_in_row (List[Tag]): A list of BeautifulSoup `Tag` objects
+                representing columns in a row.
 
         Returns:
-        str: The content within the specified tags, with leading and trailing whitespace removed.
+            TextcriticalComment: A dictionary representing the textcritical comment.
         """
-        stripped_content = self._strip_tag(self._strip_tag(content, tag), P_TAG)
-        return stripped_content.replace('</p><p>', ' <br /> ')
+        comment = copy.deepcopy(defaultTextcriticalComment)
+        comment['measure'] = self._strip_tag_and_clean(columns_in_row[0], 'td')
+        comment['system'] = self._strip_tag_and_clean(columns_in_row[1], 'td')
+        comment['position'] = self._strip_tag_and_clean(columns_in_row[2], 'td')
+        comment_text = self._strip_tag_and_clean(columns_in_row[3], 'td')
+        comment['comment'] = self.replace_glyphs(comment_text)
+
+        return comment
 
     ############################################
     # Helper function: _get_siglum
@@ -707,6 +762,68 @@ class ConversionUtilsHelper:
         return system_group
 
     ############################################
+    # Helper function: _process_corrections
+    ############################################
+
+    def _process_corrections(self, textcritics_list: TextcriticsList,
+                             textcritics: TextCritics) -> TextcriticsList:
+        """
+        Processes textcritics as corrections and appends to the corrections list.
+
+        Args:
+            textcritics (dict): The textcritics object to process.
+            textcritics_list (dict): The dictionary containing textcritics and corrections lists.
+        """
+        textcritics_list['corrections'].append(textcritics)
+        textcritics.pop("linkBoxes", None)  # Remove linkBoxes property if it exists
+
+        # Remove svgGroupId property from textcritical comments
+        for comment_block in textcritics['comments']:
+            for comment in comment_block['blockComments']:
+                comment.pop("svgGroupId", None)  # Remove svgGroupId property if it exists
+
+        return textcritics_list
+
+    ############################################
+    # Helper function: _process_table_rows
+    ############################################
+    def _process_table_rows(self, textcritics, rows_in_table, block_index):
+        """
+        Processes the rows in a table and extracts textcritical comments from them.
+
+        Args:
+            textcritics: A dictionary representing the textcritical comments.
+            rows_in_table: A list of BeautifulSoup `Tag` objects representing rows in a table.
+            block_index: The index of the current comment block.
+
+        Returns:
+            A dictionary representing the textcritical comments.
+        """
+        for row in rows_in_table[1:]:
+            columns_in_row = row.find_all('td')
+
+            # Check if the first td has a colspan attribute
+            if 'colspan' in columns_in_row[0].attrs:
+                # If the default comment block is empty, remove it
+                if not textcritics['comments'][0]['blockComments']:
+                    textcritics['comments'].pop(0)
+                    block_index -= 1
+
+                comment_block = copy.deepcopy(defaultTextcriticalCommentBlock)
+                comment_block['blockHeader'] = self._strip_tag_and_clean(
+                    columns_in_row[0], 'td')
+                textcritics['comments'].append(comment_block)
+                block_index += 1
+
+                continue
+
+            if block_index >= 0:
+                comment = self._get_comment(columns_in_row)
+                textcritics['comments'][block_index]['blockComments'].append(comment)
+
+        return textcritics
+
+    ############################################
     # Helper function: _strip_by_delimiter
     ############################################
 
@@ -723,6 +840,24 @@ class ConversionUtilsHelper:
         """
         stripped_substring_list: List[str] = [s.strip() for s in input_str.split(delimiter)]
         return stripped_substring_list
+
+    ############################################
+    # Helper function: _strip_tag_and_clean
+    ############################################
+
+    def _strip_tag_and_clean(self, content, tag) -> str:
+        """
+        Strips opening and closing tags from an HTML string and strips surrounding paragraph tags.
+
+        Args:
+        content (str): The input string.
+        tag (str): The name of the tag to strip.
+
+        Returns:
+        str: The content within the specified tags, with leading and trailing whitespace removed.
+        """
+        stripped_content = self._strip_tag(self._strip_tag(content, tag), P_TAG)
+        return stripped_content.replace('</p><p>', ' <br /> ')
 
     ############################################
     # Helper function: _strip_tag
@@ -742,10 +877,12 @@ class ConversionUtilsHelper:
         """
         stripped_str = str(tag) if tag is not None else ""
 
-        # Strip opening and closing tags from input
-        opening_tag = "<" + tag_str + ">"
+        # Strip opening and closing tags from input (incl. attributes in opening tag)
+        opening_tag_start_index = stripped_str.find('<' + tag_str)
+        opening_tag_end_index = stripped_str.find('>', opening_tag_start_index) + 1
         closing_tag = "</" + tag_str + ">"
-        stripped_str = stripped_str.removeprefix(opening_tag)
+
+        stripped_str = stripped_str[opening_tag_end_index:]
         stripped_str = stripped_str.removesuffix(closing_tag)
 
         # Strip trailing white space

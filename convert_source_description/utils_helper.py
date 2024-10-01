@@ -208,7 +208,23 @@ class ConversionUtilsHelper:
         Returns:
             str: The replaced text.
         """
-        glyphs = ["a", "b", "bb", "#", "x", "f", "ff", "fff", "mf", "mp", "p", "pp", "ppp", "ped"]
+        glyphs = [
+            "a",
+            "b",
+            "bb",
+            "#",
+            "x",
+            "f",
+            "ff",
+            "fff",
+            "mf",
+            "mp",
+            "p",
+            "pp",
+            "ppp",
+            "ped",
+            "sf",
+            "sp"]
         glyph_pattern = '|'.join(re.escape(glyph) for glyph in glyphs)
 
         return re.sub(

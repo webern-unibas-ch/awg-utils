@@ -227,10 +227,14 @@ class ConversionUtilsHelper:
             "sp"]
         glyph_pattern = '|'.join(re.escape(glyph) for glyph in glyphs)
 
+        # Match pattern for glyphs in square brackets, but not followed by a hyphen
+        match_pattern = rf'\[({glyph_pattern})\](?!-)'
+
         return re.sub(
-            rf'\[({glyph_pattern})\]',
-            lambda match: f"{{{{ref.getGlyph('{match.group(0)}')}}}}",
-            text)
+            match_pattern,
+            lambda match: f"{{{{ref.getGlyph('{match.group(1)}')}}}}",
+            text
+        )
 
     ############################################
     # Helper function: _get_comment

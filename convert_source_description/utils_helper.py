@@ -238,7 +238,7 @@ class ConversionUtilsHelper:
 
         return re.sub(
             match_pattern,
-            lambda match: f"{{{{ref.getGlyph('{match.group(1)}')}}}}",
+            lambda match: f"{{{{ref.getGlyph('{match.group(0)}')}}}}",
             text
         )
 
@@ -611,7 +611,7 @@ class ConversionUtilsHelper:
         return item
 
     ############################################
-    # Helper function: _getItems
+    # Helper function: _get_items
     ############################################
 
     def _get_items(self, paras: List[Tag]) -> List[ContentItem]:

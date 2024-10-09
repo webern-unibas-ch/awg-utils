@@ -224,7 +224,13 @@ class ConversionUtilsHelper:
             "ppp",
             "ped",
             "sf",
-            "sp"]
+            "sp",
+            "Achtelnote",
+            "Ganze Note",
+            "Halbe Note",
+            "Sechzehntelnote",
+            "Viertelnote"
+        ]
         glyph_pattern = '|'.join(re.escape(glyph) for glyph in glyphs)
 
         # Match pattern for glyphs in square brackets, but not followed by a hyphen

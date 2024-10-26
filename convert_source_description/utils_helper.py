@@ -224,6 +224,7 @@ class ConversionUtilsHelper:
             "ppp",
             "ped",
             "sf",
+            "sfz",
             "sp",
             "Achtelnote",
             "Ganze Note",

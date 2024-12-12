@@ -241,7 +241,7 @@ class ConversionUtilsHelper:
 
         return re.sub(
             match_pattern,
-            lambda match: f"{{{{ref.getGlyph('{match.group(0)}')}}}}",
+            lambda match: f"<span class='glyph'>{{{{ref.getGlyph('{match.group(0)}')}}}}</span>",
             text
         )
 

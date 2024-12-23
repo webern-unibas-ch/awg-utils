@@ -78,9 +78,12 @@ defaultTextcriticsList: TextcriticsList = {
 defaultTextcritics: TextCritics = {
     "id": "",
     "label": "",
-    "description": [],
+    "evaluations": [],
     # "rowTable": False,
-    "comments": [],
+    "commentary": {
+        "preamble": "",
+        "comments": []
+    },
     "linkBoxes": []
 }
 

@@ -167,7 +167,7 @@ class ConversionUtilsHelper:
             table_index (int): The index of the table in the list of tables.
         """
         textcritics = copy.deepcopy(defaultTextcritics)
-        textcritics['comments'] = []
+        textcritics['commentary']['comments'] = []
 
         rows_in_table = table.find_all('tr')
         block_index = -1
@@ -175,7 +175,7 @@ class ConversionUtilsHelper:
         # Create a default comment block with an empty blockHeader
         default_comment_block = copy.deepcopy(defaultTextcriticalCommentBlock)
         default_comment_block['blockHeader'] = ""
-        textcritics['comments'].append(default_comment_block)
+        textcritics['commentary']['comments'].append(default_comment_block)
         block_index += 1
 
         textcritics = self._process_table_rows(textcritics, rows_in_table, block_index)
@@ -807,7 +807,7 @@ class ConversionUtilsHelper:
         textcritics.pop("linkBoxes", None)  # Remove linkBoxes property if it exists
 
         # Remove svgGroupId property from textcritical comments
-        for comment_block in textcritics['comments']:
+        for comment_block in textcritics['commentary']['comments']:
             for comment in comment_block['blockComments']:
                 comment.pop("svgGroupId", None)  # Remove svgGroupId property if it exists
 
@@ -834,21 +834,21 @@ class ConversionUtilsHelper:
             # Check if the first td has a colspan attribute
             if 'colspan' in columns_in_row[0].attrs:
                 # If the default comment block is empty, remove it
-                if not textcritics['comments'][0]['blockComments']:
-                    textcritics['comments'].pop(0)
+                if not textcritics['commentary']['comments'][0]['blockComments']:
+                    textcritics['commentary']['comments'].pop(0)
                     block_index -= 1
 
                 comment_block = copy.deepcopy(defaultTextcriticalCommentBlock)
                 comment_block['blockHeader'] = self._strip_tag_and_clean(
                     columns_in_row[0], 'td')
-                textcritics['comments'].append(comment_block)
+                textcritics['commentary']['comments'].append(comment_block)
                 block_index += 1
 
                 continue
 
             if block_index >= 0:
                 comment = self._get_comment(columns_in_row)
-                textcritics['comments'][block_index]['blockComments'].append(comment)
+                textcritics['commentary']['comments'][block_index]['blockComments'].append(comment)
 
         return textcritics
 

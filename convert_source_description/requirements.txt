@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes requirements.in
 #
-astroid==3.3.6 \
-    --hash=sha256:6aaea045f938c735ead292204afdb977a36e989522b7833ef6fea94de743f442 \
-    --hash=sha256:db676dc4f3ae6bfe31cda227dc60e03438378d7a896aec57422c95634e8d722f
+astroid==3.3.8 \
+    --hash=sha256:187ccc0c248bfbba564826c26f070494f7bc964fd286b6d9fff4420e55de828c \
+    --hash=sha256:a88c7994f914a4ea8572fac479459f4955eeccc877be3f2d959a33273b0cf40b
     # via pylint
 beautifulsoup4==4.12.3 \
     --hash=sha256:74e3d1928edc070d21748185c46e3fb33490f22f52a3addee9aee0f4f7781051 \
@@ -35,9 +35,9 @@ platformdirs==4.2.1 \
     --hash=sha256:031cd18d4ec63ec53e82dceaac0417d218a6863f7745dfcc9efe7793b7039bdf \
     --hash=sha256:17d5a1161b3fd67b390023cb2d3b026bbd40abde6fdb052dfbd3a29c3ba22ee1
     # via pylint
-pylint==3.3.2 \
-    --hash=sha256:77f068c287d49b8683cd7c6e624243c74f92890f767f106ffa1ddf3c0a54cb7a \
-    --hash=sha256:9ec054ec992cd05ad30a6df1676229739a73f8feeabf3912c995d17601052b01
+pylint==3.3.3 \
+    --hash=sha256:07c607523b17e6d16e2ae0d7ef59602e332caa762af64203c24b41c27139f36a \
+    --hash=sha256:26e271a2bc8bce0fc23833805a9076dd9b4d5194e2a02164942cb3cdc37b4183
     # via -r requirements.in
 soupsieve==2.5 \
     --hash=sha256:5663d5a7b3bfaeee0bc4372e7fc48f9cff4940b3eec54a6451cc5299f1097690 \

@@ -11,9 +11,12 @@ permissions:
 jobs:
   lint:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
+        dir: [compare_pdfs, convert_source_description]
+    
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
@@ -29,10 +32,15 @@ jobs:
         cache: 'pip'
     
     - name: Install dependencies
+      working-directory: ${{ matrix.dir }}
       run: |
         python -m ensurepip --upgrade
-        pip install --require-hashes -r ./convert_source_description/requirements.txt
-    
+        pip install --require-hashes -r ./requirements.txt
+      
     - name: Analysing the code with pylint
+      working-directory: ${{ matrix.dir }}
       run: |
-        pylint $(git ls-files '*.py')
+        find . -name "*.py" -not -path "./.venv/*" | while read file; do
+          echo "Running pylint on $file"
+          pylint "$file" || exit 1
+        done

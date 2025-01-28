@@ -1,7 +1,7 @@
 """Compare two PDF files and highlight differences between them.
 
 The script extracts the pages of two PDF files as images, converts them to grayscale,
-and highlights any differences in a separate diff image. The diff images are saved 
+and highlights any differences in a separate diff image. The diff images are saved
 in a specified directory.
 """
 import argparse
@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 from pdf2image import convert_from_path
 from PIL import Image
+
 
 def extract_images_from_pdf(pdf_path: str, dpi=350) -> list[Image.Image]:
     """
@@ -30,6 +31,7 @@ def extract_images_from_pdf(pdf_path: str, dpi=350) -> list[Image.Image]:
     images = convert_from_path(pdf_path, dpi)
 
     return images
+
 
 def convert_to_grayscale(image: Image.Image) -> np.ndarray:
     """
@@ -49,6 +51,7 @@ def convert_to_grayscale(image: Image.Image) -> np.ndarray:
         return cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
 
     return image_np
+
 
 def highlight_differences(
     image1: np.ndarray, image2: np.ndarray, threshold=75
@@ -89,10 +92,11 @@ def highlight_differences(
 
     return image2_bgr, len(contours) > 0
 
+
 def compare_page(images1: list[Image.Image], images2: list[Image.Image],
                  page_num: int, diff_dir: str, threshold=75) -> bool:
     """
-    Compare a single page from two given lists of images (PIL.Image.Image), 
+    Compare a single page from two given lists of images (PIL.Image.Image),
     highlight differences and save the output as image.
 
     Args:
@@ -118,6 +122,7 @@ def compare_page(images1: list[Image.Image], images2: list[Image.Image],
     cv2.imwrite(f"{diff_dir}/diff_page_{page_num}.png", highlighted_image)
 
     return has_differences
+
 
 def compare_pages_in_parallel(images1: list[Image.Image], images2: list[Image.Image],
                               diff_dir: str, threshold: int) -> list[int]:
@@ -151,6 +156,7 @@ def compare_pages_in_parallel(images1: list[Image.Image], images2: list[Image.Im
 
     return pages_with_changes
 
+
 def create_diff_dir(output_path: str) -> str:
     """
     Create the output diff directory if it doesn't exist.
@@ -165,6 +171,7 @@ def create_diff_dir(output_path: str) -> str:
     os.makedirs(diff_dir, exist_ok=True)
 
     return diff_dir
+
 
 def log_and_write_diff_results(pages_with_changes: list[int], diff_dir: str, settings: dict):
     """
@@ -198,6 +205,7 @@ def log_and_write_diff_results(pages_with_changes: list[int], diff_dir: str, set
             message = "No diffs detected."
             logging.info(message)
             diff_file.write(message + "\n")
+
 
 def compare_pdfs(settings: dict):
     """
@@ -235,25 +243,25 @@ def main():
     """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "pdf1", 
+        "pdf1",
         help="Path to the first PDF file"
     )
     parser.add_argument(
-        "pdf2", 
+        "pdf2",
         help="Path to the second PDF file"
     )
     parser.add_argument(
-        "output", 
+        "output",
         help="Directory to save the output images"
-)
+    )
     parser.add_argument(
-        "--dpi", 
+        "--dpi",
         type=int,
         default=350,
         help="DPI for image extraction (default: 350)"
     )
     parser.add_argument(
-        "--threshold", 
+        "--threshold",
         type=int,
         default=75,
         help="Threshold value for difference detection (default: 75)"

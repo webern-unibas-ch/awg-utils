@@ -12,16 +12,28 @@ A repo for utility scripts of the Anton Webern Gesamtausgabe.
 
 ### Activating a Virtual Environment
 
-1. Navigate to the folder containing the virtual environment:
+1. Navigate to the target folder:
 
 ```bash
 cd /d/Repositories/webern-unibas-ch/awg-utils/compare_pdfs
 ```
 
-2. Activate the virtual environment:
+2. Create a virtual environment:
 
 ```bash
-source venv/Scripts/activate
+python -m venv .venv
+```
+
+3. Activate the virtual environment:
+
+```bash
+source .venv/Scripts/activate
+```
+
+4. Install the dependencies:
+
+```bash
+pip install -r requirements.txt --require-hashes
 ```
 
 ### Deactivating a Virtual Environment
@@ -32,13 +44,13 @@ To deactivate the currently active virtual environment, simply run:
 deactivate
 ```
 
-## Script: convert_source_description
+## [SCRIPT]: convert_source_description
 
 The python script in this folder converts a source description given in Word format from .docx to .json. 
 
 See [HOW TO ... convert source-descriptions from WORD to JSON?](convert_source_description/README.md)
 
-## Script: compare_pdfs
+## [SCRIPT]: compare_pdfs
 
 The python script in this folder compares the pages of two pdfs and highlights any diffs.
 

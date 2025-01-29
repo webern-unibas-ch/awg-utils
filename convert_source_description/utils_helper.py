@@ -195,6 +195,31 @@ class ConversionUtilsHelper:
         return textcritics_list
 
     ############################################
+    # Helpfer funtction: _add_report_fragment_links
+    ############################################
+    def _add_report_fragment_links(self, text: str) -> str:
+        """
+        Adds report fragment links to bold formatted characters in a given text.
+
+        Args:
+            text (str): The given text.
+
+        Returns:
+            str: The text with bold characters replaced by report fragment links.
+        """
+        text = re.sub(
+            r"<strong>(.*?)</strong>",
+            (
+                r'<a (click)="ref.navigateToReportFragment('
+                r"{complexId: 'TODO', fragmentId: 'source_\1'}"
+                r')"><strong>\1</strong></a>'
+            ),
+            text
+        )
+
+        return text
+
+    ############################################
     # Helpfer funtction: _escape_curly_brackets
     ############################################
     def _escape_curly_brackets(self, text: str) -> str:
@@ -231,12 +256,16 @@ class ConversionUtilsHelper:
             TextcriticalComment: A dictionary representing the textcritical comment.
         """
         comment = copy.deepcopy(defaultTextcriticalComment)
+
         comment['measure'] = self._strip_tag_and_clean(columns_in_row[0], 'td')
         comment['system'] = self._strip_tag_and_clean(columns_in_row[1], 'td')
         comment['position'] = self._strip_tag_and_clean(columns_in_row[2], 'td')
+
         comment_text = self._strip_tag_and_clean(columns_in_row[3], 'td')
         comment_text = self._escape_curly_brackets(comment_text)
-        comment['comment'] = self._replace_glyphs(comment_text)
+        comment_text = self._add_report_fragment_links(comment_text)
+        comment_text = self._replace_glyphs(comment_text)
+        comment['comment'] = comment_text
 
         return comment
 

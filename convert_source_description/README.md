@@ -9,7 +9,7 @@ The python script `convert_source_description.py` will create a JSON file `sourc
 ## HOW?
 
 > [!NOTE]
-> This converter uses latest Python version (3.12 for now). Make sure to have Python installed on your system, or get it from here: [https://www.python.org/downloads/](https://www.python.org/downloads/)
+> This converter uses latest Python version (3.13 for now). Make sure to have Python installed on your system, or get it from here: [https://www.python.org/downloads/](https://www.python.org/downloads/)
 
 ### Preparation
 

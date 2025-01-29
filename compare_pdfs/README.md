@@ -7,7 +7,7 @@ Comparing PDF files manually to find differences can be time-consuming and error
 ## HOW?
 
 > [!NOTE]
-> This script uses the latest Python version (3.12 for now). Make sure to have Python installed on your system, or get it from here: [https://www.python.org/downloads/](https://www.python.org/downloads/)
+> This script uses the latest Python version (3.13 for now). Make sure to have Python installed on your system, or get it from here: [https://www.python.org/downloads/](https://www.python.org/downloads/)
 
 ### Preparation
 

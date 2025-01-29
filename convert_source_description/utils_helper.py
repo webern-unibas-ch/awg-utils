@@ -195,55 +195,25 @@ class ConversionUtilsHelper:
         return textcritics_list
 
     ############################################
-    # Public method: replace_glyphs
+    # Helpfer funtction: _escape_curly_brackets
     ############################################
-
-    def replace_glyphs(self, text: str) -> str:
+    def _escape_curly_brackets(self, text: str) -> str:
         """
-        Replaces glyph strings in a given text.
+        Escapes curly brackets in a given text.
 
         Args:
             text (str): The given text.
 
         Returns:
-            str: The replaced text.
+            str: The escaped text.
         """
-        glyphs = [
-            "a",
-            "b",
-            "bb",
-            "#",
-            "x",
-            "f",
-            "ff",
-            "fff",
-            "ffff",
-            "mf",
-            "mp",
-            "p",
-            "pp",
-            "ppp",
-            "pppp",
-            "ped",
-            "sf",
-            "sfz",
-            "sp",
-            "Achtelnote",
-            "Ganze Note",
-            "Halbe Note",
-            "Sechzehntelnote",
-            "Viertelnote"
-        ]
-        glyph_pattern = '|'.join(re.escape(glyph) for glyph in glyphs)
-
-        # Match pattern for glyphs in square brackets, but not followed by a hyphen
-        match_pattern = rf'\[({glyph_pattern})\](?!-)'
-
-        return re.sub(
-            match_pattern,
-            lambda match: f"<span class='glyph'>{{{{ref.getGlyph('{match.group(0)}')}}}}</span>",
-            text
-        )
+        # Replace curly brackets with placeholders to avoid duplicated escaping
+        text = text.replace('{', '__LEFT_CURLY_BRACKET__') \
+                   .replace('}', '__RIGHT_CURLY_BRACKET__')
+        # Escape curly brackets
+        text = text.replace('__LEFT_CURLY_BRACKET__', "{{ '{' }}") \
+                   .replace('__RIGHT_CURLY_BRACKET__', "{{ '}' }}")
+        return text
 
     ############################################
     # Helper function: _get_comment
@@ -265,7 +235,8 @@ class ConversionUtilsHelper:
         comment['system'] = self._strip_tag_and_clean(columns_in_row[1], 'td')
         comment['position'] = self._strip_tag_and_clean(columns_in_row[2], 'td')
         comment_text = self._strip_tag_and_clean(columns_in_row[3], 'td')
-        comment['comment'] = self.replace_glyphs(comment_text)
+        comment_text = self._escape_curly_brackets(comment_text)
+        comment['comment'] = self._replace_glyphs(comment_text)
 
         return comment
 
@@ -851,6 +822,56 @@ class ConversionUtilsHelper:
                 textcritics['commentary']['comments'][block_index]['blockComments'].append(comment)
 
         return textcritics
+
+    ############################################
+    # Helper function: _replace_glyphs
+    ############################################
+    def _replace_glyphs(self, text: str) -> str:
+        """
+        Replaces glyph strings in a given text.
+
+        Args:
+            text (str): The given text.
+
+        Returns:
+            str: The replaced text.
+        """
+        glyphs = [
+            "a",
+            "b",
+            "bb",
+            "#",
+            "x",
+            "f",
+            "ff",
+            "fff",
+            "ffff",
+            "mf",
+            "mp",
+            "p",
+            "pp",
+            "ppp",
+            "pppp",
+            "ped",
+            "sf",
+            "sfz",
+            "sp",
+            "Achtelnote",
+            "Ganze Note",
+            "Halbe Note",
+            "Sechzehntelnote",
+            "Viertelnote"
+        ]
+        glyph_pattern = '|'.join(re.escape(glyph) for glyph in glyphs)
+
+        # Match pattern for glyphs in square brackets, but not followed by a hyphen
+        match_pattern = rf'\[({glyph_pattern})\](?!-)'
+
+        return re.sub(
+            match_pattern,
+            lambda match: f"<span class='glyph'>{{{{ref.getGlyph('{match.group(0)}')}}}}</span>",
+            text
+        )
 
     ############################################
     # Helper function: _strip_by_delimiter

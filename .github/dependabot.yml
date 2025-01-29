@@ -6,6 +6,8 @@ updates:
       interval: daily
 
   - package-ecosystem: pip
-    directory: /convert_source_description
+    directories:
+      - "/compare_pdfs"
+      - "/convert_source_description"  
     schedule:
       interval: daily

@@ -6,30 +6,46 @@ in a specified directory.
 """
 import argparse
 import datetime
+import io
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
 import cv2
+import fitz  # PyMuPDF
 import numpy as np
-from pdf2image import convert_from_path
 from PIL import Image
 
-
-def extract_images_from_pdf(pdf_path: str, dpi=350) -> list[Image.Image]:
+def extract_images_from_pdf(pdf_path: str, dpi=400) -> list[Image.Image]:
     """
     Extract images from a PDF file.
 
     Args:
         pdf_path (str): Path to the PDF file.
-        dpi (int): Dots per inch applied in image extraction.
 
     Returns:
         list[Image.Image]: List of images extracted from the PDF.
     """
-    # Use pdf2image to extract images from the PDF file
     logging.info("Extracting images from PDF: %s", pdf_path)
-    images = convert_from_path(pdf_path, dpi)
+    images = []
 
+    # Open the PDF file
+    pdf_document = fitz.open(pdf_path)
+
+    # Iterate through each page
+    for page_num in range(len(pdf_document)):
+        page = pdf_document.load_page(page_num)
+        logging.info("Processing page %s", page_num + 1)
+
+        # Render page to an image
+        zoom = dpi / 72  # 72 is the default DPI for PDF rendering
+        mat = fitz.Matrix(zoom, zoom)
+        pix = page.get_pixmap(matrix=mat)
+
+        # Convert to PIL Image
+        image = Image.open(io.BytesIO(pix.tobytes()))
+        images.append(image)
+
+    logging.info("Extracted %s images from the PDF", len(images))
     return images
 
 
@@ -257,7 +273,7 @@ def main():
     parser.add_argument(
         "--dpi",
         type=int,
-        default=350,
+        default=400,
         help="DPI for image extraction (default: 350)"
     )
     parser.add_argument(

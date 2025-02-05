@@ -8,9 +8,9 @@ astroid==3.3.8 \
     --hash=sha256:187ccc0c248bfbba564826c26f070494f7bc964fd286b6d9fff4420e55de828c \
     --hash=sha256:a88c7994f914a4ea8572fac479459f4955eeccc877be3f2d959a33273b0cf40b
     # via pylint
-beautifulsoup4==4.13.2 \
-    --hash=sha256:b0ebbcecbfbed2f28e07fb8d004494dfb3030711874a034551ac52008b87a1d1 \
-    --hash=sha256:da9184389e6848818cf31c970ba3cbe6f33c2b8fbabd70d5bd4a2bfa0c1c4272
+beautifulsoup4==4.13.3 \
+    --hash=sha256:1bd32405dacc920b42b83ba01644747ed77456a65760e285fbc47633ceddaf8b \
+    --hash=sha256:99045d7d3f08f91f0d656bc9b7efbae189426cd913d830294a15eefa0ea4df16
     # via -r requirements.in
 cobble==0.1.3 \
     --hash=sha256:52e7f886adbe42ccc3675dd627c87f6db8f22f96b6e0754a9e642ac7dd94fa42

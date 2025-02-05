@@ -601,7 +601,8 @@ class ConversionUtilsHelper:
             # and remove trailing colon)
             item_description = PARENTHESIS + \
                 self._strip_by_delimiter(para_content, PARENTHESIS)[1].strip().rstrip(COLON)
-
+        elif para_content.find(STRONG_TAG):
+            print("--- Potential error? Strong tag found in para:", para_content)
         else:
             item_description = para_content.strip().rstrip(COLON)
 

@@ -429,7 +429,7 @@ class ConversionUtilsHelper:
         # Check if the current paragraph contains a <strong> tag
         if sibling_para.find(STRONG_TAG):
             return paras
-        
+
         # Strip the text of the current paragraph
         stripped_sibling_para_text = sibling_para.text.strip()
 
@@ -699,7 +699,9 @@ class ConversionUtilsHelper:
             while sibling is not None and sibling.name == P_TAG:
                 sibling_content = self._strip_tag(sibling, P_TAG)
                 if sibling_content.endswith(FULL_STOP) or sibling_content.endswith(SEMICOLON):
-                    content_lines.append(sibling_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON))
+                    content_lines.append(
+                        sibling_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
+                    )
                     if sibling_content.endswith(FULL_STOP):
                         break
                 else:

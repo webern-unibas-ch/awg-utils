@@ -48,7 +48,7 @@ SYSTEM_STR = "System"
 
 COLON = ":"
 COMMA = ","
-DOT = "."
+FULL_STOP = "."
 PARENTHESIS = "("
 SEMICOLON = ";"
 SLASH = "/"
@@ -366,7 +366,11 @@ class ConversionUtilsHelper:
         comments_index = next(
             (self._get_paragraph_index_by_label(
                 label, paras) for label in comments_labels if self._get_paragraph_index_by_label(
-                label, paras) != -1), len(paras) - 1)
+                label, paras) != -1), len(paras))
+
+        # Ensure comments_index is within valid range
+        if comments_index >= len(paras):
+            comments_index = len(paras) - 1
 
         return self._get_items(paras[(content_index + 1): comments_index])
 
@@ -395,10 +399,10 @@ class ConversionUtilsHelper:
                 writing_instruments_text, SEMICOLON)
 
             # Strip . from last main and secondary writing instruments
-            main = stripped_writing_instruments[0].strip().rstrip(DOT)
+            main = stripped_writing_instruments[0].strip().rstrip(FULL_STOP)
             if len(stripped_writing_instruments) > 1:
                 secondary = [
-                    instr.strip().rstrip(DOT)
+                    instr.strip().rstrip(FULL_STOP)
                     for instr in self._strip_by_delimiter(stripped_writing_instruments[1], COMMA)
                 ]
             else:
@@ -425,8 +429,12 @@ class ConversionUtilsHelper:
         # Check if the current paragraph contains a <strong> tag
         if sibling_para.find(STRONG_TAG):
             return paras
+
+        # Strip the text of the current paragraph
+        stripped_sibling_para_text = sibling_para.text.strip()
+
         # Check if the current paragraph ends with a period
-        if sibling_para.text.endswith(DOT):
+        if stripped_sibling_para_text.endswith(FULL_STOP):
             paras.append(sibling_para)
             return paras
         # If the current paragraph does not meet the criteria, recursively search the next sibling
@@ -582,7 +590,7 @@ class ConversionUtilsHelper:
             sheet_id = item_label.replace(
                 " ",
                 UNDERSCORE).replace(
-                DOT,
+                FULL_STOP,
                 UNDERSCORE).replace(
                 STAR,
                 STAR_STR)
@@ -681,7 +689,7 @@ class ConversionUtilsHelper:
         stripped_content = self._strip_tag(content_paragraph, P_TAG)
         initial_content = self._strip_by_delimiter(stripped_content, label)[1]
 
-        content_lines.append(initial_content.strip().rstrip(DOT).rstrip(SEMICOLON))
+        content_lines.append(initial_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON))
 
         if initial_content.endswith(SEMICOLON):
             # Check for sibling paragraphs that belong to the same content
@@ -690,9 +698,11 @@ class ConversionUtilsHelper:
 
             while sibling is not None and sibling.name == P_TAG:
                 sibling_content = self._strip_tag(sibling, P_TAG)
-                if sibling_content.endswith(DOT) or sibling_content.endswith(SEMICOLON):
-                    content_lines.append(sibling_content.strip().rstrip(DOT).rstrip(SEMICOLON))
-                    if sibling_content.endswith(DOT):
+                if sibling_content.endswith(FULL_STOP) or sibling_content.endswith(SEMICOLON):
+                    content_lines.append(
+                        sibling_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
+                    )
+                    if sibling_content.endswith(FULL_STOP):
                         break
                 else:
                     break
@@ -764,7 +774,7 @@ class ConversionUtilsHelper:
                     continue
 
                 if MEASURE_STR in stripped_system_text[1]:
-                    # Remove leading measure string and trailing dot or semicolon.
+                    # Remove leading measure string and trailing full stop or semicolon.
                     measure_label = (
                         stripped_system_text[1].lstrip(MEASURE_STR).rstrip(".;").strip()
                     )

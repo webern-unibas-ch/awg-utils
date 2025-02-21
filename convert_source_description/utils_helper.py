@@ -366,7 +366,11 @@ class ConversionUtilsHelper:
         comments_index = next(
             (self._get_paragraph_index_by_label(
                 label, paras) for label in comments_labels if self._get_paragraph_index_by_label(
-                label, paras) != -1), len(paras) - 1)
+                label, paras) != -1), len(paras))
+
+        # Ensure comments_index is within valid range
+        if comments_index >= len(paras):
+            comments_index = len(paras) - 1
 
         return self._get_items(paras[(content_index + 1): comments_index])
 
@@ -425,8 +429,12 @@ class ConversionUtilsHelper:
         # Check if the current paragraph contains a <strong> tag
         if sibling_para.find(STRONG_TAG):
             return paras
+        
+        # Strip the text of the current paragraph
+        stripped_sibling_para_text = sibling_para.text.strip()
+
         # Check if the current paragraph ends with a period
-        if sibling_para.text.endswith(DOT):
+        if stripped_sibling_para_text.endswith(DOT):
             paras.append(sibling_para)
             return paras
         # If the current paragraph does not meet the criteria, recursively search the next sibling

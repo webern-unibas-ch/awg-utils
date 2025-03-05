@@ -69,6 +69,7 @@ class FileUtils:
         try:
             with open(target_file_name, "w", encoding='utf-8') as target_file:
                 target_file.write(json_object)
+                target_file.write("\n")
             print(f"Data written to {target_file_name} successfully.")
         except IOError:
             print(f"Error writing data to {target_file_name}.")

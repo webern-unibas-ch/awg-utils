@@ -1,17 +1,17 @@
 """Default objects that are used to create new source descriptions objects in the utils module."""
 
 from typed_classes import (
-    Row,
-    System,
-    Folio,
     ContentItem,
-    Description,
+    Folio,
+    LinkBox,
+    PhysDesc,
+    Row,
     SourceDescription,
     SourceList,
-    LinkBox,
+    System,
     TextcriticalComment,
-    TextCritics,
     TextcriticalCommentBlock,
+    TextCritics,
     TextcriticsList)
 
 ########
@@ -25,11 +25,11 @@ defaultSourceDescription: SourceDescription = {
     "siglumAddendum": "",
     "type": "",
     "location": "",
-    "description": {}
+    "physDesc": {}
 }
 
-defaultDescription: Description = {
-    "desc": [],
+defaultPhysDesc: PhysDesc = {
+    "conditions": [],
     "writingMaterialStrings": [],
     "writingInstruments": {
         "main": "",

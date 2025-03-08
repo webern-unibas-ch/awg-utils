@@ -49,9 +49,9 @@ class WritingInstruments(TypedDict):
     secondary: List[str]
 
 
-class Description(TypedDict):
-    """A typed dictionary that represents a description of a source description."""
-    desc: List[str]
+class PhysDesc(TypedDict):
+    """A typed dictionary that represents a physical description of a source description."""
+    conditions: List[str]
     writingMaterialStrings: List[str]
     writingInstruments: WritingInstruments
     titles: List[str]
@@ -70,7 +70,7 @@ class SourceDescription(TypedDict):
     siglumAddendum: str
     type: str
     location: str
-    description: Description
+    physDesc: PhysDesc
 
 
 class SourceList(TypedDict):

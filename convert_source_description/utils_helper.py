@@ -11,26 +11,26 @@ from typing import List, Optional, Tuple
 from bs4 import Tag
 
 from typed_classes import (
-    System,
-    Folio,
     ContentItem,
+    Folio,
+    PhysDesc,
+    SourceDescription,
+    System,
+    TextcriticalComment,
     TextCritics,
     TextcriticsList,
     WritingInstruments,
-    Description,
-    SourceDescription,
-    TextcriticalComment
 )
 from default_objects import (
-    defaultSourceDescription,
-    defaultDescription,
     defaultContentItem,
     defaultFolio,
-    defaultSystem,
+    defaultPhysDesc,
     defaultRow,
-    defaultTextcritics,
+    defaultSourceDescription,
+    defaultSystem,
     defaultTextcriticalComment,
     defaultTextcriticalCommentBlock,
+    defaultTextcritics,
 )
 
 
@@ -100,7 +100,7 @@ class ConversionUtilsHelper:
         source_description["siglumAddendum"] = siglum_addendum
         source_description["type"] = self._strip_tag(paras[1], P_TAG) or ""
         source_description["location"] = self._strip_tag(paras[2], P_TAG) or ""
-        source_description["description"] = self._get_description(paras, source_id)
+        source_description["physDesc"] = self._get_phys_desc(paras, source_id)
 
         return source_description
 
@@ -291,26 +291,26 @@ class ConversionUtilsHelper:
         return siglum, siglum_addendum
 
     ############################################
-    # Helper function: _get_description
+    # Helper function: _get_phys_desc
     ############################################
 
-    def _get_description(self, paras: List[Tag], source_id: str) -> Description:
+    def _get_phys_desc(self, paras: List[Tag], source_id: str) -> PhysDesc:
         """
-        Extracts the description of a source description from a list of BeautifulSoup `Tag` objects.
+        Extracts the physDesc of a source description from a list of BeautifulSoup `Tag` objects.
 
         Args:
             paras (List[Tag]): A list of BeautifulSoup `Tag` objects representing paragraphs.
             source_id (str): The ID of the source description.
 
         Returns:
-            Description: A dictionary representing the description of the source description.
+            PhysDesc: A dictionary representing the physical description of the source description.
         """
-        description = copy.deepcopy(defaultDescription)
-        desc = self._strip_tag(paras[3], P_TAG) or ""
-        description["desc"].append(desc)
+        phys_desc = copy.deepcopy(defaultPhysDesc)
+        conditions = self._strip_tag(paras[3], P_TAG) or ""
+        phys_desc["conditions"].append(conditions)
 
-        # Define labels and corresponding keys in the description dictionary
-        description_labels_keys = [
+        # Define labels and corresponding keys in the physical description dictionary
+        phys_desc_labels_keys = [
             ("Beschreibstoff:", "writingMaterialStrings"),
             ("Schreibstoff:", "writingInstruments"),
             ("Titel:", "titles"),
@@ -322,20 +322,20 @@ class ConversionUtilsHelper:
         ]
 
         # Get content for each label and assign it to the corresponding key
-        for label, key in description_labels_keys:
+        for label, key in phys_desc_labels_keys:
             content = self._get_paragraph_content_by_label(label, paras)
 
             # Writing instruments require special handling
             if key == "writingInstruments":
                 content = self._extract_writing_instruments(
-                    content[0]) if content else description[key]
+                    content[0]) if content else phys_desc[key]
 
-            description[key] = content
+            phys_desc[key] = content
 
         # Get content items
-        description["contents"] = self._get_content_items(paras, source_id)
+        phys_desc["contents"] = self._get_content_items(paras, source_id)
 
-        return description
+        return phys_desc
 
     ############################################
     # Helper function: _get_content_items

@@ -839,6 +839,8 @@ class ConversionUtilsHelper:
         Returns:
             A dictionary representing the textcritical comments.
         """
+        comment_id = 1
+
         for row in rows_in_table[1:]:
             columns_in_row = row.find_all('td')
 
@@ -859,7 +861,9 @@ class ConversionUtilsHelper:
 
             if block_index >= 0:
                 comment = self._get_comment(columns_in_row)
+                comment['svgGroupId'] = f"g-tkk-{comment_id}"
                 textcritics['commentary']['comments'][block_index]['blockComments'].append(comment)
+                comment_id += 1
 
         return textcritics
 

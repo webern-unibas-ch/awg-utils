@@ -1,4 +1,4 @@
-name: Pylint
+name: Pytest
 
 on:
   pull_request:
@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
-        dir: [compare_pdfs, convert_source_description]
+        dir: [convert_source_description]
     
     steps:
     - name: Harden Runner
@@ -36,10 +36,7 @@ jobs:
         python -m ensurepip --upgrade
         pip install --require-hashes -r ./requirements.txt
       
-    - name: Analysing the code with pylint
+    - name: Test the code with pytest
       working-directory: ${{ matrix.dir }}
       run: |
-        find . -name "*.py" -not -path "./.venv/*" | while read file; do
-          echo "Running pylint on $file"
-          pylint "$file" || exit 1
-        done
+        pytest tests/test_utils_helper.py -v

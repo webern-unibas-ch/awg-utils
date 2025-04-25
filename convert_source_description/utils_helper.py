@@ -911,11 +911,14 @@ class ConversionUtilsHelper:
         # Match pattern for glyphs in square brackets, but not followed by a hyphen
         match_pattern = rf'\[({glyph_pattern})\](?!-)'
 
-        return re.sub(
-            match_pattern,
-            lambda match: f"<span class='glyph'>{{{{ref.getGlyph('{match.group(0)}')}}}}</span>",
-            text
-        )
+        accid_glyphs = {"a", "b", "bb", "#", "x"}
+
+        def replace_glyph(match):
+            glyph = match.group(1)
+            css_class = "glyph accid" if glyph in accid_glyphs else "glyph"
+            return f"<span class='{css_class}'>{{{{ref.getGlyph('{glyph}')}}}}</span>"
+
+        return re.sub(match_pattern, replace_glyph, text)
 
     ############################################
     # Helper function: _strip_by_delimiter

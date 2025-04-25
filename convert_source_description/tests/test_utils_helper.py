@@ -1,3 +1,4 @@
+# pylint: disable=protected-access
 """Tests for utils_helper.py"""
 
 import pytest
@@ -103,7 +104,7 @@ class TestFindSiglumIndices:
         actual_indices = helper.find_siglum_indices(paras)
         # Assert
         assert actual_indices == expected_indices
-    
+
     def test_with_siglum_in_brackets(self, helper):
         """Test that a siglum in brackets (missing) is found."""
         # Arrange
@@ -253,7 +254,10 @@ class TestGetParagraphContentByLabel:
         assert actual_content == expected_content
 
     def test_if_content_returned_without_punctuation_marks(self, helper):
-        """Test that the correct content of a paragraph is returned as array without final punctuation marks if found."""
+        """
+        Test that the correct content of a paragraph is returned as array 
+        without final punctuation marks if found.
+        """
         # Arrange
         paras = [
             BeautifulSoup('<p>Paragraph 1</p>', 'html.parser').p,
@@ -301,7 +305,13 @@ class TestGetParagraphContentByLabel:
         """Test that the correct content of a paragraph is returned if found."""
         # Arrange
         label = 'Beschreibstoff:'
-        expected_content = ['Notenpapier, 28 Systeme, Format: hoch 343 × 264 mm, Firmenzeichen abgerissen', 'Notenpapier, 12 Systeme (unten beschnitten), Format (quer): 163 × 255 mm, kein Firmenzeichen']
+        expected_content = [
+            'Notenpapier, 28 Systeme, Format: hoch 343 × 264 mm, Firmenzeichen abgerissen',
+            (
+                'Notenpapier, 12 Systeme (unten beschnitten), Format (quer): '
+                '163 × 255 mm, kein Firmenzeichen'
+            )
+        ]
         # Act
         actual_content = helper._get_paragraph_content_by_label(label, sample_soup_paras)
         # Assert
@@ -651,7 +661,7 @@ class TestStripTagAndClean:
         result = helper._strip_tag_and_clean(content, tag)
         # Assert
         assert result == expected_result
-        
+
     def test_with_none(self, helper):
         """Test that it returns an empty string when passed None."""
         # Arrange
@@ -746,5 +756,3 @@ class TestStripTag:
         actual_stripped_result = helper._strip_tag(content, 'p')
         # Assert
         assert actual_stripped_result == expected_result
-
-

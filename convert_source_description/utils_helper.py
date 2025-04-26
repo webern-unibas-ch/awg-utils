@@ -953,31 +953,37 @@ class ConversionUtilsHelper:
         Returns:
         str: The content within the specified tags, with leading and trailing whitespace removed.
         """
-        stripped_content = self._strip_tag(self._strip_tag(content, tag), P_TAG)
+        stripped_content = self._strip_tag(content, tag)
+        stripped_content = self._strip_tag(stripped_content, P_TAG)
         return stripped_content.replace('</p><p>', ' <br /> ')
 
     ############################################
     # Helper function: _strip_tag
     ############################################
 
-    def _strip_tag(self, tag: Tag, tag_str: str) -> str:
+    def _strip_tag(self, content: str, tag_str: str) -> str:
         """
         Strips opening and closing tags from an HTML/XML string and returns the
         content within the tags as a string.
 
         Args:
-        tag (Tag): The input BeautifulSoup tag.
+        content (str): The input string.
         tagStr (str): The name of the tag to strip.
 
         Returns:
         str: The content within the specified tags, with leading and trailing whitespace removed.
         """
-        stripped_str = str(tag) if tag is not None else ""
+        if content is None:
+            print(f"Content is None for tag_str: {tag_str}")
+            return ""
+
+        stripped_str = str(content)
 
         # Strip opening and closing tags from input (incl. attributes in opening tag)
-        opening_tag_start_index = stripped_str.find('<' + tag_str)
-        opening_tag_end_index = stripped_str.find('>', opening_tag_start_index) + 1
         closing_tag = "</" + tag_str + ">"
+        opening_tag = "<" + tag_str
+        opening_tag_start_index = stripped_str.find(opening_tag)
+        opening_tag_end_index = stripped_str.find('>', opening_tag_start_index) + 1
 
         stripped_str = stripped_str[opening_tag_end_index:]
         stripped_str = stripped_str.removesuffix(closing_tag)

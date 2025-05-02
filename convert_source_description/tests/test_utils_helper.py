@@ -392,7 +392,7 @@ class TestGetParagraphIndexByLabel:
 class TestReplaceGlyphs:
     """Tests for the _replace_glyphs function."""
 
-    def test_without_classified_glyphs(self, helper):
+    def test_glyphs_without_additional_class(self, helper):
         """Test with glyphs that do not require an additional class."""
         input_text = "[f] [ff] [fff] [mp] [ped]"
         expected_output = (
@@ -456,7 +456,7 @@ class TestReplaceGlyphs:
         )
         assert helper._replace_glyphs(input_text) == expected_output
 
-    def test_replace_glyphs_with_hyphen_exclusion(self, helper):
+    def test_with_hyphen_exclusion(self, helper):
         """Test that glyphs followed by a hyphen are not replaced."""
         input_text = "[a] [b] [bb-] [#-] [x]"
         expected_output = (

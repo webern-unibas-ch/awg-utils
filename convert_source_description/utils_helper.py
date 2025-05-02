@@ -881,30 +881,12 @@ class ConversionUtilsHelper:
             str: The replaced text.
         """
         glyphs = [
-            "a",
-            "b",
-            "bb",
-            "#",
-            "x",
-            "f",
-            "ff",
-            "fff",
-            "ffff",
-            "mf",
-            "mp",
-            "p",
-            "pp",
-            "ppp",
-            "pppp",
+            "a", "b", "bb", "#", "x",
+            "f", "ff", "fff", "ffff", "mf", "mp", "p", "pp", "ppp", "pppp",
             "ped",
-            "sf",
-            "sfz",
-            "sp",
-            "Achtelnote",
-            "Ganze Note",
-            "Halbe Note",
-            "Sechzehntelnote",
-            "Viertelnote"
+            "sf", "sfz","sp",
+            "Achtelnote", "Ganze Note", "Halbe Note",
+            "Punktierte Halbe Note", "Sechzehntelnote", "Viertelnote"
         ]
         glyph_pattern = '|'.join(re.escape(glyph) for glyph in glyphs)
 
@@ -912,10 +894,18 @@ class ConversionUtilsHelper:
         match_pattern = rf'\[({glyph_pattern})\](?!-)'
 
         accid_glyphs = {"a", "b", "bb", "#", "x"}
+        note_glyphs = {
+            "Achtelnote", "Ganze Note", "Halbe Note",
+            "Punktierte Halbe Note", "Sechzehntelnote", "Viertelnote"
+        }
 
         def replace_glyph(match):
             glyph = match.group(1)
-            css_class = "glyph accid" if glyph in accid_glyphs else "glyph"
+            css_class = (
+                "glyph accid" if glyph in accid_glyphs
+                else "glyph note" if glyph in note_glyphs
+                else "glyph"
+            )
             return f"<span class='{css_class}'>{{{{ref.getGlyph('{glyph}')}}}}</span>"
 
         return re.sub(match_pattern, replace_glyph, text)

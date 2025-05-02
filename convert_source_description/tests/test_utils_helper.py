@@ -392,8 +392,8 @@ class TestGetParagraphIndexByLabel:
 class TestReplaceGlyphs:
     """Tests for the _replace_glyphs function."""
 
-    def test_without_accid_glyphs(self, helper):
-        """Test with glyphs that do not require the 'accid' class."""
+    def test_glyphs_without_additional_class(self, helper):
+        """Test with glyphs that do not require an additional class."""
         input_text = "[f] [ff] [fff] [mp] [ped]"
         expected_output = (
             "<span class='glyph'>{{ref.getGlyph('f')}}</span> "
@@ -416,15 +416,32 @@ class TestReplaceGlyphs:
         )
         assert helper._replace_glyphs(input_text) == expected_output
 
+    def test_with_note_glyphs(self, helper):
+        """Test with glyphs that require the 'note' class."""
+        input_text = (
+            "[Achtelnote] [Ganze Note] [Halbe Note] [Punktierte Halbe Note] "
+            "[Sechzehntelnote] [Viertelnote]"
+        )
+        expected_output = (
+            "<span class='glyph note'>{{ref.getGlyph('Achtelnote')}}</span> "
+            "<span class='glyph note'>{{ref.getGlyph('Ganze Note')}}</span> "
+            "<span class='glyph note'>{{ref.getGlyph('Halbe Note')}}</span> "
+            "<span class='glyph note'>{{ref.getGlyph('Punktierte Halbe Note')}}</span> "
+            "<span class='glyph note'>{{ref.getGlyph('Sechzehntelnote')}}</span> "
+            "<span class='glyph note'>{{ref.getGlyph('Viertelnote')}}</span>"
+        )
+        assert helper._replace_glyphs(input_text) == expected_output
+
     def test_with_mixed_glyphs(self, helper):
         """Test with a mix of accid and non-accid glyphs."""
-        input_text = "[a] [f] [bb] [mp] [#]"
+        input_text = "[a] [f] [bb] [mp] [#] [Achtelnote]"
         expected_output = (
             "<span class='glyph accid'>{{ref.getGlyph('a')}}</span> "
             "<span class='glyph'>{{ref.getGlyph('f')}}</span> "
             "<span class='glyph accid'>{{ref.getGlyph('bb')}}</span> "
             "<span class='glyph'>{{ref.getGlyph('mp')}}</span> "
-            "<span class='glyph accid'>{{ref.getGlyph('#')}}</span>"
+            "<span class='glyph accid'>{{ref.getGlyph('#')}}</span> "
+            "<span class='glyph note'>{{ref.getGlyph('Achtelnote')}}</span>"
         )
         assert helper._replace_glyphs(input_text) == expected_output
 
@@ -439,7 +456,7 @@ class TestReplaceGlyphs:
         )
         assert helper._replace_glyphs(input_text) == expected_output
 
-    def test_replace_glyphs_with_hyphen_exclusion(self, helper):
+    def test_with_hyphen_exclusion(self, helper):
         """Test that glyphs followed by a hyphen are not replaced."""
         input_text = "[a] [b] [bb-] [#-] [x]"
         expected_output = (

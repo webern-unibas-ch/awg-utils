@@ -31,7 +31,7 @@ python -m venv .venv
 source .venv/Scripts/activate
 ```
 
-> [!NOTE]  
+> [!NOTE]
 > Only for Devs: To create (or update) dependency files, install pip-tools via `python -m pip install pip-tools`
 > 
 > Then create/update the `requirements.txt` file via `pip-compile --generate-hashes --strip-extras requirements.in`

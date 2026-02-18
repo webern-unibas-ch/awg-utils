@@ -9,7 +9,7 @@ A repo for utility scripts of the Anton Webern Gesamtausgabe.
 
 ---
 
-## Virtual enironments
+## Virtual Environments
 
 ### Activating a Virtual Environment
 
@@ -31,11 +31,18 @@ python -m venv .venv
 source .venv/Scripts/activate
 ```
 
+> [!NOTE]
+> Only for Devs: To create (or update) dependency files, install pip-tools via `python -m pip install pip-tools`
+> 
+> Then create/update the `requirements.txt` file via `pip-compile --generate-hashes --strip-extras requirements.in`
+
+
 4. Install the dependencies:
 
 ```bash
 pip install -r requirements.txt --require-hashes
 ```
+
 
 ### Deactivating a Virtual Environment
 

@@ -37,6 +37,11 @@ source .venv/Scripts/activate
 pip install -r requirements.txt --require-hashes
 ```
 
+> [!NOTE]  
+> For Devs: After activating the virtual environment, install pip-tools via `python -m pip install pip-tools`
+> 
+> Then create the requirements.txt file via `pip-compile --generate-hashes --strip-extras requirements.in`
+
 ### Deactivating a Virtual Environment
 
 To deactivate the currently active virtual environment, simply run:

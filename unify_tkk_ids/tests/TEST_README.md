@@ -57,8 +57,8 @@ Tests the `display_uncertainties()` function that validates ID updates:
 - SVG orphans (unchanged IDs in SVG files)
 - TODO entries are properly ignored
 
-### `TestGetRelevantSvgs`
-Tests the `get_relevant_svgs()` function that finds matching SVG files:
+### `TestFindRelevantSvgs`
+Tests the `find_relevant_svg_files()` function that finds matching SVG files:
 - Standard entries (non-SkRT)
 - SkRT entries (Reihentabelle files)
 - No matches found
@@ -72,7 +72,7 @@ Tests the `update_svg_id()` function that updates IDs in SVG content:
 - Multiple occurrences
 
 ### `TestProcessTkkIds`
-Integration tests for the main `process_tkk_ids()` function:
+Integration tests for the main `unify_tkk_ids()` function:
 - Successful processing workflow
 - Error handling (missing files/directories)
 - File I/O operations
@@ -134,7 +134,7 @@ collected 25 items
 test_unify_tkk_ids.py::TestExtractNumbers::test_extract_numbers_simple PASSED
 test_unify_tkk_ids.py::TestExtractNumbers::test_extract_numbers_multiple PASSED
 ...
-test_unify_tkk_ids.py::TestProcessTkkIds::test_process_tkk_ids_success PASSED
+test_unify_tkk_ids.py::TestUnifyTkkIds::test_unify_tkk_ids_success PASSED
 
 ======== 25 passed in 2.34s ========
 

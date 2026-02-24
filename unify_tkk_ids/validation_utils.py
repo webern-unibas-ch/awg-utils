@@ -12,11 +12,11 @@ import re
 
 def validate_json_entries(data, prefix):
     """Validate JSON entries for unchanged svgGroupId values.
-    
+
     Args:
         data (dict): The processed JSON textcritics data structure
         prefix (str): The target prefix that all updated IDs should start with
-    
+
     Returns:
         int: Number of errors found
     """
@@ -38,11 +38,11 @@ def validate_json_entries(data, prefix):
 
 def validate_svg_entries(loaded_svgs, prefix):
     """Validate SVG entries for unchanged tkk class IDs.
-    
+
     Args:
         loaded_svgs (dict): Dictionary mapping SVG filenames to their content
         prefix (str): The target prefix that all updated IDs should start with
-    
+
     Returns:
         int: Number of errors found
     """
@@ -66,15 +66,15 @@ def validate_svg_entries(loaded_svgs, prefix):
 
 def display_validation_report(data, prefix, loaded_svgs):
     """Validate and report the success of TKK ID unification process.
-    
+
     Performs post-processing validation to ensure all TKK-related IDs have been
     properly updated with the specified prefix. Identifies and reports:
     - JSON entries with unchanged svgGroupId values (excluding "TODO" entries)
     - SVG elements with class="tkk" that retain old ID values
-    
+
     Generates a comprehensive error report with specific file locations and
     entry IDs for debugging purposes.
-    
+
     Args:
         data (dict): The processed JSON textcritics data structure containing
                     textcritics entries with commentary and blockComments.
@@ -82,7 +82,7 @@ def display_validation_report(data, prefix, loaded_svgs):
                      (e.g., "g-tkk-").
         loaded_svgs (dict): Dictionary mapping SVG filenames to their content
                            and path information from the processing cache.
-                           
+
     Returns:
         None: Prints validation results directly to stdout. Does not return values.
     """

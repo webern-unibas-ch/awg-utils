@@ -12,8 +12,8 @@ Functions:
 
 Usage:
     from extraction_utils import extract_moldenhauer_number, extract_svg_group_ids
-    
-    number = extract_moldenhauer_number("M_143_TF1")  
+
+    number = extract_moldenhauer_number("M_143_TF1")
     ids, comments = extract_svg_group_ids(entry_data)
 """
 
@@ -22,17 +22,17 @@ import re
 
 def extract_moldenhauer_number(text):
     """Extract the Moldenhauer catalog number from entry ID strings.
-    
+
     Supports both underscore and non-underscore patterns:
     - 'M_143_TF1' -> '143' (classic format with underscore)
     - 'M143_Textfassung1' -> '143' (filename format without underscore)
     - 'Mx_136_Sk1' -> '136' (Mx variant with underscore)
     - 'Mx789_file' -> '789' (Mx variant without underscore)
-    
+
     Args:
         text (str): The entry ID or filename to extract number from.
                    None values are converted to string automatically.
-        
+
     Returns:
         str: The extracted Moldenhauer number as string, or empty string if no match found.
     """
@@ -42,10 +42,10 @@ def extract_moldenhauer_number(text):
 
 def extract_svg_group_ids(entry):
     """Extract all svgGroupIds and their corresponding block comments from an entry.
-    
+
     Args:
         entry (dict): Single textcritics entry
-        
+
     Returns:
         tuple: (svg_group_ids, block_comments) - lists of IDs and their comment objects
     """

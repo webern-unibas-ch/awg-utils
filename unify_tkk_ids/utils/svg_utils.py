@@ -7,7 +7,7 @@ Functions for finding, matching, and updating SVG files and their content.
 """
 
 import re
-from extraction_utils import extract_moldenhauer_number
+from .extraction_utils import extract_moldenhauer_number
 
 
 def find_matching_svg_files(svg_group_id, relevant_svgs, get_svg_data):

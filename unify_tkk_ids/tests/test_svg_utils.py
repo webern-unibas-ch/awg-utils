@@ -14,7 +14,7 @@ from unittest.mock import patch
 import pytest
 
 # Import the functions we want to test
-from svg_utils import (
+from utils.svg_utils import (
     find_matching_svg_files,
     find_relevant_svg_files,
     update_svg_id
@@ -95,7 +95,7 @@ class TestFindMatchingSvgFiles(unittest.TestCase):
         expected = ["file1.svg", "file3.svg"]
         self.assertEqual(result, expected)
 
-    @patch('svg_utils.update_svg_id')
+    @patch('utils.svg_utils.update_svg_id')
     def test_find_matching_svg_files_with_update_errors(self, mock_update_svg_id):
         """Test handling of update_svg_id errors"""
         # Mock update_svg_id to return error for file1.svg

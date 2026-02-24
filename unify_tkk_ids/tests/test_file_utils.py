@@ -30,7 +30,7 @@ from io import StringIO
 import pytest
 
 # Import the functions we want to test
-from file_utils import (
+from utils.file_utils import (
     load_and_validate_inputs,
     create_svg_loader,
     save_results,

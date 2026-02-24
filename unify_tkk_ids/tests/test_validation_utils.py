@@ -22,8 +22,8 @@ from unittest.mock import patch
 from io import StringIO
 import pytest
 
-# Import validation functions from validation_utils
-from validation_utils import (
+# Import validation functions from utils.validation_utils
+from utils.validation_utils import (
     display_validation_report,
     validate_json_entries,
     validate_svg_entries

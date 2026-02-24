@@ -22,7 +22,7 @@ import unittest
 import pytest
 
 # Import extraction functions from extraction_utils
-from extraction_utils import (
+from utils.extraction_utils import (
     extract_moldenhauer_number,
     extract_svg_group_ids
 )

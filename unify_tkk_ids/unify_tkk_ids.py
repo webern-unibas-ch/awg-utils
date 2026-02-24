@@ -12,10 +12,10 @@ and counting continues as if nothing happened: g-tkk-1, g-tkk-2, TODO, g-tkk-3, 
 """
 
 import sys
-from extraction_utils import extract_moldenhauer_number, extract_svg_group_ids
-from file_utils import load_and_validate_inputs, create_svg_loader, save_results
-from svg_utils import find_matching_svg_files, find_relevant_svg_files, update_svg_id
-from validation_utils import display_validation_report
+from utils.extraction_utils import extract_moldenhauer_number, extract_svg_group_ids
+from utils.file_utils import load_and_validate_inputs, create_svg_loader, save_results
+from utils.svg_utils import find_matching_svg_files, find_relevant_svg_files, update_svg_id
+from utils.validation_utils import display_validation_report
 
 
 def process_single_svg_group_id(svg_group_id, block_comment, matching_files,

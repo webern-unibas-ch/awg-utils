@@ -194,15 +194,15 @@ def main():
     ##### fill in:
     json_path = './tests/data/textcritics.json'
     # json_path = (
-        'd:/Repositories/webern-unibas-ch/awg-app/src/assets/data/'
-        'edition/series/2/section/2a/m114/textcritics.json'
+    #    'd:/Repositories/webern-unibas-ch/awg-app/src/assets/data/'
+    #    'edition/series/2/section/2a/m114/textcritics.json'
     #)
 
     ##### fill in:
     svg_folder = './tests/img/'
     # svg_folder = (
-        'd:/Repositories/webern-unibas-ch/awg-app/src/assets/img/'
-        'edition/series/2/section/2a/m114/'
+    #    'd:/Repositories/webern-unibas-ch/awg-app/src/assets/img/'
+    #    'edition/series/2/section/2a/m114/'
     #)
 
     prefix = "g-tkk-"

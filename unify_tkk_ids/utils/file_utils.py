@@ -100,6 +100,7 @@ def save_json_file(data, json_path):
     """
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
+        f.write('\n')  # Add trailing newline
 
 
 def save_results(data, loaded_svg_texts, json_path):

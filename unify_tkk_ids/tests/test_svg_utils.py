@@ -133,6 +133,12 @@ class TestFindRelevantSvgs(unittest.TestCase):
             "M143_Textfassung1-2von2-final.svg",
             "M143_Textfassung2-1von1-final.svg",
             "M143_Sk1-1von1-final.svg",
+            "M143_Sk10-1von9-final.svg",
+            "M143_Sk10-2von9-final.svg",
+            "M143_Sk10-3von9-final.svg",
+            "M143_Sk11-1von4-final.svg",
+            "M143_Sk11-2von4-final.svg",
+            "M143_Sk12-1von2-final.svg",
             "M143_Sk2_1-1von1-final.svg",
             "M143_Sk2_1_1_1-1von1-final.svg",
             "M143_Sk2_2-1von1-final.svg",
@@ -190,7 +196,42 @@ class TestFindRelevantSvgs(unittest.TestCase):
         expected = ["M143_Sk2_1_1_1-1von1-final.svg"]
         self.assertEqual(result, expected)
 
-    def test_find_relevant_svg_files_no_id_specified(self):
+    def test_find_relevant_svg_files_for_sk1_exact_match(self):
+        """Test that Sk1 only matches Sk1 files, not Sk10, Sk11, etc."""
+        result = find_relevant_svg_files("M_143_Sk1", self.all_svg_files, "143")
+        # Should only get Sk1 files, not Sk10, Sk11, Sk12
+        expected = ["M143_Sk1-1von1-final.svg"]
+        self.assertEqual(result, expected)
+
+    def test_find_relevant_svg_files_for_sk10_exact_match(self):
+        """Test that Sk10 only matches Sk10 files, not Sk1 or other Sk1x files"""
+        result = find_relevant_svg_files("M_143_Sk10", self.all_svg_files, "143")
+        # Should only get Sk10 files
+        expected = [
+            "M143_Sk10-1von9-final.svg",
+            "M143_Sk10-2von9-final.svg",
+            "M143_Sk10-3von9-final.svg"
+        ]
+        self.assertEqual(result, expected)
+
+    def test_find_relevant_svg_files_for_sk11_exact_match(self):
+        """Test that Sk11 only matches Sk11 files, not Sk1 or Sk1x files"""
+        result = find_relevant_svg_files("M_143_Sk11", self.all_svg_files, "143")
+        # Should only get Sk11 files
+        expected = [
+            "M143_Sk11-1von4-final.svg",
+            "M143_Sk11-2von4-final.svg"
+        ]
+        self.assertEqual(result, expected)
+
+    def test_find_relevant_svg_files_for_sk12_exact_match(self):
+        """Test that Sk12 only matches Sk12 files"""
+        result = find_relevant_svg_files("M_143_Sk12", self.all_svg_files, "143")
+        # Should only get Sk12 files
+        expected = ["M143_Sk12-1von2-final.svg"]
+        self.assertEqual(result, expected)
+
+    def test_find_relevant_svg_files_with_no_id_specified(self):
         """Test getting SVGs when no TF or Sk is specified.
         Should get all non-rowtable files.
         """
@@ -201,6 +242,12 @@ class TestFindRelevantSvgs(unittest.TestCase):
             "M143_Textfassung1-2von2-final.svg",
             "M143_Textfassung2-1von1-final.svg",
             "M143_Sk1-1von1-final.svg",
+            "M143_Sk10-1von9-final.svg",
+            "M143_Sk10-2von9-final.svg",
+            "M143_Sk10-3von9-final.svg",
+            "M143_Sk11-1von4-final.svg",
+            "M143_Sk11-2von4-final.svg",
+            "M143_Sk12-1von2-final.svg",
             "M143_Sk2_1-1von1-final.svg",
             "M143_Sk2_1_1_1-1von1-final.svg",
             "M143_Sk2_2-1von1-final.svg",
@@ -210,18 +257,18 @@ class TestFindRelevantSvgs(unittest.TestCase):
         ]
         self.assertEqual(result, expected)
 
-    def test_find_relevant_svg_files_skrt(self):
+    def test_find_relevant_svg_files_with_skrt(self):
         """Test getting SVGs for SkRT entries"""
         result = find_relevant_svg_files("SkRT", self.all_svg_files, "")
         expected = ["op25_C_Reihentabelle-1von1-final.svg"]
         self.assertEqual(result, expected)
 
-    def test_find_relevant_svg_files_no_matches(self):
+    def test_find_relevant_svg_files_with_no_matches(self):
         """Test getting SVGs when no matches exist"""
         result = find_relevant_svg_files("M_999", self.all_svg_files, "999")
         self.assertEqual(result, [])
 
-    def test_find_relevant_svg_files_empty_file_list(self):
+    def test_find_relevant_svg_files_with_empty_file_list(self):
         """Test with empty SVG file list"""
         result = find_relevant_svg_files("M_143", [], "143")
         self.assertEqual(result, [])

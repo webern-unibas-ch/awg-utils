@@ -69,7 +69,8 @@ def find_relevant_svg_files(new_id, all_svg_files, current_main_number):
     sk_match = re.search(r'(Sk\d+(?:_\d+)*)', new_id)
     if sk_match:
         sk_identifier = sk_match.group(1)
-        pattern = rf'{re.escape(sk_identifier)}(?!_)'
+        # Prevent matching when the Sk identifier is followed by any digit or underscore
+        pattern = rf'{re.escape(sk_identifier)}(?![\d_])'
         return [f for f in candidate_svg_files if re.search(pattern, f)]
 
     # Default: all non-Reihentabelle files for this Moldenhauer number

@@ -4,17 +4,26 @@
 Unify TKK Group IDs - Pure Python Script
 Made by Eli (lili041 --Github) with Google Gemini
 
-This script unifies TKK group IDs in JSON textcritic files and corresponding SVG files.
-You need to fill in the path to the JSON textcritics file and the SVG folder path.
+This script unifies TKK group IDs in JSON textcritic files
+and corresponding SVG files.
+You need to fill in the path to the JSON textcritics file
+and the SVG folder path.
 
-ACHTUNG: TODO entries are skipped, but they are also not counted within a block,
-and counting continues as if nothing happened: g-tkk-1, g-tkk-2, TODO, g-tkk-3, ...
+ACHTUNG: TODO entries are skipped, but they are also not counted
+within a block, and counting continues as if nothing happened:
+g-tkk-1, g-tkk-2, TODO, g-tkk-3, ...
 """
 
 import sys
-from utils.extraction_utils import extract_moldenhauer_number, extract_svg_group_ids
-from utils.file_utils import load_and_validate_inputs, create_svg_loader, save_results
-from utils.svg_utils import find_matching_svg_files, find_relevant_svg_files, update_svg_id
+from utils.extraction_utils import (
+    extract_moldenhauer_number, extract_svg_group_ids
+)
+from utils.file_utils import (
+    load_and_validate_inputs, create_svg_loader, save_results
+)
+from utils.svg_utils import (
+    find_matching_svg_files, find_relevant_svg_files, update_svg_id
+)
 from utils.validation_utils import display_validation_report
 
 
@@ -23,7 +32,8 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
     """Process a single svgGroupId through the complete update workflow.
 
     Handles duplicate detection, JSON updates, and SVG file modifications
-    for a single svgGroupId. Returns success/failure status for counter management.
+    for a single svgGroupId. Returns success/failure status for
+    counter management.
 
     Args:
         svg_group_id (str): The original ID to replace
@@ -36,12 +46,20 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
         bool: True if updated successfully, False if skipped
     """
     if len(matching_files) == 0:
-        print(f" [!] ERROR: '{svg_group_id}' with class 'tkk' not found in any relevant SVG files")
+        print(
+            f" [!] ERROR: '{svg_group_id}' with class 'tkk' not found "
+            f"in any relevant SVG files"
+        )
         return False
     if len(matching_files) > 1:
-        print(f" [!] WARNING: '{svg_group_id}' found in {len(matching_files)} files: "
-              f"{matching_files}")
-        print("     Skipping due to multiple occurrences - manual review required")
+        print(
+            f" [!] WARNING: '{svg_group_id}' found in {len(matching_files)} "
+            f"files: {matching_files}"
+        )
+        print(
+            "     Skipping due to multiple occurrences - "
+            "manual review required"
+        )
         return False
 
     # Update JSON and SVG for single occurrence
@@ -51,13 +69,16 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
     # Update the single matching SVG file
     svg_filename = matching_files[0]
     svg_data = get_svg_data(svg_filename)
-    svg_data["content"], _ = update_svg_id(svg_data["content"], svg_group_id, new_id)
+    svg_data["content"], _ = update_svg_id(
+        svg_data["content"], svg_group_id, new_id
+    )
     print(f" [SVG] Changing '{svg_group_id}' -> '{new_id}' in {svg_filename}")
 
     return True
 
 
-def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, prefix):
+def process_textcritics_entry(
+        textcritics_entry, all_svg_files, get_svg_data, prefix):
     """Process a single textcritics entry and all its block comments.
 
     Args:
@@ -102,12 +123,15 @@ def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, pr
     counter = 1
     for svg_group_id, block_comment in zip(svg_group_ids, block_comments):
         # Find all matching SVG files for this ID
-        matching_files = find_matching_svg_files(svg_group_id, relevant_svgs, get_svg_data)
+        matching_files = find_matching_svg_files(
+            svg_group_id, relevant_svgs, get_svg_data
+        )
 
         # Update if single occurrence found
         new_id = f"{prefix}{counter}"
-        if process_single_svg_group_id(svg_group_id, block_comment, matching_files,
-                                      get_svg_data, new_id):
+        if process_single_svg_group_id(
+                svg_group_id, block_comment, matching_files,
+                get_svg_data, new_id):
             counter += 1
 
 
@@ -135,7 +159,9 @@ def unify_tkk_ids(json_path, svg_folder, prefix="g-tkk-"):
     # Initialize SVG loader
     final_svg_cache = {}
     loaded_svg_texts = {}
-    get_svg_data = create_svg_loader(svg_folder, final_svg_cache, loaded_svg_texts)
+    get_svg_data = create_svg_loader(
+        svg_folder, final_svg_cache, loaded_svg_texts
+    )
 
     # Get entries from textcritics data structure
     all_textcritics_entries = (
@@ -146,7 +172,9 @@ def unify_tkk_ids(json_path, svg_folder, prefix="g-tkk-"):
 
     # Process each textcritics entry independently
     for textcritics_entry in all_textcritics_entries:
-        process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, prefix)
+        process_textcritics_entry(
+            textcritics_entry, all_svg_files, get_svg_data, prefix
+        )
 
     # Save all modified files
     save_results(json_data, loaded_svg_texts, json_path)
@@ -165,9 +193,17 @@ def main():
 
     ##### fill in:
     json_path = './tests/data/textcritics.json'
+    # json_path = (
+        'd:/Repositories/webern-unibas-ch/awg-app/src/assets/data/'
+        'edition/series/2/section/2a/m114/textcritics.json'
+    #)
 
     ##### fill in:
     svg_folder = './tests/img/'
+    # svg_folder = (
+        'd:/Repositories/webern-unibas-ch/awg-app/src/assets/img/'
+        'edition/series/2/section/2a/m114/'
+    #)
 
     prefix = "g-tkk-"
 

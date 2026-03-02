@@ -60,7 +60,8 @@ class TestDisplayValidationReport(unittest.TestCase):
         self.prefix = "g-tkk-"
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_display_validation_report_with_single_file_single_entry_no_errors(self, mock_stdout):
+    def test_display_validation_report_with_single_file_single_entry_no_errors(
+            self, mock_stdout):
         """JSON data ids == single file SVG data with single id (no errors)"""
         data = JSON_DATA_WITH_SINGLE_PREFIXED_ID.copy()
         loaded_svgs = SAMPLE_SVG_WITH_SINGLE_PREFIXED_ID.copy()
@@ -69,7 +70,8 @@ class TestDisplayValidationReport(unittest.TestCase):
         output = mock_stdout.getvalue()
         self.assertIn("All JSON and SVG 'tkk' IDs successfully updated", output)
 
-    def test_display_validation_report_with_single_file_multiple_entries_no_errors(self):
+    def test_display_validation_report_with_single_file_multiple_entries_no_errors(
+            self):
         """JSON data ids == single file SVG data with multiple ids (no errors)"""
         data = JSON_DATA_WITH_2_PREFIXED_IDS.copy()
         loaded_svgs = SAMPLE_SVG_WITH_MULTIPLE_PREFIXED_IDS.copy()
@@ -77,10 +79,12 @@ class TestDisplayValidationReport(unittest.TestCase):
         with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
             display_validation_report(data, self.prefix, loaded_svgs)
             output = mock_stdout.getvalue()
-            self.assertIn("All JSON and SVG 'tkk' IDs successfully updated", output)
+            self.assertIn(
+                "All JSON and SVG 'tkk' IDs successfully updated", output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_display_validation_report_with_multiple_svg_files_no_errors(self, mock_stdout):
+    def test_display_validation_report_with_multiple_svg_files_no_errors(
+            self, mock_stdout):
         """JSON data ids == multiple file SVG data ids (no errors)"""
         data = JSON_DATA_WITH_4_PREFIXED_IDS.copy()
         loaded_svgs = SAMPLE_MULTIPLE_SVG_WITH_PREFIXED_IDS.copy()
@@ -90,7 +94,8 @@ class TestDisplayValidationReport(unittest.TestCase):
         self.assertIn("All JSON and SVG 'tkk' IDs successfully updated", output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_display_validation_report_with_unchanged_json_ids(self, mock_stdout):
+    def test_display_validation_report_with_unchanged_json_ids(
+            self, mock_stdout):
         """Test with unchanged JSON IDs"""
         data = JSON_DATA_WITH_MIXED_IDS.copy()
 
@@ -102,8 +107,10 @@ class TestDisplayValidationReport(unittest.TestCase):
         self.assertIn("Total issues found: 1", output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_display_validation_report_with_single_file_svg_orphans(self, mock_stdout):
-        """JSON data ids != single file SVG data ids (orphan IDs with a single file)"""
+    def test_display_validation_report_with_single_file_svg_orphans(
+            self, mock_stdout):
+        """JSON data ids != single file SVG data ids
+        (orphan IDs with a single file)"""
         data = JSON_DATA_WITH_SINGLE_PREFIXED_ID.copy()
 
         loaded_svgs = SAMPLE_SVG_WITH_MIXED_IDS.copy()
@@ -113,8 +120,10 @@ class TestDisplayValidationReport(unittest.TestCase):
         self.assertIn("SVG ORPHAN: ID 'old-id-1'", output)
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_display_validation_report_with_multiple_files_svg_orphans(self, mock_stdout):
-        """JSON data ids != multiple file SVG data ids (orphan IDs with multiple files)"""
+    def test_display_validation_report_with_multiple_files_svg_orphans(
+            self, mock_stdout):
+        """JSON data ids != multiple file SVG data ids
+        (orphan IDs with multiple files)"""
         data = JSON_DATA_WITH_2_PREFIXED_IDS.copy()
         loaded_svgs = SAMPLE_MULTIPLE_SVG_WITH_MIXED_IDS.copy()
 
@@ -136,7 +145,8 @@ class TestDisplayValidationReport(unittest.TestCase):
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_display_validation_report_with_todo_and_mixed_ids(self, mock_stdout):
-        """JSON data with TODO entries and mixed unchanged IDs (should report only unchanged ID error)"""
+        """JSON data with TODO entries and mixed unchanged IDs
+        (should report only unchanged ID error)"""
         data = JSON_DATA_WITH_TODO_AND_MIXED_IDS.copy()
 
         loaded_svgs = SAMPLE_SVG_WITH_SINGLE_PREFIXED_ID.copy()
@@ -155,7 +165,8 @@ class TestDisplayValidationReport(unittest.TestCase):
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_display_validation_report_with_malformed_json(self, mock_stdout):
-        """Malformed JSON data (should report success since validation should be skipped)"""
+        """Malformed JSON data
+        (should report success since validation should be skipped)"""
         data = JSON_DATA_MALFORMED.copy()
 
         display_validation_report(data, "g-tkk-", {})
@@ -214,7 +225,8 @@ class TestValidateJsonEntries(unittest.TestCase):
         self.assertEqual(errors, 0)
 
     def test_validate_json_entries_with_todo_and_mixed_ids(self):
-        """Test that TODO entries are ignored even when mixed with unchanged IDs"""
+        """Test that TODO entries are ignored even when mixed
+        with unchanged IDs"""
         data = JSON_DATA_WITH_TODO_AND_MIXED_IDS.copy()
 
         errors = validate_json_entries(data, self.prefix)
@@ -228,7 +240,8 @@ class TestValidateJsonEntries(unittest.TestCase):
         self.assertEqual(errors, 0)
 
     def test_validate_json_entries_with_malformed_data(self):
-        """Test with malformed JSON data (should report no errors since validation should be skipped)"""
+        """Test with malformed JSON data
+        (should report no errors since validation should be skipped)"""
         data = JSON_DATA_MALFORMED.copy()
 
         errors = validate_json_entries(data, self.prefix)
@@ -263,6 +276,13 @@ class TestValidateSvgEntries(unittest.TestCase):
 
         errors = validate_svg_entries(loaded_svgs, self.prefix)
         self.assertEqual(errors, 0)
+
+    def test_validate_single_svg_file_with_single_orphans(self):
+        """Test with only SVG IDs that weren't updated"""
+        loaded_svgs = SAMPLE_SVG_WITH_SINGLE_UNPREFIXED_ID.copy()
+
+        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        self.assertEqual(errors, 1)
 
     def test_validate_single_svg_file_with_all_orphans(self):
         """Test with only SVG IDs that weren't updated"""

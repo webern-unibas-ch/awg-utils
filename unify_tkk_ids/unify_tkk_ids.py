@@ -11,7 +11,7 @@ and the SVG folder path.
 
 ACHTUNG: TODO entries are skipped, but they are also not counted
 within a block, and counting continues as if nothing happened:
-g-tkk-1, g-tkk-2, TODO, g-tkk-3, ...
+g-tkk-{entry_id}-1, g-tkk-{entry_id}-2, TODO, g-tkk-{entry_id}-3, ...
 """
 
 import sys
@@ -119,7 +119,7 @@ def process_textcritics_entry(
         print(" No svgGroupIds to process")
         return
 
-    # Process each svgGroupId and replace with g-tkk-1, g-tkk-2, etc.
+    # Process each svgGroupId and replace with g-tkk-{entry_id}-1, g-tkk-{entry_id}-2, etc.
     counter = 1
     for svg_group_id, block_comment in zip(svg_group_ids, block_comments):
         # Find all matching SVG files for this ID
@@ -128,7 +128,8 @@ def process_textcritics_entry(
         )
 
         # Update if single occurrence found
-        new_id = f"{prefix}{counter}"
+        entry_id_formatted = textcritics_entry_id.lower()
+        new_id = f"{prefix}{entry_id_formatted}-{counter}"
         if process_single_svg_group_id(
                 svg_group_id, block_comment, matching_files,
                 get_svg_data, new_id):
@@ -141,7 +142,7 @@ def unify_tkk_ids(json_path, svg_folder, prefix="g-tkk-"):
     For each JSON entry:
     1. Collect all svgGroupIds from blockComments
     2. Find those IDs in relevant SVG files (where tkk class exists)
-    3. Replace with g-tkk-1, g-tkk-2, etc. in sequence per entry
+    3. Replace with g-tkk-{entry_id}-1, g-tkk-{entry_id}-2, etc. in sequence per entry
 
     Args:
         json_path (str): Path to the JSON textcritics file

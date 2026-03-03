@@ -352,21 +352,21 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_tf1-1",
+                                "svgGroupId": "g1145",
                                 "measure": "1",
                                 "system": "",
                                 "position": "4/8",
                                 "comment": "<em>rit.</em> versetzt von ungenauer Position zwischen 4/8 und 5/8 mit Blick auf <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk4a'})\"><strong>M 317 Sk4</strong></a>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_tf1-2",
+                                "svgGroupId": "g1198",
                                 "measure": "3",
                                 "system": "Ges.",
                                 "position": "1. Note",
                                 "comment": "<span class='glyph'>{{ref.getGlyph('[f]')}}</span> versetzt von 1. Pause."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_tf1-3",
+                                "svgGroupId": "g1204",
                                 "measure": "6",
                                 "system": "Ges.",
                                 "position": "1. Note",
@@ -393,7 +393,7 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk1-1",
+                                "svgGroupId": "g6494",
                                 "measure": "1–2",
                                 "system": "1",
                                 "position": "",
@@ -405,63 +405,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk2",
+                    "svgGroupId": "g6407",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk2_1",
+                    "svgGroupId": "g6443",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk2_1_1",
+                    "svgGroupId": "g6490",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk2_1_2",
+                    "svgGroupId": "g6454",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g6468",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk2_1_3",
+                    "svgGroupId": "g6479",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk3",
+                    "svgGroupId": "g6414",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk3_1",
+                    "svgGroupId": "g6434",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk1toM_317_Sk3_1_2",
+                    "svgGroupId": "g6425",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
@@ -483,21 +483,21 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2-1",
+                                "svgGroupId": "g1055",
                                 "measure": "A",
                                 "system": "1",
                                 "position": "1.–5. Reihenton",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2-2",
+                                "svgGroupId": "text74",
                                 "measure": "A",
                                 "system": "1",
                                 "position": "2. Reihenton",
                                 "comment": "<span class='glyph accid'>{{ref.getGlyph('[a]')}}</span> nachgezogen (überschreibt <span class='glyph accid'>{{ref.getGlyph('[b]')}}</span>?)."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2-3",
+                                "svgGroupId": "g1065",
                                 "measure": "B",
                                 "system": "1",
                                 "position": "4. Reihenton",
@@ -509,63 +509,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk1",
+                    "svgGroupId": "g536",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk2_1",
+                    "svgGroupId": "g572",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk2_1_1",
+                    "svgGroupId": "g608",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk2_1_2",
+                    "svgGroupId": "g583",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g597",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk2_1_3",
+                    "svgGroupId": "g619",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk3",
+                    "svgGroupId": "g554",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk3_1",
+                    "svgGroupId": "g563",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2toM_317_Sk3_1_2",
+                    "svgGroupId": "g547",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
@@ -586,56 +586,56 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1-1",
+                                "svgGroupId": "g1245",
                                 "measure": "1–3",
                                 "system": "1",
                                 "position": "",
                                 "comment": "Text in Kurrentschrift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1-2",
+                                "svgGroupId": "text164",
                                 "measure": "1",
                                 "system": "1",
                                 "position": "6/8",
                                 "comment": "<span class='glyph accid'>{{ref.getGlyph('[b]')}}</span> nachgezogen (überschreibt Ansatz von <span class='glyph accid'>{{ref.getGlyph('[#]')}}</span> zu dis<sup>2</sup>?)."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1-3",
+                                "svgGroupId": "g1254",
                                 "measure": "2",
                                 "system": "1",
                                 "position": "1. Note",
                                 "comment": "Durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1-4",
+                                "svgGroupId": "text194",
                                 "measure": "2",
                                 "system": "1",
                                 "position": "3/8",
                                 "comment": "<span class='glyph accid'>{{ref.getGlyph('[#]')}}</span> nachgezogen (überschreibt <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>?)."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1-5",
+                                "svgGroupId": "text338",
                                 "measure": "2",
                                 "system": "3",
                                 "position": "letzte Note",
                                 "comment": "Punkt unter der Note: Fleck oder Ansatz zu Notenkopf f?"
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1-6",
+                                "svgGroupId": "g1281",
                                 "measure": "2 <br /> bis 3",
                                 "system": "3",
                                 "position": "letzte Note <br /> 3. Note",
                                 "comment": "Durch Einklammerung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1-7",
+                                "svgGroupId": "g242",
                                 "measure": "3",
                                 "system": "1",
                                 "position": "3. Note",
                                 "comment": "Klammerung rechts zeigt Tilgung an. Es ist nicht eindeutig, ob die so angezeigte Tilgung ab T. 2 4/8 beginnt (mit den Varianten in System 2–3) oder ob sie sich auch auf T. 1 ff. bezieht (mit den Varianten in <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk2_1_1'})\"><strong>Sk2.1.1</strong></a> und <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk2_1_2'})\"><strong>Sk2.1.2</strong></a>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1-8",
+                                "svgGroupId": "g1295",
                                 "measure": "3",
                                 "system": "2",
                                 "position": "4/8",
@@ -647,63 +647,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk1",
+                    "svgGroupId": "g1210",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk2",
+                    "svgGroupId": "g1203",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk2_1_1",
+                    "svgGroupId": "g1221",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk2_1_2",
+                    "svgGroupId": "g1232",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g1273",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk2_1_3",
+                    "svgGroupId": "g1284",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk3",
+                    "svgGroupId": "g1239",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk3_1",
+                    "svgGroupId": "g1259",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1toM_317_Sk3_1_2",
+                    "svgGroupId": "g1250",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
@@ -723,63 +723,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk1",
+                    "svgGroupId": "g1022",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk2",
+                    "svgGroupId": "g1015",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk2_1",
+                    "svgGroupId": "g1031",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk2_1_2",
+                    "svgGroupId": "g1042",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g1083",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk2_1_3",
+                    "svgGroupId": "g1094",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk3",
+                    "svgGroupId": "g1049",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk3_1",
+                    "svgGroupId": "g1069",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_1toM_317_Sk3_1_2",
+                    "svgGroupId": "g1060",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
@@ -800,7 +800,7 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk2_1_2-1",
+                                "svgGroupId": "g1105",
                                 "measure": "3",
                                 "system": "2",
                                 "position": "",
@@ -812,63 +812,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk1",
+                    "svgGroupId": "g1029",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk2",
+                    "svgGroupId": "g1022",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk2_1",
+                    "svgGroupId": "g1038",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk2_1_1",
+                    "svgGroupId": "g1049",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g1090",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk2_1_3",
+                    "svgGroupId": "g1101",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk3",
+                    "svgGroupId": "g1056",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk3_1",
+                    "svgGroupId": "g1076",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2toM_317_Sk3_1_2",
+                    "svgGroupId": "g1067",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
@@ -888,63 +888,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk1",
+                    "svgGroupId": "g1009",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk2",
+                    "svgGroupId": "g1002",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk2_1",
+                    "svgGroupId": "g1018",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk2_1_1",
+                    "svgGroupId": "g1029",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk2_1_2",
+                    "svgGroupId": "g1040",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk2_1_3",
+                    "svgGroupId": "g1078",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk3",
+                    "svgGroupId": "g1047",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk3_1",
+                    "svgGroupId": "g1067",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_2_1toM_317_Sk3_1_2",
+                    "svgGroupId": "g1058",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
@@ -964,63 +964,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk1",
+                    "svgGroupId": "g988",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk2",
+                    "svgGroupId": "g981",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk2_1",
+                    "svgGroupId": "g997",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk2_1_1",
+                    "svgGroupId": "g1008",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk2_1_2",
+                    "svgGroupId": "g1019",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g1060",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk3",
+                    "svgGroupId": "g1026",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk3_1",
+                    "svgGroupId": "g1046",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk2_1_3toM_317_Sk3_1_2",
+                    "svgGroupId": "g1037",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
@@ -1041,21 +1041,21 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3-1",
+                                "svgGroupId": "g1114",
                                 "measure": "1 <br /> bis 2",
                                 "system": "3",
                                 "position": "1. Note <br /> 1. Note",
                                 "comment": "Text in Kurrentschrift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3-2",
+                                "svgGroupId": "g1119",
                                 "measure": "2",
                                 "system": "3",
                                 "position": "1. Note",
                                 "comment": "Punktierung durch Einkreisung getilgt?"
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3-3",
+                                "svgGroupId": "g3069",
                                 "measure": "2",
                                 "system": "3",
                                 "position": "1. Note",
@@ -1067,63 +1067,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk1",
+                    "svgGroupId": "g588",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk2",
+                    "svgGroupId": "g581",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk2_1",
+                    "svgGroupId": "g628",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk2_1_1",
+                    "svgGroupId": "g653",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk2_1_2",
+                    "svgGroupId": "g619",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g642",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk2_1_3",
+                    "svgGroupId": "g664",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk3_1",
+                    "svgGroupId": "g608",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3toM_317_Sk3_1_2",
+                    "svgGroupId": "g599",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
@@ -1144,56 +1144,56 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1-1",
+                                "svgGroupId": "g1203",
                                 "measure": "vor 3 <br /> bis 3",
                                 "system": "4",
                                 "position": "1. Note <br /> 1. Note",
                                 "comment": "Text in Kurrentschrift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1-2",
+                                "svgGroupId": "g1209",
                                 "measure": "3",
                                 "system": "4",
                                 "position": "Taktanfang",
                                 "comment": "Asterisk verweist auf Variante der Fortsetzung in <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk3_1_2'})\"><strong>Sk3.1.2</strong></a>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1-3",
+                                "svgGroupId": "g1213",
                                 "measure": "{5–6}",
                                 "system": "4",
                                 "position": "",
                                 "comment": "Durch Einklammerung getilgt. (Die Variante in System 3 wird allerdings nicht von der Einklammerung eingeschlossen.)"
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1-4",
+                                "svgGroupId": "g1218",
                                 "measure": "{5}",
                                 "system": "4",
                                 "position": "1. Note",
                                 "comment": "Ligaturbogen gestrichen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1-5",
+                                "svgGroupId": "g1206",
                                 "measure": "{5}",
                                 "system": "4",
                                 "position": "1. Note",
                                 "comment": "Pfeil unten rechts von Variante T. 4 in <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk3_1_1'})\"><strong>Sk3.1.1</strong></a>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1-6",
+                                "svgGroupId": "text228",
                                 "measure": "{5}",
                                 "system": "4",
                                 "position": "6/8",
                                 "comment": "<em>I</em> markiert hier als Reihenziffer vermutlich den wiederholten Beginn der in <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk3'})\"><strong>Sk3</strong></a> T. 1–2 1. Note und in <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk3_1'})\"><strong>Sk3.1</strong></a> fortgeführten Zwölftonreihe. Diese Reihe ist nicht identisch mit G<sub>g</sub> in den Reihentabellen <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk3_1_3'})\"><strong>Sk3.1.3</strong></a> und <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'SkRT'})\"><strong>M 317 / M 321 / M 322 RT</strong></a> in <a (click)=\"ref.navigateToReportFragment({complexId: 'op25', fragmentId: 'source_C'})\"><strong>C</strong></a> (dort jeweils mit arabischer Ziffer <em>1</em> bezeichnet)."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1-7",
+                                "svgGroupId": "g1241",
                                 "measure": "{5} <br /> bis {6}",
                                 "system": "4",
                                 "position": "6/8 <br /> 3. Note",
                                 "comment": "Text in Kurrentschrift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1-8",
+                                "svgGroupId": "g1225",
                                 "measure": "{6}",
                                 "system": "4",
                                 "position": "1–2/8",
@@ -1205,77 +1205,77 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk1",
+                    "svgGroupId": "g1214",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk2",
+                    "svgGroupId": "g698",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk2_1",
+                    "svgGroupId": "g725",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk2_1_1",
+                    "svgGroupId": "g761",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk2_1_2",
+                    "svgGroupId": "g736",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g750",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk2_1_3",
+                    "svgGroupId": "g772",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk3",
+                    "svgGroupId": "g705",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk3_1_1",
+                    "svgGroupId": "g716",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk3_1_2",
+                    "svgGroupId": "g691",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1toM_317_Sk3_1_3",
+                    "svgGroupId": "g680",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_3"
@@ -1296,7 +1296,7 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_1-1",
+                                "svgGroupId": "g312",
                                 "measure": "5",
                                 "system": "6",
                                 "position": "",
@@ -1308,21 +1308,21 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk3_1_1toM_317_Sk3_1",
+                    "svgGroupId": "g441",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_1toM_317_Sk3_1_3",
+                    "svgGroupId": "g432",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_1toM_317_Sk3_1_3_1",
+                    "svgGroupId": "g454",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_3_1"
@@ -1343,35 +1343,35 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_2-1",
+                                "svgGroupId": "g798",
                                 "measure": "3 <br /> bis 5",
                                 "system": "4",
                                 "position": "1. Note <br /> 1. Note",
                                 "comment": "Text in Kurrentschrift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_2-2",
+                                "svgGroupId": "g804",
                                 "measure": "3",
                                 "system": "4",
                                 "position": "Taktanfang",
                                 "comment": "Asterisk verweist auf Anschluss von <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk3_1'})\"><strong>Sk3.1</strong></a>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_2-3",
+                                "svgGroupId": "g809",
                                 "measure": "3",
                                 "system": "4",
                                 "position": "1. Note",
                                 "comment": "Punktierung durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_2-4",
+                                "svgGroupId": "g929",
                                 "measure": "5",
                                 "system": "4",
                                 "position": "1. Note",
                                 "comment": "Punktierte Viertelnote überschreibt Halbe Note."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_2-5",
+                                "svgGroupId": "g1958",
                                 "measure": "5",
                                 "system": "4",
                                 "position": "nach 1. Note",
@@ -1383,63 +1383,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk1",
+                    "svgGroupId": "g1091",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk2",
+                    "svgGroupId": "g559",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk2_1",
+                    "svgGroupId": "g584",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk2_1_1",
+                    "svgGroupId": "g631",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk2_1_2",
+                    "svgGroupId": "g595",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk2_1_2_1",
+                    "svgGroupId": "g609",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_2_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk2_1_3",
+                    "svgGroupId": "g620",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk2_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk3",
+                    "svgGroupId": "g566",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_2toM_317_Sk3_1",
+                    "svgGroupId": "g575",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
@@ -1461,42 +1461,42 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-1",
+                                "svgGroupId": "g4504",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "5",
                                 "position": "",
                                 "comment": "Strich mit unklarer Bedeutung."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-2",
+                                "svgGroupId": "g310",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "6",
                                 "position": "G<sub>g</sub> (1): vor 1. Reihenton",
                                 "comment": "<em>1</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-3",
+                                "svgGroupId": "g104",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "6",
                                 "position": "G<sub>g</sub> (1): 7. Reihenton",
                                 "comment": "sic: kein <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-4",
+                                "svgGroupId": "g1554",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "6",
                                 "position": "G<sub>g</sub> (1): 10.–11. Reihenton",
                                 "comment": "<span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>a, <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>c<sup>1</sup> durch Einkreisung getilgt und ersetzt durch c<sup>2</sup> (sic: kein <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>), <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>a<sup>1</sup>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-5",
+                                "svgGroupId": "g570",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "6",
                                 "position": "K<sub>gis</sub> (2): vor 1. Reihenton",
                                 "comment": "<em>2</em> mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-6",
+                                "svgGroupId": "g1572",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "6",
                                 "position": "K<sub>gis</sub> (2): 2.–3. Reihenton",
@@ -1510,7 +1510,7 @@
                                 "comment": "<em>3</em> mit schwarzem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-7",
+                                "svgGroupId": "g1591",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "7",
                                 "position": "U<sub>g</sub> (3): 10.–11. Reihenton",
@@ -1524,14 +1524,14 @@
                                 "comment": "<em>4</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-8",
+                                "svgGroupId": "g1608",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "7",
                                 "position": "KU<sub>fis</sub> (4): 2.–3. Note",
                                 "comment": "<span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>d<sup>2</sup>, <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>f<sup>2</sup> durch Einkreisung getilgt und ersetzt durch <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>f<sup>1</sup>, d<sup>1</sup> (sic: kein <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span>)."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk3_1_3-9",
+                                "svgGroupId": "g1613",
                                 "measure": "Bl. 38<sup>v</sup>",
                                 "system": "6–7",
                                 "position": "nach letzter Note",
@@ -1543,21 +1543,21 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk3_1_3toM_317_Sk3_1",
+                    "svgGroupId": "g631",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_3toM_317_Sk3_1_1",
+                    "svgGroupId": "g642",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_3toM_317_Sk3_1_3_1",
+                    "svgGroupId": "g655",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_3_1"
@@ -1577,14 +1577,14 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk3_1_3_1toM_317_Sk3_1_3",
+                    "svgGroupId": "g410",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk3_1_3_1toM_317_Sk3_1_1",
+                    "svgGroupId": "g421",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk3_1_1"
@@ -1609,56 +1609,56 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-1",
+                                "svgGroupId": "g678",
                                 "measure": "{1A}",
                                 "system": "10–12",
                                 "position": "",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-2",
+                                "svgGroupId": "g683",
                                 "measure": "{1B}",
                                 "system": "10–12",
                                 "position": "",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-3",
+                                "svgGroupId": "text334",
                                 "measure": "vor 1C",
                                 "system": "11",
                                 "position": "1. Note",
                                 "comment": "<em>4</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-4",
+                                "svgGroupId": "g687",
                                 "measure": "1C",
                                 "system": "11",
                                 "position": "6/8",
                                 "comment": "sic: Winkel markiert hier nicht das Ende, sondern den 11. Reihenton von KU<sub>fis</sub> (<em>4</em>). 12. Reihenton von KU<sub>fis</sub> (<em>g</em>) ist zugleich 1. Reihenton von G<sub>g</sub> (<em>1</em>): siehe T. 2 System 10–11 jeweils 1. Note."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-5",
+                                "svgGroupId": "line20",
                                 "measure": "nach 1C",
                                 "system": "11–12",
                                 "position": "",
                                 "comment": "Taktstrich nachgezogen mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-6",
+                                "svgGroupId": "text580",
                                 "measure": "2",
                                 "system": "10",
                                 "position": "1. Note",
                                 "comment": "<em>1</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-7",
+                                "svgGroupId": "g1865",
                                 "measure": "3B",
                                 "system": "2",
                                 "position": "1/8",
                                 "comment": "<em>zart</em> gestrichen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-8",
+                                "svgGroupId": "g1869",
                                 "measure": "3B",
                                 "system": "3",
                                 "position": "3. Note",
@@ -1672,210 +1672,210 @@
                                 "comment": "<em>3</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-9",
+                                "svgGroupId": "g7843",
                                 "measure": "3B",
                                 "system": "3–4",
                                 "position": "4.–6. Note",
                                 "comment": "Durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-10",
+                                "svgGroupId": "text430",
                                 "measure": "3B",
                                 "system": "6",
                                 "position": "1. Note",
                                 "comment": "<em>4</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-11",
+                                "svgGroupId": "g8572",
                                 "measure": "3B",
                                 "system": "2",
                                 "position": "5/8",
                                 "comment": "Durch Einkreisung getilgt. Siehe Variante in System 1."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-12",
+                                "svgGroupId": "g1889",
                                 "measure": "4",
                                 "system": "2–4",
                                 "position": "Taktanfang",
                                 "comment": "Taktvorzeichnung 2/4 überschreibt 4/4."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-13",
+                                "svgGroupId": "g1899",
                                 "measure": "5",
                                 "system": "2",
                                 "position": "1. Note",
                                 "comment": "Punktierte Viertelnote überschreibt Halbe Note."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-14",
+                                "svgGroupId": "g1903",
                                 "measure": "5",
                                 "system": "2",
                                 "position": "1. Note",
                                 "comment": "Winkel mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-15",
+                                "svgGroupId": "g9301",
                                 "measure": "5",
                                 "system": "3–4",
                                 "position": "(1–2/4)",
                                 "comment": "Durch Einkreisung mit rotem Buntstift getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-16",
+                                "svgGroupId": "g1909",
                                 "measure": "5",
                                 "system": "5–6",
                                 "position": "",
                                 "comment": "Durch Streichung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-17",
+                                "svgGroupId": "g1917",
                                 "measure": "5",
                                 "system": "3",
                                 "position": "1. Note",
                                 "comment": "<em>u. 1</em> und Winkel mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-18",
+                                "svgGroupId": "g1925",
                                 "measure": "5",
                                 "system": "5",
                                 "position": "1. Note",
                                 "comment": "Beide Winkel und <em>1</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-19",
+                                "svgGroupId": "g1929",
                                 "measure": "5",
                                 "system": "8",
                                 "position": "3. Note",
                                 "comment": "Winkel mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-20",
+                                "svgGroupId": "text806",
                                 "measure": "5",
                                 "system": "7",
                                 "position": "1. Note",
                                 "comment": "<em>1</em> nachgezogen mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-21",
+                                "svgGroupId": "g1945",
                                 "measure": "5",
                                 "system": "2",
                                 "position": "5/8",
                                 "comment": "<em>1</em> über dem System mit rotem Buntstift und radiert. <em>1</em> unter dem System mit rotem Buntstift. (Ziffern beziehen sich auf 6/8.)"
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-22",
+                                "svgGroupId": "g2067",
                                 "measure": "6",
                                 "system": "2",
                                 "position": "1.–2. Note",
                                 "comment": "<em>leuchtet</em> zusammengeschrieben."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-23",
+                                "svgGroupId": "g10030",
                                 "measure": "6",
                                 "system": "3–4",
                                 "position": "1. Pause bis <br /> 1. Note",
                                 "comment": "Durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-24",
+                                "svgGroupId": "g10759",
                                 "measure": "6",
                                 "system": "5",
                                 "position": "1. Note",
                                 "comment": "fis<sup>1</sup> durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-25",
+                                "svgGroupId": "text1070",
                                 "measure": "6",
                                 "system": "4",
                                 "position": "2. Note",
                                 "comment": "<span class='glyph'>{{ref.getGlyph('[f]')}}</span> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-26",
+                                "svgGroupId": "g11488",
                                 "measure": "6",
                                 "system": "5–6",
                                 "position": "2.–6. Note",
                                 "comment": "Durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-27",
+                                "svgGroupId": "text888",
                                 "measure": "6",
                                 "system": "3",
                                 "position": "2.–4. Note",
                                 "comment": "Triolenziffer nachgezogen mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-28",
+                                "svgGroupId": "g1871",
                                 "measure": "6",
                                 "system": "3",
                                 "position": "letzte Note",
                                 "comment": "Winkel mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-29",
+                                "svgGroupId": "text1078",
                                 "measure": "6",
                                 "system": "4",
                                 "position": "8/8",
                                 "comment": "<em>3</em> nachgezogen mit schwarzem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-30",
+                                "svgGroupId": "g1165",
                                 "measure": "7",
                                 "system": "10–11",
                                 "position": "Taktanfang",
                                 "comment": "<em>4/4</em> überschreibt <em>3/4</em>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-31",
+                                "svgGroupId": "text1148",
                                 "measure": "7",
                                 "system": "10",
                                 "position": "3/8",
                                 "comment": "<em>3</em> nachgezogen mit schwarzem Buntstift. (Ziffer bezieht sich auf 1. Note.)"
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-32",
+                                "svgGroupId": "g1228",
                                 "measure": "7",
                                 "system": "11",
                                 "position": "8/8",
                                 "comment": "Winkel nachgezogen mit schwarzem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-33",
+                                "svgGroupId": "g1233",
                                 "measure": "vor 8",
                                 "system": "12",
                                 "position": "",
                                 "comment": "Bassschlüssel gestrichen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-34",
+                                "svgGroupId": "text1150",
                                 "measure": "8",
                                 "system": "11",
                                 "position": "1. Note",
                                 "comment": "<em>2</em> mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-35",
+                                "svgGroupId": "g1236",
                                 "measure": "9",
                                 "system": "11",
                                 "position": "(2/4)",
                                 "comment": "Viertelpause über dem System durch Einkreisung getilgt?"
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-36",
+                                "svgGroupId": "text1212",
                                 "measure": "9",
                                 "system": "11",
                                 "position": "3. Note",
                                 "comment": "sic: <span class='glyph accid'>{{ref.getGlyph('[b]')}}</span> (zu es<sup>2</sup>). Vermutlich Verschreibung für <span class='glyph accid'>{{ref.getGlyph('[a]')}}</span> (zu e<sup>2</sup>: 11. Reihenton von K<sub>gis</sub>)."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-37",
+                                "svgGroupId": "g1247",
                                 "measure": "9",
                                 "system": "12",
                                 "position": "2. Note",
                                 "comment": "8–┐ nachgezogen mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-38",
+                                "svgGroupId": "text1152",
                                 "measure": "9",
                                 "system": "13",
                                 "position": "1. Note",
@@ -1889,161 +1889,161 @@
                                 "comment": "Durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-39",
+                                "svgGroupId": "g1254",
                                 "measure": "9",
                                 "system": "9",
                                 "position": "letzte Note",
                                 "comment": "Winkel mit schwarzem Buntstift und radiert."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-40",
+                                "svgGroupId": "g1445",
                                 "measure": "9 <br /> bis 10",
                                 "system": "9",
                                 "position": "letzte Note <br /> 1. Note",
                                 "comment": "<em>einmal</em> zusammengeschrieben."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-41",
+                                "svgGroupId": "g1264",
                                 "measure": "10",
                                 "system": "9",
                                 "position": "1. Note",
                                 "comment": "Winkel mit schwarzem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-42",
+                                "svgGroupId": "text1178",
                                 "measure": "10",
                                 "system": "9",
                                 "position": "2. Note",
                                 "comment": "<em>1</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-43",
+                                "svgGroupId": "g9931",
                                 "measure": "10",
                                 "system": "11–12",
                                 "position": "1. Note",
                                 "comment": "Durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-44",
+                                "svgGroupId": "g12115",
                                 "measure": "12",
                                 "system": "13–14",
                                 "position": "Taktanfang",
                                 "comment": "<em>3/4</em> nachgezogen mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-45",
+                                "svgGroupId": "text1216",
                                 "measure": "12",
                                 "system": "8",
                                 "position": "(1. Note)",
                                 "comment": "<em>molto</em> [xx] radiert."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-46",
+                                "svgGroupId": "g1461",
                                 "measure": "12",
                                 "system": "9",
                                 "position": "1/8",
                                 "comment": "Text: Kleinschreibung <em>wer</em>[-den] überschrieben zu Großschreibung <em>Wer</em>[-den]."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-47",
+                                "svgGroupId": "g20105",
                                 "measure": "12",
                                 "system": "11",
                                 "position": "1. Note",
                                 "comment": "Winkel mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-48",
+                                "svgGroupId": "g1478",
                                 "measure": "12",
                                 "system": "9",
                                 "position": "3.–5. Note",
                                 "comment": "<em>hingestellt</em> zusammengeschrieben."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-49",
+                                "svgGroupId": "text1058",
                                 "measure": "12",
                                 "system": "13",
                                 "position": "2. Note",
                                 "comment": "<em>4</em> nachgezogen mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-50",
+                                "svgGroupId": "text476",
                                 "measure": "13",
                                 "system": "16",
                                 "position": "1. Note",
                                 "comment": "<em>gilt</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-51",
+                                "svgGroupId": "g12150",
                                 "measure": "13",
                                 "system": "15, 16",
                                 "position": "1. Pause",
                                 "comment": "Viertelpause überschreibt Achtelpause."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-52",
+                                "svgGroupId": "g12880",
                                 "measure": "13",
                                 "system": "14",
                                 "position": "2. Note",
                                 "comment": "Winkel mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-53",
+                                "svgGroupId": "g13611",
                                 "measure": "13",
                                 "system": "15",
                                 "position": "(5/8)",
                                 "comment": "Achtelpause gestrichen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-54",
+                                "svgGroupId": "g14343",
                                 "measure": "13",
                                 "system": "14",
                                 "position": "letzte Note",
                                 "comment": "<em>u. 4</em> gestrichen mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-55",
+                                "svgGroupId": "g15072",
                                 "measure": "13",
                                 "system": "14–15",
                                 "position": "letzte Note",
                                 "comment": "Pfeil mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-56",
+                                "svgGroupId": "g15803",
                                 "measure": "13",
                                 "system": "15",
                                 "position": "letzte Note",
                                 "comment": "Winkel gestrichen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-57",
+                                "svgGroupId": "text474",
                                 "measure": "14",
                                 "system": "15–16",
                                 "position": "Taktanfang",
                                 "comment": "<em>3</em> mit schwarzem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-58",
+                                "svgGroupId": "g17374",
                                 "measure": "14",
                                 "system": "15, 16",
                                 "position": "1. Note",
                                 "comment": "Achtelnote überschreibt Viertelnote."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-59",
+                                "svgGroupId": "g21745",
                                 "measure": "14",
                                 "system": "16",
                                 "position": "1. Note",
                                 "comment": "<em>u.</em> von <em>u. 3</em> sowie Winkel mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-60",
+                                "svgGroupId": "g18830",
                                 "measure": "14",
                                 "system": "13",
                                 "position": "2. Note",
                                 "comment": "h (undeutlich, auch als c<sup>1</sup> zu entziffern) durch Einklammerung getilgt und ersetzt durch h<sup>2</sup>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4-61",
+                                "svgGroupId": "g19559",
                                 "measure": "14",
                                 "system": "16",
                                 "position": "letzte Note",
@@ -2055,63 +2055,63 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4_1",
+                    "svgGroupId": "g802",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4c",
+                    "svgGroupId": "g1363",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4c"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4b",
+                    "svgGroupId": "g1344",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4b"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4d",
+                    "svgGroupId": "g1367",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4d"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4_2",
+                    "svgGroupId": "g1353",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4_3",
+                    "svgGroupId": "g1367-9",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4_3"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4c",
+                    "svgGroupId": "g809",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4c"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4_2",
+                    "svgGroupId": "g796",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4toM_317_Sk4_3",
+                    "svgGroupId": "g818",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4_3"
@@ -2133,28 +2133,28 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4_1-1",
+                                "svgGroupId": "g25236",
                                 "measure": "2",
                                 "system": "14",
                                 "position": "1. Note",
                                 "comment": "Beide Winkel und <em>1</em> (G<sub>g</sub>) mit rotem Buntstift. "
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4_1-2",
+                                "svgGroupId": "g1225",
                                 "measure": "2",
                                 "system": "13",
                                 "position": "6/8–4/4",
                                 "comment": "Decrescendogabel zu 4/4 überschrieben zu Decrescendogabel von 6/8–4/4."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4_1-3",
+                                "svgGroupId": "g30323",
                                 "measure": "{3}",
                                 "system": "",
                                 "position": "",
                                 "comment": "Durch Einklammerung links und Streichung getilgt. Streichung mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4_1-4",
+                                "svgGroupId": "g31053",
                                 "measure": "{3}",
                                 "system": "14",
                                 "position": "letzte Note",
@@ -2166,7 +2166,7 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk4_1toM_317_Sk4a",
+                    "svgGroupId": "g604",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4a"
@@ -2186,14 +2186,14 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk4_2toM_317_Sk4d",
+                    "svgGroupId": "g371",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4d"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4_2toM_317_Sk4c",
+                    "svgGroupId": "g388",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4c"
@@ -2214,14 +2214,14 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4_3-1",
+                                "svgGroupId": "g35106",
                                 "measure": "13",
                                 "system": "16",
                                 "position": "1. Note",
                                 "comment": "sic: Verweisstrich führt zu <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk4d'})\"><strong>Sk4</strong></a> T. 14. Inhaltlich bezieht sich <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk4_3'})\"><strong>Sk4.3</strong></a> jedoch auf <a (click)=\"ref.selectSvgSheet({complexId: 'op25', sheetId: 'M_317_Sk4d'})\"><strong>Sk4</strong></a> T. 13. "
                             },
                             {
-                                "svgGroupId": "g-tkk-m_317_sk4_3-2",
+                                "svgGroupId": "g36576",
                                 "measure": "13",
                                 "system": "16",
                                 "position": "letzte Note",
@@ -2233,14 +2233,14 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_317_Sk4_3toM_317_Sk4d",
+                    "svgGroupId": "g453",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4d"
                     }
                 },
                 {
-                    "svgGroupId": "M_317_Sk4_3toM_317_Sk4c",
+                    "svgGroupId": "g466",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_317_Sk4c"
@@ -2262,63 +2262,63 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-skrt-1",
+                                "svgGroupId": "text440",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "1",
                                 "position": "G<sub>g</sub>",
                                 "comment": "Reihennummerierung <em>1</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-skrt-2",
+                                "svgGroupId": "text682",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "1",
                                 "position": "K<sub>gis</sub>",
                                 "comment": "Reihennummerierung <em>2</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-skrt-3",
+                                "svgGroupId": "text444",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "2",
                                 "position": "U<sub>g</sub>",
                                 "comment": "Reihennummerierung <em>3</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-skrt-4",
+                                "svgGroupId": "text686",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "2",
                                 "position": "KU<sub>fis</sub>",
                                 "comment": "Reihennummerierung <em>4</em> mit rotem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-skrt-5",
+                                "svgGroupId": "text450",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "3",
                                 "position": "G<sub>c</sub>",
                                 "comment": "Reihennummerierung <em>5</em> mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-skrt-6",
+                                "svgGroupId": "text688",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "3",
                                 "position": "K<sub>cis</sub>",
                                 "comment": "Reihennummerierung <em>6</em> mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-skrt-7",
+                                "svgGroupId": "text458",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "4",
                                 "position": "U<sub>c</sub>",
                                 "comment": "Reihennummerierung <em>7</em> mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-skrt-8",
+                                "svgGroupId": "text690",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "4",
                                 "position": "KU<sub>h</sub>",
                                 "comment": "Reihennummerierung <em>8</em> mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-skrt-9",
+                                "svgGroupId": "g3291",
                                 "measure": "Bl. 1<sup>r</sup>",
                                 "system": "3–4",
                                 "position": "",
@@ -2343,28 +2343,28 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_321_sk1-1",
+                                "svgGroupId": "g249",
                                 "measure": "{1A}",
                                 "system": "8",
                                 "position": "",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_321_sk1-2",
+                                "svgGroupId": "g251",
                                 "measure": "{2A}",
                                 "system": "8",
                                 "position": "",
                                 "comment": "Durch Einklammerung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_321_sk1-3",
+                                "svgGroupId": "g253",
                                 "measure": "3",
                                 "system": "7",
                                 "position": "1.–2. Note",
                                 "comment": "Durch Einklammerung getilgt. Siehe Korrektur in System 6."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_321_sk1-4",
+                                "svgGroupId": "g252",
                                 "measure": "3",
                                 "system": "8",
                                 "position": "1. Note",
@@ -2376,7 +2376,7 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_321_Sk1toM_320_Sk1_1",
+                    "svgGroupId": "g248",
                     "linkTo": {
                         "complexId": "op24",
                         "sheetId": "M_320_Sk1_1"
@@ -2398,21 +2398,21 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_321_sk2-1",
+                                "svgGroupId": "g2060",
                                 "measure": "vor 1y <br /> bis 1y",
                                 "system": "2",
                                 "position": "1. Note <br /> nach 4/4",
                                 "comment": "Taktstrich nach T. 1y 2/4 gestrichen, Viertelnote überschreibt Halbe Note vor T. 1y 1. Note und in T. 1y 2/4. Taktstriche am Taktanfang von T. 1y und in T. 1y nach 4/4 hinzugefügt.  <br /> Ante correcturam: vermutlich zunächst voller 3/2-Takt mit Viertelpause, Halbe Note g<sup>2</sup> mit Ligatur zu Viertelnote, Halbe Note e<sup>2</sup>.  <br /> Dann voller 3/2-Takt mit Viertelpause, Ligatur aus zwei Viertelnoten g<sup>2</sup>, Viertelnote e<sup>2</sup>, Viertelpause, Viertelnote dis<sup>2</sup>. <br /> Dann Auftakt zu T. 1y mit Viertelpause, Viertelnote g<sup>2</sup> mit Ligatur zu vollem 3/2-Takt T. 1y. Dabei Taktstrich nach T. 1y 4/4 redundant, aber nicht getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_321_sk2-2",
+                                "svgGroupId": "g2",
                                 "measure": "4x <br /> 3y",
                                 "system": "1 <br /> 2",
                                 "position": "5/8 <br /> 1/8",
                                 "comment": "Achtelpause hinzugefügt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_321_sk2-3",
+                                "svgGroupId": "g1",
                                 "measure": "4x <br /> bis 5x",
                                 "system": "1",
                                 "position": "4/8 <br /> 1/8",
@@ -2438,14 +2438,14 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_322_sk1-1",
+                                "svgGroupId": "g159",
                                 "measure": "3",
                                 "system": "2",
                                 "position": "letzte Note",
                                 "comment": "sic: <em>Nach</em> statt <em>Nacht</em> (siehe <a (click)=\"ref.navigateToReportFragment({complexId: 'op25', fragmentId: 'text_Jone_DF'})\"><strong>Jone_DF</strong></a>)."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk1-2",
+                                "svgGroupId": "g158",
                                 "measure": "nach 3",
                                 "system": "2",
                                 "position": "",
@@ -2457,7 +2457,7 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_322_Sk1toM_322_Sk2",
+                    "svgGroupId": "g157",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_322_Sk2"
@@ -2479,14 +2479,14 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_322_sk2-1",
+                                "svgGroupId": "g229",
                                 "measure": "1",
                                 "system": "3",
                                 "position": "",
                                 "comment": "<em>7</em> mit grünem Buntstift nachgezogen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk2-2",
+                                "svgGroupId": "g1344",
                                 "measure": "2",
                                 "system": "2",
                                 "position": "1. Note",
@@ -2498,7 +2498,7 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_322_Sk2toM_322_Sk1",
+                    "svgGroupId": "g228",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_322_Sk1"
@@ -2520,161 +2520,161 @@
                         "blockHeader": "",
                         "blockComments": [
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-1",
+                                "svgGroupId": "g1",
                                 "measure": "{1A}",
                                 "system": "7–8",
                                 "position": "",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-2",
+                                "svgGroupId": "g2",
                                 "measure": "{1B}",
                                 "system": "7–8",
                                 "position": "",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-3",
+                                "svgGroupId": "g3",
                                 "measure": "{1C–2A}",
                                 "system": "7–8",
                                 "position": "",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-4",
+                                "svgGroupId": "g4",
                                 "measure": "1D",
                                 "system": "7–8",
                                 "position": "1/8",
                                 "comment": "<em>5</em> mit grünem Buntstift nachgezogen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-5",
+                                "svgGroupId": "g5",
                                 "measure": "2B",
                                 "system": "7",
                                 "position": "1. Note",
                                 "comment": "Winkel mit grünem Buntstift nachgezogen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-6",
+                                "svgGroupId": "g6",
                                 "measure": "2B",
                                 "system": "5",
                                 "position": "3/8",
                                 "comment": "<em>7</em> mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-7",
+                                "svgGroupId": "g8",
                                 "measure": "2B",
                                 "system": "7–8",
                                 "position": "",
                                 "comment": "Durch Einkreisung getilgt. Siehe Korrektur in System 9–10."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-8",
+                                "svgGroupId": "g7",
                                 "measure": "2B",
                                 "system": "9–10",
                                 "position": "4/8",
                                 "comment": "<em>5</em> mit grünem Buntstift nachgezogen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-9",
+                                "svgGroupId": "g21b",
                                 "measure": "{3A}",
                                 "system": "13–14",
                                 "position": "1–2/8",
                                 "comment": "Durch Einkreisung getilgt. Siehe Korrektur in System 15–16."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-10",
+                                "svgGroupId": "g22b",
                                 "measure": "{3A}",
                                 "system": "12–16",
                                 "position": "1–3/8",
                                 "comment": "Achtelbalken von T. 2B in System 16 gestrichen und ersetzt durch Achtelpause. Achtelpausen in System 13 und 16 gestrichen sowie Verweislinie zu System 11 3/8 hinzugefügt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-11",
+                                "svgGroupId": "g23b",
                                 "measure": "{3A–4A}",
                                 "system": "11–14",
                                 "position": "",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-12",
+                                "svgGroupId": "g24b",
                                 "measure": "{3B}",
                                 "system": "11",
                                 "position": "",
                                 "comment": "Taktzahl <em>3</em> überschreibt <em>5</em>."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-13",
+                                "svgGroupId": "g25b",
                                 "measure": "{3B}",
                                 "system": "11–14",
                                 "position": "",
                                 "comment": "Durch Einklammerung rechts getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-14",
+                                "svgGroupId": "g28b",
                                 "measure": "3C",
                                 "system": "13",
                                 "position": "6/8",
                                 "comment": "Winkel mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-15",
+                                "svgGroupId": "g212b",
                                 "measure": "4B",
                                 "system": "13–14",
                                 "position": "",
                                 "comment": "Durch Einklammerung getilgt. Siehe Korrektur in System 15–16."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-16",
+                                "svgGroupId": "text337b",
                                 "measure": "4B",
                                 "system": "16",
                                 "position": "1/8",
                                 "comment": "<em>8</em> mit grünem Buntstift."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-17",
+                                "svgGroupId": "g27b",
                                 "measure": "4B",
                                 "system": "16",
                                 "position": "3/4",
                                 "comment": "<span class='glyph'>{{ref.getGlyph('[pp]')}}</span> gestrichen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-18",
+                                "svgGroupId": "g1210b",
                                 "measure": "4B",
                                 "system": "15",
                                 "position": "6/8",
                                 "comment": "e gestrichen. Dann <em>bleibt</em> hinzugefügt, dann <em>bleibt</em> getilgt durch Einkreisung. <br /> <em>8va</em> gestrichen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-19",
+                                "svgGroupId": "g213b",
                                 "measure": "5",
                                 "system": "13–14",
                                 "position": "",
                                 "comment": "Durch Einklammerung getilgt. Siehe Korrektur in System 15–16."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-20",
+                                "svgGroupId": "g211b",
                                 "measure": "5",
                                 "system": "16",
                                 "position": "6/8",
                                 "comment": "B/a gestrichen und durch Einkreisung getilgt, ersetzt durch A/b."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-21",
+                                "svgGroupId": "g1281",
                                 "measure": "7",
                                 "system": "1",
                                 "position": "2. Pause",
                                 "comment": "Gestrichen."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-22",
+                                "svgGroupId": "g1301",
                                 "measure": "8",
                                 "system": "1",
                                 "position": "1.–2. Note",
                                 "comment": "Durch Einkreisung getilgt."
                             },
                             {
-                                "svgGroupId": "g-tkk-m_322_sk3-23",
+                                "svgGroupId": "g1305",
                                 "measure": "10",
                                 "system": "4",
                                 "position": "5–6/8",
@@ -2686,35 +2686,35 @@
             },
             "linkBoxes": [
                 {
-                    "svgGroupId": "M_322_Sk3toM_322_Sk3b",
+                    "svgGroupId": "g802",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_322_Sk3b"
                     }
                 },
                 {
-                    "svgGroupId": "M_322_Sk3toM_322_Sk3a",
+                    "svgGroupId": "g802b",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_322_Sk3a"
                     }
                 },
                 {
-                    "svgGroupId": "M_322_Sk3toM_322_Sk4_2",
+                    "svgGroupId": "g1287",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_322_Sk4_2"
                     }
                 },
                 {
-                    "svgGroupId": "M_322_Sk3toM_322_Sk4_1",
+                    "svgGroupId": "g1292",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_322_Sk4_1"
                     }
                 },
                 {
-                    "svgGroupId": "M_322_Sk3toM_322_Sk4_3",
+                    "svgGroupId": "g1297",
                     "linkTo": {
                         "complexId": "op25",
                         "sheetId": "M_322_Sk4_3"

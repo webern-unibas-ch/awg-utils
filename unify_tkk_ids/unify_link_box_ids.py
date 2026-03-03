@@ -67,8 +67,8 @@ def process_single_link_box(svg_group_id, link_box, entry_id, matching_files,
         print(f" [!] ERROR: No sheetId found in linkBox with svgGroupId '{svg_group_id}'")
         return False
 
-    # Create new ID: {entry_id}to{sheetId}
-    new_id = f"{entry_id}to{sheet_id}"
+    # Create new ID: g-lb-{entry_id}-to-{sheetId}
+    new_id = f"g-lb-{entry_id}-to-{sheet_id}"
 
     # Update JSON
     link_box['svgGroupId'] = new_id

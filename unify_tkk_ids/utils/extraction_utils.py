@@ -61,3 +61,15 @@ def extract_svg_group_ids(entry):
                 block_comments.append(block_comment)
 
     return svg_group_ids, block_comments
+
+def extract_link_boxes(entry):
+    """Extract all linkBoxes from an entry.
+
+    Args:
+        entry (dict): Single textcritics entry
+
+    Returns:
+        list: List of linkBox objects with svgGroupId and linkTo information
+    """
+    link_boxes = entry.get('linkBoxes', [])
+    return link_boxes if isinstance(link_boxes, list) else []

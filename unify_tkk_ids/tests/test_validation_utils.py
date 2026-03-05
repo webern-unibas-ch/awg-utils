@@ -313,5 +313,45 @@ class TestValidateSvgEntries(unittest.TestCase):
         self.assertEqual(errors, 2)
 
 
-if __name__ == '__main__':
-    unittest.main()
+# ---- shared validation coverage: TKK + LinkBox ----
+import inspect
+import pytest
+import utils.validation_utils as _validation_utils
+
+
+def _call_validate_svg_entries(loaded_svgs, prefix, required_class):
+    sig = inspect.signature(_validation_utils.validate_svg_entries)
+    if "required_class" in sig.parameters:
+        return _validation_utils.validate_svg_entries(
+            loaded_svgs, prefix, required_class=required_class
+        )
+    if required_class != "tkk":
+        pytest.fail("validate_svg_entries must support LinkBox class filtering.")
+    return _validation_utils.validate_svg_entries(loaded_svgs, prefix)
+
+
+@pytest.mark.parametrize(
+    "prefix,required_class",
+    [("g-tkk-", "tkk"), ("g-lb-", "link-box")],
+    ids=["tkk", "linkbox"],
+)
+def test_shared_validate_json_and_svg_support_both_unifiers(prefix, required_class):
+    data = {
+        "textcritics": [
+            {
+                "id": "E1",
+                "commentary": {"comments": [{"blockComments": [{"svgGroupId": "old-id"}]}]},
+            }
+        ]
+    }
+    assert _validation_utils.validate_json_entries(data, prefix) == 1
+
+    loaded_svgs = {
+        "sheet.svg": {
+            "content": (
+                f"<g class='x {required_class} y' id='old-id'></g>"
+                f"<g id='{prefix}123' class='{required_class}'></g>"
+            )
+        }
+    }
+    assert _call_validate_svg_entries(loaded_svgs, prefix, required_class) == 1

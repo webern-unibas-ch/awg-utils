@@ -36,35 +36,49 @@ def validate_json_entries(data, prefix):
     return errors_found
 
 
-def validate_svg_entries(loaded_svgs, prefix):
-    """Validate SVG entries for unchanged tkk class IDs.
+_G_TAG_RE = re.compile(r"<g\b[^>]*>", re.IGNORECASE | re.DOTALL)
+_ATTR_RE = re.compile(r"([:\w-]+)\s*=\s*(\"[^\"]*\"|'[^']*')", re.DOTALL)
 
-    Args:
-        loaded_svgs (dict): Dictionary mapping SVG filenames to their content
-        prefix (str): The target prefix that all updated IDs should start with
+def _extract_attrs(tag_text):
+    attrs = {}
+    for name, quoted in _ATTR_RE.findall(tag_text):
+        attrs[name.lower()] = quoted[1:-1]
+    return attrs
 
-    Returns:
-        int: Number of errors found
-    """
-    errors_found = 0
-    tkk_id_regex = re.compile(
-        r'<[^>]+?class=["\'][^"\']*\btkk\b[^"\']*["\'][^>]+?id=["\']([^"\']+)["\']'
-        r'|<[^>]+?id=["\']([^"\']+)["\'][^>]+?class=["\'][^"\']*\btkk\b[^"\']*["\']'
-    )
+def _has_class_token(class_attr, required_class):
+    wanted = (required_class or "").strip().lower()
+    if not wanted:
+        return False
+    return any(tok.lower() == wanted for tok in (class_attr or "").split())
 
-    for filename, sdata in loaded_svgs.items():
-        matches = tkk_id_regex.findall(sdata["content"])
-        for match in matches:
-            found_id = match[0] if match[0] else match[1]
-            if not found_id.startswith(prefix):
-                print(f"  [!] SVG ORPHAN: ID '{found_id}' with class 'tkk' in {filename} "
-                      f"was NOT updated.")
-                errors_found += 1
+def validate_svg_entries(loaded_svgs, id_prefix, required_class="tkk"):
+    errors = 0
+    for svg_filename, svg_data in loaded_svgs.items():
+        content = (svg_data or {}).get("content", "")
+        seen = set()
 
-    return errors_found
+        for g_tag in _G_TAG_RE.findall(content):
+            attrs = _extract_attrs(g_tag)
+            svg_id = attrs.get("id")
+            class_attr = attrs.get("class", "")
+
+            if not svg_id or svg_id in seen:
+                continue
+            if not _has_class_token(class_attr, required_class):
+                continue
+
+            seen.add(svg_id)
+            if not svg_id.startswith(id_prefix):
+                errors += 1
+                print(
+                    f"  [!] SVG ORPHAN: ID '{svg_id}' with class '{required_class}' "
+                    f"in {svg_filename} was NOT updated."
+                )
+
+    return errors
 
 
-def display_validation_report(data, prefix, loaded_svgs):
+def display_validation_report(data, id_prefix, loaded_svgs, required_class="tkk"):
     """Validate and report the success of TKK ID unification process.
 
     Performs post-processing validation to ensure all TKK-related IDs have been
@@ -78,18 +92,22 @@ def display_validation_report(data, prefix, loaded_svgs):
     Args:
         data (dict): The processed JSON textcritics data structure containing
                     textcritics entries with commentary and blockComments.
-        prefix (str): The target prefix that all updated IDs should start with
+        id_prefix (str): The target prefix that all updated IDs should start with
                      (e.g., "g-tkk-").
         loaded_svgs (dict): Dictionary mapping SVG filenames to their content
                            and path information from the processing cache.
+        required_class (str): The required class name for SVG elements to be
+                           validated (default is "tkk").
 
     Returns:
         None: Prints validation results directly to stdout. Does not return values.
     """
     print("\n--- UNCERTAINTY & ERROR REPORT ---")
 
-    json_errors = validate_json_entries(data, prefix)
-    svg_errors = validate_svg_entries(loaded_svgs, prefix)
+    json_errors = validate_json_entries(data, id_prefix)
+    svg_errors = validate_svg_entries(
+        loaded_svgs, id_prefix, required_class=required_class
+    )
     total_errors = json_errors + svg_errors
 
     if total_errors == 0:

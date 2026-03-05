@@ -715,6 +715,48 @@ class TestUnifyTkkIds(unittest.TestCase):
             unify_tkk_ids(self.json_path, "/nonexistent/dir")
 
 
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_unify_tkk_ids_dry_run_does_not_persist_changes(self, _mock_stdout):
+        """Dry-run should not persist file changes."""
+        with open(self.json_path, 'r', encoding='utf-8') as f:
+            json_before = f.read()
+        with open(self.svg_path, 'r', encoding='utf-8') as f:
+            svg_before = f.read()
+
+        success = unify_tkk_ids(
+            self.json_path, self.svg_dir, "g-tkk-", dry_run=True
+        )
+        self.assertTrue(success)
+
+        with open(self.json_path, 'r', encoding='utf-8') as f:
+            json_after = f.read()
+        with open(self.svg_path, 'r', encoding='utf-8') as f:
+            svg_after = f.read()
+
+        self.assertEqual(json_before, json_after)
+        self.assertEqual(svg_before, svg_after)
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_unify_tkk_ids_second_run_is_noop(self, _mock_stdout):
+        """Second run should be idempotent."""
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, "g-tkk-"))
+
+        with open(self.json_path, 'r', encoding='utf-8') as f:
+            json_after_first = f.read()
+        with open(self.svg_path, 'r', encoding='utf-8') as f:
+            svg_after_first = f.read()
+
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, "g-tkk-"))
+
+        with open(self.json_path, 'r', encoding='utf-8') as f:
+            json_after_second = f.read()
+        with open(self.svg_path, 'r', encoding='utf-8') as f:
+            svg_after_second = f.read()
+
+        self.assertEqual(json_after_first, json_after_second)
+        self.assertEqual(svg_after_first, svg_after_second)
+
+
 @pytest.mark.integration
 class TestIntegration(unittest.TestCase):
     """Integration tests with temporary files"""

@@ -45,6 +45,41 @@ def _extract_attrs(tag_text):
     return attrs
 
 
+def _class_contains(class_attr, needle="tkk"):
+    return (needle or "").strip().lower() in (class_attr or "").lower()
+
+
+def _coerce_update_result(update_result, original_content):
+    """
+    Normalize update_svg_id() return variants:
+    - updated_content
+    - (updated_content, changed_bool)
+    - (updated_content, error_message_or_none)
+    """
+    updated_content = original_content
+    changed = False
+    update_error = None
+
+    if isinstance(update_result, tuple):
+        if len(update_result) >= 1:
+            updated_content = update_result[0]
+        if len(update_result) >= 2:
+            second = update_result[1]
+            if isinstance(second, bool):
+                changed = second
+            else:
+                # legacy style: None => success, str => error
+                update_error = second
+                changed = second is None
+        else:
+            changed = updated_content != original_content
+    else:
+        updated_content = update_result
+        changed = updated_content != original_content
+
+    return updated_content, changed, update_error
+
+
 def _build_tkk_id_index(relevant_svgs, get_svg_data):
     """Build map: svgGroupId -> [svg filenames], scanning each SVG once."""
     id_to_files = {}
@@ -57,9 +92,10 @@ def _build_tkk_id_index(relevant_svgs, get_svg_data):
         for g_tag in _G_TAG_RE.findall(content):
             attrs = _extract_attrs(g_tag)
             svg_id = attrs.get("id")
-            classes = set(attrs.get("class", "").split())
+            class_attr = attrs.get("class", "")
 
-            if svg_id and "tkk" in classes and svg_id not in seen_ids_in_file:
+            # class only needs to contain "tkk"
+            if svg_id and _class_contains(class_attr, "tkk") and svg_id not in seen_ids_in_file:
                 id_to_files.setdefault(svg_id, []).append(svg_filename)
                 seen_ids_in_file.add(svg_id)
 
@@ -105,25 +141,24 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
     svg_filename = matching_files[0]
     svg_data = get_svg_data(svg_filename)
 
-    # Backward-compatible handling for mocked/non-standard returns
     update_result = update_svg_id(svg_data["content"], svg_group_id, new_id)
-    if isinstance(update_result, tuple):
-        if len(update_result) >= 2:
-            updated_content, changed = update_result[0], update_result[1]
-        elif len(update_result) == 1:
-            updated_content, changed = update_result[0], True
-        else:
-            updated_content, changed = svg_data["content"], False
-    else:
-        updated_content, changed = update_result, True
+    updated_content, changed, update_error = _coerce_update_result(
+        update_result, svg_data["content"]
+    )
 
     if require_svg_change and not changed:
         _bump(stats, "svg_noop")
         if verbose:
-            print(
-                f" [!] WARNING: Could not update '{svg_group_id}' in "
-                f"{svg_filename}; JSON unchanged"
-            )
+            if update_error:
+                print(
+                    f" [!] WARNING: Could not update '{svg_group_id}' in "
+                    f"{svg_filename}; JSON unchanged ({update_error})"
+                )
+            else:
+                print(
+                    f" [!] WARNING: Could not update '{svg_group_id}' in "
+                    f"{svg_filename}; JSON unchanged"
+                )
         return False
 
     _bump(stats, "ids_changed")

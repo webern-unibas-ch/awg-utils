@@ -189,25 +189,71 @@ def update_svg_id_by_class(svg_content, old_val, new_val, target_class):
     return content, None
 
 
-def find_matching_svg_files_by_class(svg_group_id, relevant_svgs, get_svg_data, target_class="link-box"):
-    """Find all SVG files that contain a specific ID with a specific class.
+def _extract_attr(tag_text: str, attr_name: str):
+    m = re.search(
+        rf"""\b{re.escape(attr_name)}\s*=\s*(['"])(.*?)\1""",
+        tag_text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return m.group(2) if m else ""
 
-    Args:
-        svg_group_id (str): The ID to search for
-        relevant_svgs (list): List of relevant SVG filenames to search in
-        get_svg_data (function): Function to load SVG data
-        target_class (str): The CSS class to match (default: "link-box")
+def _has_class_token(class_attr: str, wanted_class: str) -> bool:
+    wanted = (wanted_class or "").strip().lower()
+    if not wanted:
+        return False
+    return any(token.lower() == wanted for token in class_attr.split())
 
-    Returns:
-        list: List of SVG filenames that contain the ID with the target class
-    """
-    matching_files = []
-    for svg_filename in relevant_svgs:
+def find_matching_svg_files_by_class(svg_group_id, relevant_svg_files, get_svg_data, required_class="tkk"):
+    matching = []
+    tag_re = re.compile(
+        rf"""<[A-Za-z_:][\w:.-]*[^>]*\bid\s*=\s*(['"]){re.escape(svg_group_id)}\1[^>]*>""",
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+    for svg_filename in relevant_svg_files:
         svg_data = get_svg_data(svg_filename)
-        # Test if this ID exists with target class in this SVG
-        test_content, error = update_svg_id_by_class(
-            svg_data["content"], svg_group_id, "test", target_class
+        if not svg_data:
+            continue
+        content = svg_data.get("content", "")
+        for tag_match in tag_re.finditer(content):
+            class_attr = _extract_attr(tag_match.group(0), "class")
+            if _has_class_token(class_attr, required_class):
+                matching.append(svg_filename)
+                break
+
+    return matching
+
+def update_svg_id_by_class(svg_content, old_id, new_id, required_class="tkk"):
+    replaced = False
+    tag_re = re.compile(
+        rf"""<[A-Za-z_:][\w:.-]*[^>]*\bid\s*=\s*(['"]){re.escape(old_id)}\1[^>]*>""",
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    id_attr_re = re.compile(
+        rf"""(\bid\s*=\s*)(['"]){re.escape(old_id)}\2""",
+        flags=re.IGNORECASE,
+    )
+
+    def _replace_tag(match):
+        nonlocal replaced
+        tag = match.group(0)
+        if replaced:
+            return tag
+
+        class_attr = _extract_attr(tag, "class")
+        if not _has_class_token(class_attr, required_class):
+            return tag
+
+        replaced = True
+        return id_attr_re.sub(
+            lambda m: f"{m.group(1)}{m.group(2)}{new_id}{m.group(2)}",
+            tag,
+            count=1,
         )
-        if error is None and test_content != svg_data["content"]:
-            matching_files.append(svg_filename)
-    return matching_files
+
+    updated_content = tag_re.sub(_replace_tag, svg_content)
+
+    if not replaced:
+        return svg_content, f"'{old_id}' with class containing '{required_class}' not found"
+
+    return updated_content, None

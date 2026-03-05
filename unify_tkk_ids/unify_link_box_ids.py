@@ -68,7 +68,7 @@ def process_single_link_box(svg_group_id, link_box, entry_id, matching_files,
         return False
 
     # Create new ID: g-lb-{entry_id}-to-{sheetId}
-    new_id = f"g-lb-{entry_id}-to-{sheet_id}"
+    new_id = f"g-lb-{entry_id}-to-{sheet_id}".lower()
 
     # Update JSON
     link_box['svgGroupId'] = new_id

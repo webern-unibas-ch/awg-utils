@@ -1,0 +1,5 @@
+# Notebook/runtime dependencies for unify_ids.ipynb
+# Install with: pip install -r requirements-notebook.txt
+
+ipykernel>=6.0
+ipywidgets>=8.0

@@ -14,7 +14,7 @@ from utils.file_utils import (
     load_and_validate_inputs, create_svg_loader, save_results
 )
 from utils.svg_utils import (
-    find_matching_svg_files_by_class, find_relevant_svg_files, update_svg_id
+    find_matching_svg_files_by_class, find_relevant_svg_files, update_svg_id_by_class
 )
 from utils.validation_utils import display_validation_report
 
@@ -55,7 +55,7 @@ def _class_contains(class_attr, needle=TKK_CLASS):
 
 def _coerce_update_result(update_result, original_content):
     """
-    Normalize update_svg_id() return variants:
+    Normalize update_svg_id_by_class() return variants:
     - updated_content
     - (updated_content, changed_bool)
     - (updated_content, error_message_or_none)
@@ -144,7 +144,7 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
     svg_filename = matching_files[0]
     svg_data = get_svg_data(svg_filename)
 
-    update_result = update_svg_id(svg_data["content"], svg_group_id, new_id)
+    update_result = update_svg_id_by_class(svg_data["content"], svg_group_id, new_id, TKK_CLASS)
     updated_content, changed, update_error = _coerce_update_result(
         update_result, svg_data["content"]
     )

@@ -37,8 +37,8 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):
     """Test cases for the process_single_svg_group_id function"""
 
     def setUp(self):
-        # Mock the update_svg_id function
-        self.update_svg_id_patcher = patch('unify_tkk_ids.update_svg_id')
+        # Mock the update_svg_id_by_class function
+        self.update_svg_id_patcher = patch('unify_tkk_ids.update_svg_id_by_class')
         self.mock_update_svg_id = self.update_svg_id_patcher.start()
         self.mock_update_svg_id.return_value = ("updated_svg_content", None)
 
@@ -77,9 +77,9 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):
         # Should call get_svg_data with the matching file
         self.mock_get_svg_data.assert_called_once_with("test.svg")
 
-        # Should call update_svg_id to update SVG content
+        # Should call update_svg_id_by_class to update SVG content
         self.mock_update_svg_id.assert_called_once_with(
-            "<svg>test content</svg>", self.svg_group_id, expected_new_id
+            "<svg>test content</svg>", self.svg_group_id, expected_new_id, "tkk"
         )
 
     def test_process_single_svg_group_id_with_no_files(self):
@@ -104,7 +104,7 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):
         self.assertIn("ERROR", error_call)
         self.assertIn("not found in any relevant SVG files", error_call)
 
-        # Should not call get_svg_data or update_svg_id
+        # Should not call get_svg_data or update_svg_id_by_class
         self.mock_get_svg_data.assert_not_called()
         self.mock_update_svg_id.assert_not_called()
 

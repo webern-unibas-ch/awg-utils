@@ -96,65 +96,6 @@ def find_relevant_svg_files(new_id, all_svg_files, current_main_number):
     return candidate_svg_files
 
 
-def update_svg_id(svg_content, old_val, new_val):
-    """Update an ID in SVG content while preserving elements with class="tkk".
-
-    Handles elements that may have multiple CSS classes, as long as "tkk" is one of them.
-    Supports both single and double quotes, and various attribute orders.
-
-    Examples of supported formats:
-    - <g class="tkk" id="old-id">  (single class)
-    - <g class="tkk other-class" id="old-id">  (tkk first)
-    - <g class="active tkk selected" id="old-id">  (tkk in middle)
-    - <g id="old-id" class='other-class tkk'>  (tkk last, single quotes)
-
-    Args:
-        svg_content (str): The SVG content to process
-        old_val (str): The old ID value to replace
-        new_val (str): The new ID value to use as replacement
-
-    Returns:
-        tuple: (updated_content, error_message)
-               error_message is None if successful, string if error occurred
-    """
-    # Only match the ID if the same tag contains class with "tkk" as a word
-    escaped_id = re.escape(old_val)
-
-    # Create patterns for both quote styles and both attribute orders
-    # Use word boundaries (\b) to match "tkk" as complete word within class attribute
-    patterns = [
-        # Double quotes: id first, then class with tkk
-        f'<[^>]*?id="{escaped_id}"[^>]*?class="[^"]*\\btkk\\b[^"]*"[^>]*?>',
-        # Double quotes: class with tkk first, then id
-        f'<[^>]*?class="[^"]*\\btkk\\b[^"]*"[^>]*?id="{escaped_id}"[^>]*?>',
-        # Single quotes: id first, then class with tkk
-        f"<[^>]*?id='{escaped_id}'[^>]*?class='[^']*\\btkk\\b[^']*'[^>]*?>",
-        # Single quotes: class with tkk first, then id
-        f"<[^>]*?class='[^']*\\btkk\\b[^']*'[^>]*?id='{escaped_id}'[^>]*?>",
-    ]
-
-    # Count total tkk matches first
-    total_tkk_matches = 0
-    for pattern in patterns:
-        total_tkk_matches += len(re.findall(pattern, svg_content))
-
-    if total_tkk_matches > 1:
-        return (svg_content,
-                f"Multiple class='tkk' elements found with ID '{old_val}' "
-                f"({total_tkk_matches} occurrences)")
-
-    def replace_id(match):
-        full_tag = match.group(0)
-        return (full_tag.replace(f'id="{old_val}"', f'id="{new_val}"')
-                        .replace(f"id='{old_val}'", f"id='{new_val}'"))
-
-    # Apply all patterns
-    content = svg_content
-    for pattern in patterns:
-        content = re.sub(pattern, replace_id, content)
-    return content, None
-
-
 def update_svg_id_by_class(svg_content, old_id, new_id, target_class):
     """Update an ID in SVG content for elements with a specific class.
 

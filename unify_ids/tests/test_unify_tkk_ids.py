@@ -264,7 +264,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         self.extract_moldenhauer_patcher = patch('unify_tkk_ids.extract_moldenhauer_number')
         self.find_relevant_svgs_patcher = patch('unify_tkk_ids.find_relevant_svg_files')
         self.extract_svg_ids_patcher = patch('unify_tkk_ids.extract_svg_group_ids')
-        self.find_matching_patcher = patch('unify_tkk_ids.find_matching_svg_files')
+        self.find_matching_patcher = patch('unify_tkk_ids.find_matching_svg_files_by_class')
         self.process_single_patcher = patch('unify_tkk_ids.process_single_svg_group_id')
 
         self.mock_extract_moldenhauer = self.extract_moldenhauer_patcher.start()
@@ -484,7 +484,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
 
         self.mock_extract_svg_ids.assert_called_once_with(self.test_textcritics_entry)
 
-        # Should call find_matching_svg_files for each svgGroupId
+        # Should call find_matching_svg_files_by_class for each svgGroupId
         expected_calls = [
             unittest.mock.call("id-1", ["test1.svg", "test2.svg"], self.mock_get_svg_data),
             unittest.mock.call("id-2", ["test1.svg", "test2.svg"], self.mock_get_svg_data)

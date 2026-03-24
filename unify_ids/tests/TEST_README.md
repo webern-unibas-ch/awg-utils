@@ -108,7 +108,7 @@ Tests for `utils/file_utils.py`:
 
 ### SVG Utils Tests (`test_svg_utils.py`)
 Tests for `utils/svg_utils.py`:
-- **`find_matching_svg_files()`**: SVG file discovery with ID matching
+- **`find_matching_svg_files_by_class()`**: SVG file discovery with ID matching by class
 - **`find_relevant_svg_files()`**: File filtering by entry type (TF, Sk, SkRT)
 - **`update_svg_id()`**: ID replacement in SVG content with tkk class preservation
 - Different quote styles, attribute orders, and CSS class combinations

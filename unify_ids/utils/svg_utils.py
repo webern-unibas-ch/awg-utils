@@ -15,28 +15,6 @@ from .extraction_utils import (
 )
 
 
-def find_matching_svg_files(svg_group_id, relevant_svgs, get_svg_data):
-    """Find all SVG files that contain a specific svgGroupId with tkk class.
-
-    Args:
-        svg_group_id (str): The ID to search for
-        relevant_svgs (list): List of relevant SVG filenames to search in
-        get_svg_data (function): Function to load SVG data
-
-    Returns:
-        list: List of SVG filenames that contain the ID with tkk class
-    """
-    matching_files = []
-
-    for svg_filename in relevant_svgs:
-        svg_data = get_svg_data(svg_filename)
-        # Test if this ID exists with class tkk in this SVG
-        test_content, error = update_svg_id(svg_data["content"], svg_group_id, "test")
-        if error is None and test_content != svg_data["content"]:
-            matching_files.append(svg_filename)
-
-    return matching_files
-
 def find_matching_svg_files_by_class(svg_group_id, relevant_svg_files, get_svg_data,
                                      required_class="tkk"):
     """

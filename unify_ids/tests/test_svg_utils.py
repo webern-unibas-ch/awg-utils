@@ -15,15 +15,15 @@ import pytest
 
 # Import the functions we want to test
 from utils.svg_utils import (
-    find_matching_svg_files,
+    find_matching_svg_files_by_class,
     find_relevant_svg_files,
     update_svg_id
 )
 
 
 @pytest.mark.unit
-class TestFindMatchingSvgFiles(unittest.TestCase):
-    """Test cases for the find_matching_svg_files function"""
+class TestFindMatchingSvgFilesByClass(unittest.TestCase):
+    """Test cases for the find_matching_svg_files_by_class function"""
 
     def setUp(self):
         """Set up test fixtures"""
@@ -44,7 +44,7 @@ class TestFindMatchingSvgFiles(unittest.TestCase):
 
     def test_find_matching_svg_files_with_single_match(self):
         """Test finding SVG files with single matching ID"""
-        result = find_matching_svg_files("test-id-1", self.relevant_svgs, self.mock_get_svg_data)
+        result = find_matching_svg_files_by_class("test-id-1", self.relevant_svgs, self.mock_get_svg_data, "tkk")
         expected = ["file1.svg"]
         self.assertEqual(result, expected)
 
@@ -53,26 +53,26 @@ class TestFindMatchingSvgFiles(unittest.TestCase):
         # Add test-id-1 to file2.svg as well
         self.test_svg_content["file2.svg"]["content"] = '<g class="tkk" id="test-id-1">content</g>'
 
-        result = find_matching_svg_files("test-id-1", self.relevant_svgs, self.mock_get_svg_data)
+        result = find_matching_svg_files_by_class("test-id-1", self.relevant_svgs, self.mock_get_svg_data, "tkk")
         expected = ["file1.svg", "file2.svg"]
         self.assertEqual(result, expected)
 
     def test_find_matching_svg_files_with_no_matches(self):
         """Test finding SVG files when no matches exist"""
-        result = find_matching_svg_files(
-            "nonexistent-id", self.relevant_svgs, self.mock_get_svg_data
+        result = find_matching_svg_files_by_class(
+            "non-existent-id", self.relevant_svgs, self.mock_get_svg_data, "tkk"
         )
         self.assertEqual(result, [])
 
     def test_find_matching_svg_files_with_no_tkk_class(self):
         """Test that IDs without tkk class are not matched"""
-        result = find_matching_svg_files("test-id-3", self.relevant_svgs, self.mock_get_svg_data)
+        result = find_matching_svg_files_by_class("test-id-3", self.relevant_svgs, self.mock_get_svg_data, "tkk")
         # file3.svg has test-id-3 but no tkk class, so should not match
         self.assertEqual(result, [])
 
     def test_find_matching_svg_files_with_empty_relevant_svgs(self):
         """Test with empty relevant SVG list"""
-        result = find_matching_svg_files("test-id-1", [], self.mock_get_svg_data)
+        result = find_matching_svg_files_by_class("test-id-1", [], self.mock_get_svg_data, "tkk")
         self.assertEqual(result, [])
 
     def test_find_matching_svg_files_with_mixed_quote_styles(self):
@@ -80,7 +80,7 @@ class TestFindMatchingSvgFiles(unittest.TestCase):
         # Set up test content with single quotes
         self.test_svg_content["file2.svg"]["content"] = "<g id='test-id-1' class='tkk'>content</g>"
 
-        result = find_matching_svg_files("test-id-1", self.relevant_svgs, self.mock_get_svg_data)
+        result = find_matching_svg_files_by_class("test-id-1", self.relevant_svgs, self.mock_get_svg_data, "tkk")
         expected = ["file1.svg", "file2.svg"]  # Both should match despite different quotes
         self.assertEqual(result, expected)
 
@@ -91,7 +91,7 @@ class TestFindMatchingSvgFiles(unittest.TestCase):
             '<g class="other-class tkk selected" id="test-id-1">content</g>'
         )
 
-        result = find_matching_svg_files("test-id-1", self.relevant_svgs, self.mock_get_svg_data)
+        result = find_matching_svg_files_by_class("test-id-1", self.relevant_svgs, self.mock_get_svg_data, "tkk")
         expected = ["file1.svg", "file3.svg"]
         self.assertEqual(result, expected)
 
@@ -116,7 +116,7 @@ class TestFindMatchingSvgFiles(unittest.TestCase):
             '<g class="tkk file2" id="test-id-1">content</g>'
         )
 
-        result = find_matching_svg_files("test-id-1", self.relevant_svgs, self.mock_get_svg_data)
+        result = find_matching_svg_files_by_class("test-id-1", self.relevant_svgs, self.mock_get_svg_data, "tkk")
         # Only file2.svg should match due to error in file1.svg
         expected = ["file2.svg"]
         self.assertEqual(result, expected)

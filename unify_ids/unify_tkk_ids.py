@@ -14,14 +14,16 @@ from utils.file_utils import (
     load_and_validate_inputs, create_svg_loader, save_results
 )
 from utils.svg_utils import (
-    find_matching_svg_files, find_relevant_svg_files, update_svg_id
+    find_matching_svg_files_by_class, find_relevant_svg_files, update_svg_id
 )
 from utils.validation_utils import display_validation_report
 
 # Global regex patterns and constants
 G_TAG_RE = re.compile(r"<g\b[^>]*>", re.IGNORECASE | re.DOTALL)
 ATTR_RE = re.compile(r"([:\w-]+)\s*=\s*(\"[^\"]*\"|'[^']*')", re.DOTALL)
+TKK_CLASS = "tkk"
 TKK_PREFIX = "awg-tkk-"
+
 
 
 def _init_stats():
@@ -47,7 +49,7 @@ def _extract_attrs(tag_text):
     return attrs
 
 
-def _class_contains(class_attr, needle="tkk"):
+def _class_contains(class_attr, needle=TKK_CLASS):
     return (needle or "").strip().lower() in (class_attr or "").lower()
 
 
@@ -97,7 +99,7 @@ def _build_tkk_id_index(relevant_svgs, get_svg_data):
             class_attr = attrs.get("class", "")
 
             # class only needs to contain "tkk"
-            if svg_id and _class_contains(class_attr, "tkk") and svg_id not in seen_ids_in_file:
+            if svg_id and _class_contains(class_attr, TKK_CLASS) and svg_id not in seen_ids_in_file:
                 id_to_files.setdefault(svg_id, []).append(svg_filename)
                 seen_ids_in_file.add(svg_id)
 
@@ -107,16 +109,15 @@ def _build_tkk_id_index(relevant_svgs, get_svg_data):
 def _get_cached_matching_files(svg_group_id, relevant_svgs, get_svg_data, cache):
     """Fallback cache using existing matching logic."""
     if svg_group_id not in cache:
-        cache[svg_group_id] = find_matching_svg_files(
-            svg_group_id, relevant_svgs, get_svg_data
+        cache[svg_group_id] = find_matching_svg_files_by_class(
+            svg_group_id, relevant_svgs, get_svg_data, TKK_CLASS
         )
     return cache[svg_group_id]
 
 
 def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
                                 get_svg_data, new_id, dry_run=False,
-                                stats=None, verbose=True,
-                                require_svg_change=False):
+                                stats=None, verbose=True):
     """Process a single svgGroupId through the complete update workflow."""
     if len(matching_files) == 0:
         _bump(stats, "ids_missing")
@@ -148,7 +149,7 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
         update_result, svg_data["content"]
     )
 
-    if require_svg_change and not changed:
+    if not changed:
         _bump(stats, "svg_noop")
         if verbose:
             if update_error:
@@ -181,7 +182,7 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
 
 def process_textcritics_entry(
         textcritics_entry, all_svg_files, get_svg_data,
-        dry_run=False, stats=None, verbose=True, use_index=False):
+        dry_run=False, stats=None, verbose=True):
     """Process a single textcritics entry and all its block comments."""
     if not isinstance(textcritics_entry, dict):
         return
@@ -217,12 +218,11 @@ def process_textcritics_entry(
 
     tkk_id_index = {}
     fallback_cache = {}
-    if use_index:
-        try:
-            tkk_id_index = _build_tkk_id_index(relevant_svgs, get_svg_data)
-        except (TypeError, AttributeError, KeyError):
-            # Keep tests/mocked flows compatible
-            tkk_id_index = {}
+    try:
+        tkk_id_index = _build_tkk_id_index(relevant_svgs, get_svg_data)
+    except (TypeError, AttributeError, KeyError):
+        # Keep tests/mocked flows compatible
+        tkk_id_index = {}
 
     counter = 1
     entry_id_formatted = textcritics_entry_id.lower()
@@ -230,34 +230,20 @@ def process_textcritics_entry(
     for svg_group_id, block_comment in zip(svg_group_ids, block_comments):
         _bump(stats, "ids_seen")
 
-        if use_index and svg_group_id in tkk_id_index:
+        if svg_group_id in tkk_id_index:
             matching_files = tkk_id_index[svg_group_id]
         else:
-            if use_index:
-                matching_files = _get_cached_matching_files(
-                    svg_group_id, relevant_svgs, get_svg_data, fallback_cache
-                )
-            else:
-                # Old behavior (important for existing tests)
-                matching_files = find_matching_svg_files(
-                    svg_group_id, relevant_svgs, get_svg_data
-                )
+            matching_files = _get_cached_matching_files(
+                svg_group_id, relevant_svgs, get_svg_data, fallback_cache
+            )
 
         new_id = f"{TKK_PREFIX}{entry_id_formatted}-{counter:03d}"
 
-        # Keep old call shape when defaults are used (test compatibility)
-        if use_index or dry_run or stats is not None or not verbose:
-            updated = process_single_svg_group_id(
-                svg_group_id, block_comment, matching_files,
-                get_svg_data, new_id,
-                dry_run=dry_run, stats=stats, verbose=verbose,
-                require_svg_change=use_index
-            )
-        else:
-            updated = process_single_svg_group_id(
-                svg_group_id, block_comment, matching_files,
-                get_svg_data, new_id
-            )
+        updated = process_single_svg_group_id(
+            svg_group_id, block_comment, matching_files,
+            get_svg_data, new_id,
+            dry_run=dry_run, stats=stats, verbose=verbose
+        )
 
         if updated:
             counter += 1
@@ -290,7 +276,7 @@ def unify_tkk_ids(json_path, svg_folder,
     for textcritics_entry in all_textcritics_entries:
         process_textcritics_entry(
             textcritics_entry, all_svg_files, get_svg_data,
-            dry_run=dry_run, stats=stats, verbose=verbose, use_index=True
+            dry_run=dry_run, stats=stats, verbose=verbose
         )
 
     if not dry_run:

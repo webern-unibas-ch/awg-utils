@@ -1,10 +1,8 @@
 """Tests for unify_link_box_ids.py."""
 
 from unittest.mock import call
-
 import pytest
 
-import unify_link_box_ids as module_under_test
 from unify_link_box_ids import (
     main,
     process_single_link_box,
@@ -25,11 +23,11 @@ class TestProcessSingleLinkBox:
     def test_process_single_link_box_with_success(
         self, mocker, capsys, sample_svg_data
     ):
+        """Test successful processing of a link box with valid inputs."""
         link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M317_Sk2"}}
         get_svg_data = mocker.Mock(return_value=sample_svg_data)
-        update_mock = mocker.patch.object(
-            module_under_test,
-            "update_svg_id_by_class",
+        update_mock = mocker.patch(
+            "unify_link_box_ids.update_svg_id_by_class",
             return_value=("<updated-svg-content>", None),
         )
 
@@ -55,6 +53,7 @@ class TestProcessSingleLinkBox:
         assert f"[SVG] Changing 'g6407' -> '{expected_new_id}' in sheet.svg" in output
 
     def test_process_single_link_box_with_no_matching_files(self, mocker, capsys):
+        """Test processing of a link box when no matching SVG files are found."""
         link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M317_Sk2"}}
         get_svg_data = mocker.Mock()
 
@@ -67,6 +66,7 @@ class TestProcessSingleLinkBox:
         assert "not found in any relevant SVG files" in output
 
     def test_process_single_link_box_with_multiple_matching_files(self, mocker, capsys):
+        """Test processing of a link box when multiple matching SVG files are found."""
         link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M317_Sk2"}}
         get_svg_data = mocker.Mock()
 
@@ -86,6 +86,7 @@ class TestProcessSingleLinkBox:
         assert "Skipping due to multiple occurrences" in output
 
     def test_process_single_link_box_with_missing_sheet_id(self, mocker, capsys):
+        """Test processing of a link box when the linked sheetId is missing."""
         link_box = {"svgGroupId": "g6407", "linkTo": {}}
         get_svg_data = mocker.Mock()
 
@@ -102,11 +103,11 @@ class TestProcessSingleLinkBox:
     def test_process_single_link_box_with_svg_update_error(
         self, mocker, capsys, sample_svg_data
     ):
+        """Test processing of a link box when the SVG update fails."""
         link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M317_Sk2"}}
         get_svg_data = mocker.Mock(return_value=sample_svg_data)
-        mocker.patch.object(
-            module_under_test,
-            "update_svg_id_by_class",
+        mocker.patch(
+            "unify_link_box_ids.update_svg_id_by_class",
             return_value=("<svg-content>", "Could not update id"),
         )
 
@@ -127,8 +128,9 @@ class TestProcessTextcriticsEntry:
     """Tests for process_textcritics_entry."""
 
     def test_process_textcritics_entry_returns_for_non_dict(self, mocker):
-        extract_number_mock = mocker.patch.object(
-            module_under_test, "extract_moldenhauer_number"
+        """Test that process_textcritics_entry returns early when entry is not a dict."""
+        extract_number_mock = mocker.patch(
+            "unify_link_box_ids.extract_moldenhauer_number"
         )
 
         process_textcritics_entry("not-a-dict", ["a.svg"], mocker.Mock())
@@ -136,8 +138,9 @@ class TestProcessTextcriticsEntry:
         extract_number_mock.assert_not_called()
 
     def test_process_textcritics_entry_returns_when_id_missing(self, mocker):
-        extract_number_mock = mocker.patch.object(
-            module_under_test, "extract_moldenhauer_number"
+        """Test that process_textcritics_entry returns early when 'id' is missing."""
+        extract_number_mock = mocker.patch(
+            "unify_link_box_ids.extract_moldenhauer_number"
         )
 
         process_textcritics_entry({}, ["a.svg"], mocker.Mock())
@@ -145,6 +148,7 @@ class TestProcessTextcriticsEntry:
         extract_number_mock.assert_not_called()
 
     def test_process_textcritics_entry_success_basic(self, mocker, capsys):
+        """Test successful processing of a textcritics entry with valid link boxes."""
         entry = {"id": "M143_TF1"}
         all_svg_files = ["test1.svg", "test2.svg"]
         link_boxes = [
@@ -153,24 +157,22 @@ class TestProcessTextcriticsEntry:
         ]
         get_svg_data = mocker.Mock()
 
-        extract_number_mock = mocker.patch.object(
-            module_under_test, "extract_moldenhauer_number", return_value="143"
+        extract_number_mock = mocker.patch(
+            "unify_link_box_ids.extract_moldenhauer_number", return_value="143"
         )
-        find_relevant_mock = mocker.patch.object(
-            module_under_test,
-            "find_relevant_svg_files",
+        find_relevant_mock = mocker.patch(
+            "unify_link_box_ids.find_relevant_svg_files",
             return_value=["test1.svg", "test2.svg"],
         )
-        extract_link_boxes_mock = mocker.patch.object(
-            module_under_test, "extract_link_boxes", return_value=link_boxes
+        extract_link_boxes_mock = mocker.patch(
+            "unify_link_box_ids.extract_link_boxes", return_value=link_boxes
         )
-        find_matching_mock = mocker.patch.object(
-            module_under_test,
-            "find_matching_svg_files_by_class",
+        find_matching_mock = mocker.patch(
+            "unify_link_box_ids.find_matching_svg_files_by_class",
             side_effect=[["test1.svg"], ["test2.svg"]],
         )
-        process_single_mock = mocker.patch.object(
-            module_under_test, "process_single_link_box", return_value=True
+        process_single_mock = mocker.patch(
+            "unify_link_box_ids.process_single_link_box", return_value=True
         )
 
         process_textcritics_entry(entry, all_svg_files, get_svg_data)
@@ -196,24 +198,24 @@ class TestProcessTextcriticsEntry:
     def test_process_textcritics_entry_prints_skrt_anchor_and_no_link_boxes(
         self, mocker, capsys
     ):
+        """Test that process_textcritics_entry identifies SkRT anchor and handles no link boxes."""
         entry = {"id": "M143_SkRT1"}
         all_svg_files = ["test1.svg"]
         get_svg_data = mocker.Mock()
 
-        mocker.patch.object(
-            module_under_test, "extract_moldenhauer_number", return_value="143"
+        mocker.patch(
+            "unify_link_box_ids.extract_moldenhauer_number", return_value="143"
         )
-        mocker.patch.object(
-            module_under_test,
-            "find_relevant_svg_files",
+        mocker.patch(
+            "unify_link_box_ids.find_relevant_svg_files",
             return_value=["test1.svg"],
         )
-        mocker.patch.object(module_under_test, "extract_link_boxes", return_value=[])
-        find_matching_mock = mocker.patch.object(
-            module_under_test, "find_matching_svg_files_by_class"
+        mocker.patch("unify_link_box_ids.extract_link_boxes", return_value=[])
+        find_matching_mock = mocker.patch(
+            "unify_link_box_ids.find_matching_svg_files_by_class"
         )
-        process_single_mock = mocker.patch.object(
-            module_under_test, "process_single_link_box"
+        process_single_mock = mocker.patch(
+            "unify_link_box_ids.process_single_link_box"
         )
 
         process_textcritics_entry(entry, all_svg_files, get_svg_data)
@@ -227,6 +229,7 @@ class TestProcessTextcriticsEntry:
     def test_process_textcritics_entry_skips_link_box_without_svg_group_id(
         self, mocker, capsys
     ):
+        """Test that process_textcritics_entry skips link boxes that are missing svgGroupId."""
         entry = {"id": "M143_TF1"}
         all_svg_files = ["sheet.svg"]
         link_boxes = [
@@ -235,22 +238,20 @@ class TestProcessTextcriticsEntry:
         ]
         get_svg_data = mocker.Mock()
 
-        mocker.patch.object(
-            module_under_test, "extract_moldenhauer_number", return_value="143"
+        mocker.patch(
+            "unify_link_box_ids.extract_moldenhauer_number", return_value="143"
         )
-        mocker.patch.object(
-            module_under_test,
-            "find_relevant_svg_files",
+        mocker.patch(
+            "unify_link_box_ids.find_relevant_svg_files",
             return_value=["sheet.svg"],
         )
-        mocker.patch.object(module_under_test, "extract_link_boxes", return_value=link_boxes)
-        find_matching_mock = mocker.patch.object(
-            module_under_test,
-            "find_matching_svg_files_by_class",
+        mocker.patch("unify_link_box_ids.extract_link_boxes", return_value=link_boxes)
+        find_matching_mock = mocker.patch(
+            "unify_link_box_ids.find_matching_svg_files_by_class",
             return_value=["sheet.svg"],
         )
-        process_single_mock = mocker.patch.object(
-            module_under_test, "process_single_link_box", return_value=True
+        process_single_mock = mocker.patch(
+            "unify_link_box_ids.process_single_link_box", return_value=True
         )
 
         process_textcritics_entry(entry, all_svg_files, get_svg_data)
@@ -269,14 +270,17 @@ class TestUnifyLinkBoxIds:
     """Tests for unify_link_box_ids."""
 
     def test_unify_link_box_ids_processes_dict_textcritics(self, mocker, capsys):
+        """
+        Test that unify_link_box_ids processes textcritics when root is a dict
+        with 'textcritics' key.
+        """
         json_data = {"textcritics": [{"id": "A"}, {"id": "B"}]}
         all_svg_files = ["A.svg", "B.svg"]
         get_svg_data = mocker.Mock(name="get_svg_data")
         captured = {}
 
-        load_mock = mocker.patch.object(
-            module_under_test,
-            "load_and_validate_inputs",
+        load_mock = mocker.patch(
+            "unify_link_box_ids.load_and_validate_inputs",
             return_value=(json_data, all_svg_files),
         )
 
@@ -286,13 +290,12 @@ class TestUnifyLinkBoxIds:
             captured["loaded_svg_texts"] = loaded_svg_texts
             return get_svg_data
 
-        create_loader_mock = mocker.patch.object(
-            module_under_test,
-            "create_svg_loader",
+        create_loader_mock = mocker.patch(
+            "unify_link_box_ids.create_svg_loader",
             side_effect=_fake_create_svg_loader,
         )
-        process_entry_mock = mocker.patch.object(module_under_test, "process_textcritics_entry")
-        save_results_mock = mocker.patch.object(module_under_test, "save_results")
+        process_entry_mock = mocker.patch("unify_link_box_ids.process_textcritics_entry")
+        save_results_mock = mocker.patch("unify_link_box_ids.save_results")
 
         result = unify_link_box_ids("textcritics.json", "img/")
 
@@ -315,22 +318,24 @@ class TestUnifyLinkBoxIds:
         assert "--- Link Box ID processing completed ---" in output
 
     def test_unify_link_box_ids_processes_list_root(self, mocker):
+        """
+        Test that unify_link_box_ids processes textcritics when root is a list
+        (legacy format).
+        """
         json_data = [{"id": "A"}, {"id": "B"}]
         all_svg_files = ["A.svg"]
         get_svg_data = mocker.Mock(name="get_svg_data")
 
-        mocker.patch.object(
-            module_under_test,
-            "load_and_validate_inputs",
+        mocker.patch(
+            "unify_link_box_ids.load_and_validate_inputs",
             return_value=(json_data, all_svg_files),
         )
-        mocker.patch.object(
-            module_under_test,
-            "create_svg_loader",
+        mocker.patch(
+            "unify_link_box_ids.create_svg_loader",
             return_value=get_svg_data,
         )
-        process_entry_mock = mocker.patch.object(module_under_test, "process_textcritics_entry")
-        save_results_mock = mocker.patch.object(module_under_test, "save_results")
+        process_entry_mock = mocker.patch("unify_link_box_ids.process_textcritics_entry")
+        save_results_mock = mocker.patch("unify_link_box_ids.save_results")
 
         result = unify_link_box_ids("textcritics.json", "img/")
 
@@ -346,10 +351,11 @@ class TestMain:
     """Tests for main."""
 
     def test_main_success_path(self, mocker, capsys):
-        process_mock = mocker.patch.object(
-            module_under_test, "unify_link_box_ids", return_value=True
+        """Test the successful execution path of main."""
+        process_mock = mocker.patch(
+            "unify_link_box_ids.unify_link_box_ids", return_value=True
         )
-        exit_mock = mocker.patch.object(module_under_test.sys, "exit")
+        exit_mock = mocker.patch("sys.exit")
 
         main()
 
@@ -361,10 +367,11 @@ class TestMain:
         assert "Finished!" in output
 
     def test_main_with_warnings(self, mocker, capsys):
-        process_mock = mocker.patch.object(
-            module_under_test, "unify_link_box_ids", return_value=False
+        """Test main when unify_link_box_ids returns False indicating warnings."""
+        process_mock = mocker.patch(
+            "unify_link_box_ids.unify_link_box_ids", return_value=False
         )
-        exit_mock = mocker.patch.object(module_under_test.sys, "exit")
+        exit_mock = mocker.patch("sys.exit")
 
         main()
 
@@ -376,12 +383,12 @@ class TestMain:
         assert "Processing completed with warnings." in output
 
     def test_main_handles_file_not_found(self, mocker, capsys):
-        mocker.patch.object(
-            module_under_test,
-            "unify_link_box_ids",
+        """Test main when unify_link_box_ids raises FileNotFoundError."""
+        mocker.patch(
+            "unify_link_box_ids.unify_link_box_ids",
             side_effect=FileNotFoundError("missing-file"),
         )
-        exit_mock = mocker.patch.object(module_under_test.sys, "exit")
+        exit_mock = mocker.patch("sys.exit")
 
         main()
 
@@ -390,12 +397,12 @@ class TestMain:
         assert "Error: missing-file" in output
 
     def test_main_handles_unexpected_error(self, mocker, capsys):
-        mocker.patch.object(
-            module_under_test,
-            "unify_link_box_ids",
+        """Test main when unify_link_box_ids raises an unexpected exception."""
+        mocker.patch(
+            "unify_link_box_ids.unify_link_box_ids",
             side_effect=ValueError("bad-config"),
         )
-        exit_mock = mocker.patch.object(module_under_test.sys, "exit")
+        exit_mock = mocker.patch("sys.exit")
 
         main()
 

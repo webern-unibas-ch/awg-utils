@@ -17,6 +17,7 @@ Usage:
     python -m pytest tests/test_validation_utils.py::TestDisplayValidationReport -v
 """
 
+import inspect
 import unittest
 from unittest.mock import patch
 from io import StringIO
@@ -313,21 +314,32 @@ class TestValidateSvgEntries(unittest.TestCase):
         self.assertEqual(errors, 2)
 
 
-# ---- shared validation coverage: TKK + LinkBox ----
-import inspect
-import pytest
-import utils.validation_utils as _validation_utils
-
-
 def _call_validate_svg_entries(loaded_svgs, prefix, required_class):
-    sig = inspect.signature(_validation_utils.validate_svg_entries)
+    """
+    Helper function to call validate_svg_entries with optional required_class parameter.
+
+    Provides compatibility for testing different versions of validate_svg_entries
+    that may or may not support the required_class parameter.
+
+    Args:
+        loaded_svgs: Dictionary of loaded SVG data
+        prefix: The prefix to validate against
+        required_class: The required CSS class to filter by
+
+    Returns:
+        Number of validation errors found
+
+    Raises:
+        pytest.fail: If required_class is not "tkk" and function doesn't support filtering
+    """
+    sig = inspect.signature(validate_svg_entries)
     if "required_class" in sig.parameters:
-        return _validation_utils.validate_svg_entries(
+        return validate_svg_entries(
             loaded_svgs, prefix, required_class=required_class
         )
     if required_class != "tkk":
         pytest.fail("validate_svg_entries must support LinkBox class filtering.")
-    return _validation_utils.validate_svg_entries(loaded_svgs, prefix)
+    return validate_svg_entries(loaded_svgs, prefix)
 
 
 @pytest.mark.parametrize(
@@ -336,6 +348,7 @@ def _call_validate_svg_entries(loaded_svgs, prefix, required_class):
     ids=["tkk", "linkbox"],
 )
 def test_shared_validate_json_and_svg_support_both_unifiers(prefix, required_class):
+    """Test that validation methods support both tkk and linkBox unifiers"""
     data = {
         "textcritics": [
             {
@@ -344,7 +357,7 @@ def test_shared_validate_json_and_svg_support_both_unifiers(prefix, required_cla
             }
         ]
     }
-    assert _validation_utils.validate_json_entries(data, prefix) == 1
+    assert validate_json_entries(data, prefix) == 1
 
     loaded_svgs = {
         "sheet.svg": {

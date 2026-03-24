@@ -699,7 +699,7 @@ class TestUnifyTkkIds(unittest.TestCase):
     def test_unify_tkk_ids_success(self, _mock_stdout):
         """Test successful processing of TKK IDs returns True"""
         success = unify_tkk_ids(
-            self.json_path, self.svg_dir, "awg-tkk-"
+            self.json_path, self.svg_dir
         )
 
         self.assertTrue(success)
@@ -724,7 +724,7 @@ class TestUnifyTkkIds(unittest.TestCase):
             svg_before = f.read()
 
         success = unify_tkk_ids(
-            self.json_path, self.svg_dir, "awg-tkk-", dry_run=True
+            self.json_path, self.svg_dir, dry_run=True
         )
         self.assertTrue(success)
 
@@ -739,14 +739,14 @@ class TestUnifyTkkIds(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_unify_tkk_ids_second_run_is_noop(self, _mock_stdout):
         """Second run should be idempotent."""
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, "awg-tkk-"))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir))
 
         with open(self.json_path, 'r', encoding='utf-8') as f:
             json_after_first = f.read()
         with open(self.svg_path, 'r', encoding='utf-8') as f:
             svg_after_first = f.read()
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, "awg-tkk-"))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir))
 
         with open(self.json_path, 'r', encoding='utf-8') as f:
             json_after_second = f.read()

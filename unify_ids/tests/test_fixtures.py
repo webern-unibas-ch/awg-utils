@@ -73,7 +73,12 @@ SAMPLE_TEXTCRITICS_WITH_2_PREFIXED_IDS = _create_textcritic_entry(
     "M_142_Sk1", ["awg-tkk-m142_sk1-001", "awg-tkk-m142_sk1-002"]
 )
 SAMPLE_TEXTCRITICS_WITH_4_PREFIXED_IDS = _create_textcritic_entry(
-    "M_142_Sk1", ["awg-tkk-m142_sk1-001", "awg-tkk-m142_sk1-002", "awg-tkk-m142_sk1-003", "awg-tkk-m142_sk1-004"]
+    "M_142_Sk1", [
+        "awg-tkk-m142_sk1-001",
+        "awg-tkk-m142_sk1-002",
+        "awg-tkk-m142_sk1-003",
+        "awg-tkk-m142_sk1-004"
+    ]
 )
 
 # Textcritic entry with single unprefixed ID

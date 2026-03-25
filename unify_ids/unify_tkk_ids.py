@@ -33,7 +33,8 @@ def _init_stats():
         "ids_changed": 0,
         "ids_missing": 0,
         "ids_multiple": 0,
-        "svg_noop": 0,
+        "svg_errors": 0,
+        "svg_unchanged": 0,
     }
 
 
@@ -51,37 +52,6 @@ def _extract_attrs(tag_text):
 
 def _class_contains(class_attr, needle=TKK.css_class):
     return (needle or "").strip().lower() in (class_attr or "").lower()
-
-
-def _coerce_update_result(update_result, original_content):
-    """
-    Normalize update_svg_id_by_class() return variants:
-    - updated_content
-    - (updated_content, changed_bool)
-    - (updated_content, error_message_or_none)
-    """
-    updated_content = original_content
-    changed = False
-    update_error = None
-
-    if isinstance(update_result, tuple):
-        if len(update_result) >= 1:
-            updated_content = update_result[0]
-        if len(update_result) >= 2:
-            second = update_result[1]
-            if isinstance(second, bool):
-                changed = second
-            else:
-                # legacy style: None => success, str => error
-                update_error = second
-                changed = second is None
-        else:
-            changed = updated_content != original_content
-    else:
-        updated_content = update_result
-        changed = updated_content != original_content
-
-    return updated_content, changed, update_error
 
 
 def _build_tkk_id_index(relevant_svgs, get_svg_data):
@@ -144,25 +114,23 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
     svg_filename = matching_files[0]
     svg_data = get_svg_data(svg_filename)
 
-    update_result = update_svg_id_by_class(svg_data["content"], svg_group_id, new_id, TKK.css_class)
-    updated_content, changed, update_error = _coerce_update_result(
-        update_result, svg_data["content"]
+    updated_content, update_error = update_svg_id_by_class(
+        svg_data["content"], svg_group_id, new_id, TKK.css_class
     )
 
-    if not changed:
-        _bump(stats, "svg_noop")
+    if update_error is not None:
+        _bump(stats, "svg_errors")
         if verbose:
-            if update_error:
-                print(
-                    f" [!] WARNING: Could not update '{svg_group_id}' in "
-                    f"{svg_filename}; JSON unchanged ({update_error})"
-                )
-            else:
-                print(
-                    f" [!] WARNING: Could not update '{svg_group_id}' in "
-                    f"{svg_filename}; JSON unchanged"
-                )
+            print(
+                f" [!] WARNING: Could not update '{svg_group_id}' in "
+                f"{svg_filename}; JSON unchanged ({update_error})"
+            )
         return False
+
+    if updated_content == svg_data["content"]:
+        _bump(stats, "svg_unchanged")
+        if verbose:
+            print(f" [i] SVG already had '{new_id}' in {svg_filename}; updating JSON only")
 
     _bump(stats, "ids_changed")
 
@@ -297,7 +265,8 @@ def unify_tkk_ids(json_path, svg_folder,
             f"changed={stats['ids_changed']}, "
             f"missing={stats['ids_missing']}, "
             f"multiple={stats['ids_multiple']}, "
-            f"svg_noop={stats['svg_noop']}"
+            f"svg_errors={stats['svg_errors']}, "
+            f"svg_unchanged={stats['svg_unchanged']}"
         )
 
     return True

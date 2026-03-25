@@ -19,6 +19,7 @@ Example:
 
 import sys
 
+from utils.constants import LINKBOX
 from utils.extraction_utils import (
         extract_id_suffix,
         extract_moldenhauer_number,
@@ -30,10 +31,6 @@ from utils.file_utils import (
 from utils.svg_utils import (
     find_matching_svg_files_by_class, find_relevant_svg_files, update_svg_id_by_class
 )
-
-# Global constants
-LINKBOX_CLASS = "link-box"
-LINKBOX_PREFIX = "awg-lb-"
 
 
 # Helper function to append structured messages
@@ -74,13 +71,13 @@ def process_single_link_box(svg_group_id, parent_link_boxes, textcritics_entry_i
 
     # Find all matching SVG files for this ID
     matching_files = find_matching_svg_files_by_class(
-        svg_group_id, relevant_svgs, get_svg_data, LINKBOX_CLASS
+        svg_group_id, relevant_svgs, get_svg_data, LINKBOX.css_class
     )
 
     if len(matching_files) == 0:
         log_report_message(
             messages, "error", "svg_group_id_not_found", textcritics_entry_id,
-            f"'{svg_group_id}' with class '{LINKBOX_CLASS}' not found in any relevant SVG files"
+            f"'{svg_group_id}' with class '{LINKBOX.css_class}' not found in any relevant SVG files"
         )
         return False
 
@@ -127,7 +124,7 @@ def process_single_link_box(svg_group_id, parent_link_boxes, textcritics_entry_i
             )
 
         # Create new ID
-        new_group_id = f"{LINKBOX_PREFIX}{entry_id}-to-{target_sheet_id}".lower()
+        new_group_id = f"{LINKBOX.prefix}{entry_id}-to-{target_sheet_id}".lower()
 
         # Duplicate linkBox and update ID in JSON
         new_link_box = dict(link_box)
@@ -147,7 +144,7 @@ def process_single_link_box(svg_group_id, parent_link_boxes, textcritics_entry_i
         # Update SVG file
         svg_data = get_svg_data(svg_filename)
         svg_data["content"], error = update_svg_id_by_class(
-            svg_data["content"], svg_group_id, new_group_id, LINKBOX_CLASS
+            svg_data["content"], svg_group_id, new_group_id, LINKBOX.css_class
         )
         if error:
             print(f" [!] WARNING: {error} in {svg_filename}")

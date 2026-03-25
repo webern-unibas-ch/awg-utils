@@ -13,7 +13,7 @@ import unittest
 import xml.etree.ElementTree as ET
 import pytest
 
-# Import the functions we want to test
+from utils.constants import LINKBOX, TKK
 from utils.svg_utils import (
     _find_elements_by_id_and_class,
     _parse_svg_xml,
@@ -22,11 +22,6 @@ from utils.svg_utils import (
     find_relevant_svg_files,
     update_svg_id_by_class
 )
-
-# Global constants for test cases
-LINKBOX_CLASS = "link-box"
-TKK_CLASS = "tkk"
-
 
 @pytest.mark.unit
 class TestFindMatchingSvgFilesByClass(unittest.TestCase):
@@ -62,7 +57,7 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
     def test_find_matching_svg_files_with_tkk_target_class(self):
         """Test finding SVG files with explicit target class 'tkk'"""
         result = find_matching_svg_files_by_class(
-            "test-id-1", self.relevant_svgs, self.mock_get_svg_data, TKK_CLASS
+            "test-id-1", self.relevant_svgs, self.mock_get_svg_data, TKK.css_class
         )
         expected = ["file1.svg"]
         self.assertEqual(result, expected)
@@ -70,7 +65,7 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
     def test_find_matching_svg_files_with_link_box_target_class(self):
         """Test finding SVG files with target class 'link-box'"""
         result = find_matching_svg_files_by_class(
-            "test-id-4", self.relevant_svgs, self.mock_get_svg_data, LINKBOX_CLASS
+            "test-id-4", self.relevant_svgs, self.mock_get_svg_data, LINKBOX.css_class
         )
         expected = ["file4.svg"]
         self.assertEqual(result, expected)
@@ -81,7 +76,7 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
         self.test_svg_content["file2.svg"]["content"] = '<g class="tkk" id="test-id-1">content</g>'
 
         result = find_matching_svg_files_by_class(
-            "test-id-1", self.relevant_svgs, self.mock_get_svg_data, TKK_CLASS
+            "test-id-1", self.relevant_svgs, self.mock_get_svg_data, TKK.css_class
         )
         expected = ["file1.svg", "file2.svg"]
         self.assertEqual(result, expected)
@@ -89,14 +84,14 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
     def test_find_matching_svg_files_with_no_matches(self):
         """Test finding SVG files when no matches exist"""
         result = find_matching_svg_files_by_class(
-            "non-existent-id", self.relevant_svgs, self.mock_get_svg_data, TKK_CLASS
+            "non-existent-id", self.relevant_svgs, self.mock_get_svg_data, TKK.css_class
         )
         self.assertEqual(result, [])
 
     def test_find_matching_svg_files_with_no_tkk_class(self):
         """Test that IDs without tkk class are not matched"""
         result = find_matching_svg_files_by_class(
-            "test-id-3", self.relevant_svgs, self.mock_get_svg_data, TKK_CLASS
+            "test-id-3", self.relevant_svgs, self.mock_get_svg_data, TKK.css_class
         )
         # file3.svg has test-id-3 but no tkk class, so should not match
         self.assertEqual(result, [])
@@ -104,7 +99,7 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
     def test_find_matching_svg_files_with_empty_relevant_svgs(self):
         """Test with empty relevant SVG list"""
         result = find_matching_svg_files_by_class(
-            "test-id-1", [], self.mock_get_svg_data, TKK_CLASS
+            "test-id-1", [], self.mock_get_svg_data, TKK.css_class
         )
         self.assertEqual(result, [])
 
@@ -116,7 +111,7 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
         )
 
         result = find_matching_svg_files_by_class(
-            "test-id-1", self.relevant_svgs, self.mock_get_svg_data, TKK_CLASS
+            "test-id-1", self.relevant_svgs, self.mock_get_svg_data, TKK.css_class
         )
         expected = ["file1.svg", "file3.svg"]
         self.assertEqual(result, expected)
@@ -129,7 +124,7 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
             return self.test_svg_content.get(filename, {"content": ""})
 
         result = find_matching_svg_files_by_class(
-            "test-id-1", self.relevant_svgs, mock_get_svg_data_with_none, TKK_CLASS
+            "test-id-1", self.relevant_svgs, mock_get_svg_data_with_none, TKK.css_class
         )
         # file2.svg returns None and should be skipped
         expected = ["file1.svg"]
@@ -143,7 +138,7 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
             return self.test_svg_content.get(filename, {"content": ""})
 
         result = find_matching_svg_files_by_class(
-            "test-id-1", self.relevant_svgs, mock_get_svg_data_with_empty, TKK_CLASS
+            "test-id-1", self.relevant_svgs, mock_get_svg_data_with_empty, TKK.css_class
         )
         # file2.svg returns empty dict, should still be processed (content key missing gives "")
         # but it won't have matching IDs, so still only file1.svg
@@ -158,7 +153,7 @@ class TestFindMatchingSvgFilesByClass(unittest.TestCase):
             return self.test_svg_content.get(filename, {"content": ""})
 
         result = find_matching_svg_files_by_class(
-            "test-id-1", self.relevant_svgs, mock_get_svg_data_with_invalid_xml, TKK_CLASS
+            "test-id-1", self.relevant_svgs, mock_get_svg_data_with_invalid_xml, TKK.css_class
         )
         # file2.svg has invalid XML and should be skipped
         expected = ["file1.svg"]
@@ -324,7 +319,7 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
     def test_update_svg_id_by_class_with_tkk_target_class(self):
         """Test basic ID update when element has matching class 'tkk'"""
         svg_content = '<svg><g class="tkk" id="old-id">content</g></svg>'
-        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK_CLASS)
+        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK.css_class)
         self.assertIsNone(error)
         self.assertIn('id="new-id"', result)
         self.assertNotIn('id="old-id"', result)
@@ -332,7 +327,7 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
     def test_update_svg_id_by_class_with_link_box_target_class(self):
         """Test basic ID update when element has matching class 'link-box'"""
         svg_content = '<svg><g class="link-box" id="old-id">content</g></svg>'
-        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", LINKBOX_CLASS)
+        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", LINKBOX.css_class)
         self.assertIsNone(error)
         self.assertIn('id="new-id"', result)
         self.assertNotIn('id="old-id"', result)
@@ -340,7 +335,7 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
     def test_update_svg_id_by_class_with_no_matching_class(self):
         """Test that IDs without target class are not updated and return an error"""
         svg_content = '<g class="other" id="old-id">content</g>'
-        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK_CLASS)
+        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK.css_class)
         self.assertEqual(result, svg_content)  # Should remain unchanged
         self.assertIsNotNone(error)
         self.assertIn("'old-id' with class containing 'tkk' not found", error)
@@ -353,14 +348,14 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
             '<g class="active tkk selected" id="old-id">content</g>'  # tkk middle
         ]
         for svg_content in test_cases:
-            result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK_CLASS)
+            result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK.css_class)
             self.assertIsNone(error)
             self.assertIn('id="new-id"', result)
 
     def test_update_svg_id_by_class_with_partial_class_name_no_match(self):
         """Test that partial matches of 'tkk' in class names are not updated"""
         svg_content = '<g class="tkkish" id="old-id">content</g>'
-        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK_CLASS)
+        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK.css_class)
         self.assertEqual(result, svg_content)  # Should remain unchanged
         self.assertIsNotNone(error)
         self.assertIn("'old-id' with class containing 'tkk' not found", error)
@@ -369,7 +364,7 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
         """Test that output uses normalized XML format (double quotes, proper spacing)"""
         # Input with single quotes
         svg_content = "<g id='old-id' class='tkk'>content</g>"
-        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK_CLASS)
+        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK.css_class)
         self.assertIsNone(error)
         # Output should have double quotes (normalized by serializer)
         self.assertIn('id="new-id"', result)
@@ -382,7 +377,7 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
     <g id="old-id" class="tkk other-class">content2</g>
     <g class="other" id="old-id">content3</g>
 </svg>'''
-        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK_CLASS)
+        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK.css_class)
 
         # Should return unchanged content and error message
         self.assertEqual(result, svg_content)
@@ -397,7 +392,7 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
             '<svg xmlns="http://www.w3.org/2000/svg">'
             '<g class="tkk" id="old-id">x</g></svg>'
         )
-        result, error = update_svg_id_by_class(svg_no_decl, "old-id", "new-id", TKK_CLASS)
+        result, error = update_svg_id_by_class(svg_no_decl, "old-id", "new-id", TKK.css_class)
         self.assertIsNone(error)
         self.assertFalse(result.lstrip().startswith('<?xml'))
         self.assertIn('id="new-id"', result)
@@ -408,7 +403,7 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
             '<svg xmlns="http://www.w3.org/2000/svg">'
             '<g class="tkk" id="old-id">x</g></svg>'
         )
-        result, error = update_svg_id_by_class(svg_with_decl, "old-id", "new-id", TKK_CLASS)
+        result, error = update_svg_id_by_class(svg_with_decl, "old-id", "new-id", TKK.css_class)
         self.assertIsNone(error)
         self.assertTrue(result.startswith('<?xml'))
         self.assertIn('id="new-id"', result)
@@ -417,7 +412,7 @@ class TestUpdateSvgIdByClass(unittest.TestCase):
         """Test that invalid SVG XML is handled gracefully with error message"""
         # Mismatched tags - invalid XML
         svg_content = '<svg><g class="tkk" id="old-id">content</svg>'  # missing </g>
-        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK_CLASS)
+        result, error = update_svg_id_by_class(svg_content, "old-id", "new-id", TKK.css_class)
 
         # Should return unchanged content and error message
         self.assertEqual(result, svg_content)
@@ -433,7 +428,7 @@ class TestFindElementsByIdAndClass(unittest.TestCase):
         """Test finding element with matching ID and class 'tkk'"""
         svg_content = '<svg><g id="test-id" class="tkk">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].get('id'), "test-id")
 
@@ -441,7 +436,7 @@ class TestFindElementsByIdAndClass(unittest.TestCase):
         """Test finding element with matching ID and class 'link-box'"""
         svg_content = '<svg><g id="test-id" class="link-box">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", LINKBOX_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", LINKBOX.css_class)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].get('id'), "test-id")
 
@@ -449,14 +444,14 @@ class TestFindElementsByIdAndClass(unittest.TestCase):
         """Test that no elements are found when ID doesn't match"""
         svg_content = '<svg><g id="other-id" class="tkk">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(result, [])
 
     def test_find_elements_with_no_matching_class(self):
         """Test that no elements are found when class doesn't match"""
         svg_content = '<svg><g id="test-id" class="other">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(result, [])
 
     def test_find_elements_with_multiple_matching_elements(self):
@@ -467,7 +462,7 @@ class TestFindElementsByIdAndClass(unittest.TestCase):
     <g id="test-id" class="other">content3</g>
 </svg>'''
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(len(result), 2)
         for elem in result:
             self.assertEqual(elem.get('id'), "test-id")
@@ -477,35 +472,35 @@ class TestFindElementsByIdAndClass(unittest.TestCase):
         """Test class matching when target class is first in list"""
         svg_content = '<svg><g id="test-id" class="tkk other">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(len(result), 1)
 
     def test_find_elements_with_multiple_classes_target_at_end(self):
         """Test class matching when target class is last in list"""
         svg_content = '<svg><g id="test-id" class="other tkk">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(len(result), 1)
 
     def test_find_elements_with_multiple_classes_target_in_middle(self):
         """Test class matching when target class is in middle"""
         svg_content = '<svg><g id="test-id" class="first tkk last">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(len(result), 1)
 
     def test_find_elements_partial_class_name_no_match(self):
         """Test that partial class matches don't match"""
         svg_content = '<svg><g id="test-id" class="tkkish">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(result, [])
 
     def test_find_elements_with_no_class_attribute(self):
         """Test that elements without class attribute don't match"""
         svg_content = '<svg><g id="test-id">content</g></svg>'
         root, _ = _parse_svg_xml(svg_content)
-        result = _find_elements_by_id_and_class(root, "test-id", TKK_CLASS)
+        result = _find_elements_by_id_and_class(root, "test-id", TKK.css_class)
         self.assertEqual(result, [])
 
 

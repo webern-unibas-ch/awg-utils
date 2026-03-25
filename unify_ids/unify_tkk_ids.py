@@ -7,6 +7,8 @@ Made by Eli (lili041 --Github) with Google Gemini
 
 import re
 import sys
+
+from utils.constants import TKK
 from utils.extraction_utils import (
     extract_moldenhauer_number, extract_svg_group_ids
 )
@@ -21,8 +23,6 @@ from utils.validation_utils import display_validation_report
 # Global regex patterns and constants
 G_TAG_RE = re.compile(r"<g\b[^>]*>", re.IGNORECASE | re.DOTALL)
 ATTR_RE = re.compile(r"([:\w-]+)\s*=\s*(\"[^\"]*\"|'[^']*')", re.DOTALL)
-TKK_CLASS = "tkk"
-TKK_PREFIX = "awg-tkk-"
 
 
 
@@ -49,7 +49,7 @@ def _extract_attrs(tag_text):
     return attrs
 
 
-def _class_contains(class_attr, needle=TKK_CLASS):
+def _class_contains(class_attr, needle=TKK.css_class):
     return (needle or "").strip().lower() in (class_attr or "").lower()
 
 
@@ -99,7 +99,7 @@ def _build_tkk_id_index(relevant_svgs, get_svg_data):
             class_attr = attrs.get("class", "")
 
             # class only needs to contain "tkk"
-            if svg_id and _class_contains(class_attr, TKK_CLASS) and svg_id not in seen_ids_in_file:
+            if svg_id and _class_contains(class_attr, TKK.css_class) and svg_id not in seen_ids_in_file:
                 id_to_files.setdefault(svg_id, []).append(svg_filename)
                 seen_ids_in_file.add(svg_id)
 
@@ -110,7 +110,7 @@ def _get_cached_matching_files(svg_group_id, relevant_svgs, get_svg_data, cache)
     """Fallback cache using existing matching logic."""
     if svg_group_id not in cache:
         cache[svg_group_id] = find_matching_svg_files_by_class(
-            svg_group_id, relevant_svgs, get_svg_data, TKK_CLASS
+            svg_group_id, relevant_svgs, get_svg_data, TKK.css_class
         )
     return cache[svg_group_id]
 
@@ -144,7 +144,7 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
     svg_filename = matching_files[0]
     svg_data = get_svg_data(svg_filename)
 
-    update_result = update_svg_id_by_class(svg_data["content"], svg_group_id, new_id, TKK_CLASS)
+    update_result = update_svg_id_by_class(svg_data["content"], svg_group_id, new_id, TKK.css_class)
     updated_content, changed, update_error = _coerce_update_result(
         update_result, svg_data["content"]
     )
@@ -237,7 +237,7 @@ def process_textcritics_entry(
                 svg_group_id, relevant_svgs, get_svg_data, fallback_cache
             )
 
-        new_id = f"{TKK_PREFIX}{entry_id_formatted}-{counter:03d}"
+        new_id = f"{TKK.prefix}{entry_id_formatted}-{counter:03d}"
 
         updated = process_single_svg_group_id(
             svg_group_id, block_comment, matching_files,
@@ -285,7 +285,7 @@ def unify_tkk_ids(json_path, svg_folder,
         elif verbose:
             print(" No changes detected; skipping writes.")
 
-        display_validation_report(json_data, TKK_PREFIX, loaded_svg_texts)
+        display_validation_report(json_data, TKK.prefix, loaded_svg_texts)
     elif verbose:
         print(" [DRY-RUN] Skipping write + validation report.")
 

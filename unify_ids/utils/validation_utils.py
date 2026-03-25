@@ -58,21 +58,21 @@ def _extract_attrs(tag_text):
 
 
 
-def validate_svg_entries(loaded_svgs, id_prefix, required_class="tkk"):
+def validate_svg_entries(svg_file_cache, prefix, target_class="tkk"):
     """
-    Validate SVG entries for IDs that have not been updated with the required prefix.
+    Validate SVG entries for IDs that have not been updated with the target prefix.
 
     Args:
-        loaded_svgs (dict): Dictionary mapping SVG filenames to their content and metadata.
-        id_prefix (str): The target prefix that all updated SVG IDs should start with.
-        required_class (str): The required class name for SVG elements to be validated
+        svg_file_cache (dict): Cache for currently loaded SVG files to validate.
+        prefix (str): The target prefix that all updated SVG IDs should start with.
+        target_class (str): The target class name for SVG elements to be validated
                             (default is "tkk").
 
     Returns:
         int: Number of SVG ID errors found (IDs not updated with the prefix).
     """
     errors = 0
-    for svg_filename, svg_data in loaded_svgs.items():
+    for svg_filename, svg_data in svg_file_cache.items():
         content = (svg_data or {}).get("content", "")
         seen = set()
 
@@ -83,21 +83,21 @@ def validate_svg_entries(loaded_svgs, id_prefix, required_class="tkk"):
 
             if not svg_id or svg_id in seen:
                 continue
-            if not has_class_token(class_attr, required_class):
+            if not has_class_token(class_attr, target_class):
                 continue
 
             seen.add(svg_id)
-            if not svg_id.startswith(id_prefix):
+            if not svg_id.startswith(prefix):
                 errors += 1
                 print(
-                    f"  [!] SVG ORPHAN: ID '{svg_id}' with class '{required_class}' "
+                    f"  [!] SVG ORPHAN: ID '{svg_id}' with class '{target_class}' "
                     f"in {svg_filename} was NOT updated."
                 )
 
     return errors
 
 
-def display_validation_report(data, id_prefix, loaded_svgs, required_class="tkk"):
+def display_validation_report(data, svg_file_cache, prefix, target_class="tkk"):
     """Validate and report the success of TKK ID unification process.
 
     Performs post-processing validation to ensure all TKK-related IDs have been
@@ -111,11 +111,10 @@ def display_validation_report(data, id_prefix, loaded_svgs, required_class="tkk"
     Args:
         data (dict): The processed JSON textcritics data structure containing
                     textcritics entries with commentary and blockComments.
-        id_prefix (str): The target prefix that all updated IDs should start with
+        svg_file_cache (dict): Cache for currently loaded SVG files to validate.
+        prefix (str): The target prefix that all updated IDs should start with
                      (e.g., "awg-tkk-").
-        loaded_svgs (dict): Dictionary mapping SVG filenames to their content
-                           and path information from the processing cache.
-        required_class (str): The required class name for SVG elements to be
+        target_class (str): The target class name for SVG elements to be
                             validated (default is "tkk").
 
     Returns:
@@ -123,9 +122,9 @@ def display_validation_report(data, id_prefix, loaded_svgs, required_class="tkk"
     """
     print("\n--- UNCERTAINTY & ERROR REPORT ---")
 
-    json_errors = validate_json_entries(data, id_prefix)
+    json_errors = validate_json_entries(data, prefix)
     svg_errors = validate_svg_entries(
-        loaded_svgs, id_prefix, required_class=required_class
+        svg_file_cache, prefix, target_class=target_class
     )
     total_errors = json_errors + svg_errors
 

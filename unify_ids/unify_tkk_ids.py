@@ -15,6 +15,7 @@ from utils.extraction_utils import (
 from utils.file_utils import (
     load_and_validate_inputs, create_svg_loader, save_results
 )
+from utils.stats_utils import Stats, Settings
 from utils.svg_utils import (
     find_matching_svg_files_by_class, find_relevant_svg_files, update_svg_id_by_class
 )
@@ -23,24 +24,6 @@ from utils.validation_utils import display_validation_report
 # Global regex patterns and constants
 G_TAG_RE = re.compile(r"<g\b[^>]*>", re.IGNORECASE | re.DOTALL)
 ATTR_RE = re.compile(r"([:\w-]+)\s*=\s*(\"[^\"]*\"|'[^']*')", re.DOTALL)
-
-
-
-def _init_stats():
-    return {
-        "entries_seen": 0,
-        "ids_seen": 0,
-        "ids_changed": 0,
-        "ids_missing": 0,
-        "ids_multiple": 0,
-        "svg_errors": 0,
-        "svg_unchanged": 0,
-    }
-
-
-def _bump(stats, key, amount=1):
-    if stats is not None:
-        stats[key] = stats.get(key, 0) + amount
 
 
 def _extract_attrs(tag_text):
@@ -86,12 +69,11 @@ def _get_cached_matching_files(svg_group_id, relevant_svgs, get_svg_data, cache)
 
 
 def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
-                                get_svg_data, new_id, dry_run=False,
-                                stats=None, verbose=True):
+                                get_svg_data, new_id, settings, stats):
     """Process a single svgGroupId through the complete update workflow."""
     if len(matching_files) == 0:
-        _bump(stats, "ids_missing")
-        if verbose:
+        stats.bump("ids_missing")
+        if settings.verbose:
             print(
                 f" [!] ERROR: '{svg_group_id}' with class 'tkk' not found "
                 f"in any relevant SVG files"
@@ -99,8 +81,8 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
         return False
 
     if len(matching_files) > 1:
-        _bump(stats, "ids_multiple")
-        if verbose:
+        stats.bump("ids_multiple")
+        if settings.verbose:
             print(
                 f" [!] WARNING: '{svg_group_id}' found in {len(matching_files)} "
                 f"files: {matching_files}"
@@ -119,8 +101,8 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
     )
 
     if update_error is not None:
-        _bump(stats, "svg_errors")
-        if verbose:
+        stats.bump("svg_errors")
+        if settings.verbose:
             print(
                 f" [!] WARNING: Could not update '{svg_group_id}' in "
                 f"{svg_filename}; JSON unchanged ({update_error})"
@@ -128,18 +110,18 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
         return False
 
     if updated_content == svg_data["content"]:
-        _bump(stats, "svg_unchanged")
-        if verbose:
+        stats.bump("svg_unchanged")
+        if settings.verbose:
             print(f" [i] SVG already had '{new_id}' in {svg_filename}; updating JSON only")
 
-    _bump(stats, "ids_changed")
+    stats.bump("ids_changed")
 
-    if verbose:
-        dry_marker = " [DRY-RUN]" if dry_run else ""
+    if settings.verbose:
+        dry_marker = " [DRY-RUN]" if settings.dry_run else ""
         print(f"{dry_marker} [JSON] Changing '{svg_group_id}' -> '{new_id}'")
         print(f"{dry_marker} [SVG]  Changing '{svg_group_id}' -> '{new_id}' in {svg_filename}")
 
-    if dry_run:
+    if settings.dry_run:
         return True
 
     # Keep old behavior for direct unit tests
@@ -150,7 +132,7 @@ def process_single_svg_group_id(svg_group_id, block_comment, matching_files,
 
 def process_textcritics_entry(
         textcritics_entry, all_svg_files, get_svg_data,
-        dry_run=False, stats=None, verbose=True):
+        settings, stats):
     """Process a single textcritics entry and all its block comments."""
     if not isinstance(textcritics_entry, dict):
         return
@@ -159,14 +141,14 @@ def process_textcritics_entry(
     if not textcritics_entry_id:
         return
 
-    _bump(stats, "entries_seen")
-    if verbose:
+    stats.bump("entries_seen")
+    if settings.verbose:
         print(f"\nProcessing textcritics entry ID: {textcritics_entry_id}")
 
     svg_group_ids, block_comments = extract_svg_group_ids(textcritics_entry)
 
     if not svg_group_ids:
-        if verbose:
+        if settings.verbose:
             print(" No svgGroupIds to process")
         return
 
@@ -175,7 +157,7 @@ def process_textcritics_entry(
         textcritics_entry_id, all_svg_files, current_main_number
     )
 
-    if verbose:
+    if settings.verbose:
         if "SkRT" in textcritics_entry_id:
             print(f" SkRT anchor detected: {textcritics_entry_id}")
         else:
@@ -196,7 +178,7 @@ def process_textcritics_entry(
     entry_id_formatted = textcritics_entry_id.lower()
 
     for svg_group_id, block_comment in zip(svg_group_ids, block_comments):
-        _bump(stats, "ids_seen")
+        stats.bump("ids_seen")
 
         if svg_group_id in tkk_id_index:
             matching_files = tkk_id_index[svg_group_id]
@@ -210,7 +192,7 @@ def process_textcritics_entry(
         updated = process_single_svg_group_id(
             svg_group_id, block_comment, matching_files,
             get_svg_data, new_id,
-            dry_run=dry_run, stats=stats, verbose=verbose
+            settings=settings, stats=stats
         )
 
         if updated:
@@ -218,19 +200,18 @@ def process_textcritics_entry(
 
 
 def unify_tkk_ids(json_path, svg_folder,
-                  dry_run=False, verbose=True):
+                  settings):
     """Unify TKK IDs in JSON and SVG files."""
-    if verbose:
+    if settings.verbose:
         print("--- Starting TKK ID processing ---")
-        if dry_run:
+        if settings.dry_run:
             print(" [DRY-RUN] No files will be written.")
 
     json_data, all_svg_files = load_and_validate_inputs(json_path, svg_folder)
 
-    final_svg_cache = {}
-    loaded_svg_texts = {}
+    svg_file_cache = {}
     get_svg_data = create_svg_loader(
-        svg_folder, final_svg_cache, loaded_svg_texts
+        svg_folder, svg_file_cache
     )
 
     all_textcritics_entries = (
@@ -239,35 +220,26 @@ def unify_tkk_ids(json_path, svg_folder,
         else json_data
     )
 
-    stats = _init_stats()
+    stats = Stats()
 
     for textcritics_entry in all_textcritics_entries:
         process_textcritics_entry(
             textcritics_entry, all_svg_files, get_svg_data,
-            dry_run=dry_run, stats=stats, verbose=verbose
+            settings=settings, stats=stats
         )
 
-    if not dry_run:
-        if stats["ids_changed"] > 0:
-            save_results(json_data, loaded_svg_texts, json_path)
-        elif verbose:
+    if not settings.dry_run:
+        if stats.ids_changed > 0:
+            save_results(json_data, svg_file_cache, json_path)
+        elif settings.verbose:
             print(" No changes detected; skipping writes.")
 
-        display_validation_report(json_data, TKK.prefix, loaded_svg_texts)
-    elif verbose:
+        display_validation_report(json_data, svg_file_cache, TKK.prefix)
+    elif settings.verbose:
         print(" [DRY-RUN] Skipping write + validation report.")
 
-    if verbose:
-        print(
-            " Summary: "
-            f"entries={stats['entries_seen']}, "
-            f"ids_seen={stats['ids_seen']}, "
-            f"changed={stats['ids_changed']}, "
-            f"missing={stats['ids_missing']}, "
-            f"multiple={stats['ids_multiple']}, "
-            f"svg_errors={stats['svg_errors']}, "
-            f"svg_unchanged={stats['svg_unchanged']}"
-        )
+    if settings.verbose:
+        print(f" Summary: {stats.summary()}")
 
     return True
 
@@ -284,7 +256,8 @@ def main():
     svg_folder = './tests/img/'
 
     try:
-        success = unify_tkk_ids(json_path, svg_folder)
+        settings = Settings(dry_run=False, verbose=True)
+        success = unify_tkk_ids(json_path, svg_folder, settings)
         if success:
             print("\n Finished!")
         else:

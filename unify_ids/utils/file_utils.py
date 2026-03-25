@@ -52,25 +52,23 @@ def load_and_validate_inputs(json_path, svg_folder):
     return data, all_svg_files
 
 
-def create_svg_loader(svg_folder, final_svg_cache, loaded_svg_texts):
+def create_svg_loader(svg_folder, svg_file_cache):
     """Create a closure function for loading SVG files with caching.
 
     Args:
         svg_folder (str): Path to the folder containing SVG files
-        final_svg_cache (dict): Cache for final SVG results
-        loaded_svg_texts (dict): Cache for currently loaded SVG texts
+        svg_file_cache (dict): Cache for currently loaded SVG files
 
     Returns:
         function: A function that loads and caches SVG content
     """
     def get_svg_text(filename):
-        if filename not in loaded_svg_texts:
+        if filename not in svg_file_cache:
             path = os.path.join(svg_folder, filename)
             with open(path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            loaded_svg_texts[filename] = {"content": content, "path": path}
-            final_svg_cache[filename] = loaded_svg_texts[filename]
-        return loaded_svg_texts[filename]
+            svg_file_cache[filename] = {"content": content, "path": path}
+        return svg_file_cache[filename]
     return get_svg_text
 
 
@@ -103,19 +101,19 @@ def save_json_file(data, json_path):
         f.write('\n')  # Add trailing newline
 
 
-def save_results(data, loaded_svg_texts, json_path):
+def save_results(data, svg_file_cache, json_path):
     """Save all modified files.
 
     Args:
         data (dict): Modified JSON data to save
-        loaded_svg_texts (dict): Currently loaded SVG texts to save
+        svg_file_cache (dict): Cache for currently loaded SVG files to save
         json_path (str): Path to save the JSON file
 
     Returns:
         None: Saves files
     """
     # Final save of any remaining SVG files
-    save_svg_files(loaded_svg_texts)
+    save_svg_files(svg_file_cache)
 
     # Save updated JSON
     save_json_file(data, json_path)

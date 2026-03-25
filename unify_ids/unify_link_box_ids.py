@@ -239,10 +239,9 @@ def unify_link_box_ids(json_path, svg_folder):
     json_data, all_svg_files = load_and_validate_inputs(json_path, svg_folder)
 
     # Initialize SVG loader
-    final_svg_cache = {}
-    loaded_svg_texts = {}
+    svg_file_cache = {}
     get_svg_data = create_svg_loader(
-        svg_folder, final_svg_cache, loaded_svg_texts
+        svg_folder, svg_file_cache
     )
 
     # Get entries from textcritics data structure
@@ -262,7 +261,7 @@ def unify_link_box_ids(json_path, svg_folder):
         )
 
     # Save all modified files
-    save_results(json_data, loaded_svg_texts, json_path)
+    save_results(json_data, svg_file_cache, json_path)
 
     print("\n--- Link Box ID processing completed ---")
 

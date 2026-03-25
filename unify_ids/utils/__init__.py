@@ -12,7 +12,7 @@ This package contains utility modules for TKK ID processing:
 
 # Import all commonly used functions to make them available at package level
 from .extraction_utils import (
-    extract_class_attr_value, extract_moldenhauer_number, extract_svg_group_ids, has_class_token
+    extract_moldenhauer_number, extract_svg_group_ids, has_class_token
 )
 from .file_utils import (
     load_and_validate_inputs, create_svg_loader, save_results
@@ -26,7 +26,6 @@ from .validation_utils import (
 
 __all__ = [
     # extraction_utils
-    'extract_class_attr_value',
     'extract_moldenhauer_number',
     'extract_svg_group_ids',
     'has_class_token',

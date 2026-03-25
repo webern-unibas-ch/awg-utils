@@ -7,7 +7,6 @@ This module provides utility functions for extracting and parsing various
 identifiers and data structures used in TKK ID processing workflows.
 
 Functions:
-    - extract_class_attr_value: Extracts the value of the class attribute from an SVG tag string
     - extract_id_suffix: Extracts suffix for linkBox IDs from SVG filenames
     - extract_link_boxes: Extracts linkBox objects from JSON entry structures
     - extract_moldenhauer_number: Extracts catalog numbers from entry ID strings
@@ -16,7 +15,6 @@ Functions:
 
 Usage:
     from utils.extraction_utils import (
-        extract_class_attr_value,
         extract_id_suffix,
         extract_link_boxes,
         extract_moldenhauer_number,
@@ -25,28 +23,14 @@ Usage:
     )
 
 
-    class_attr = extract_class_attr_value('<g class="tkk important">...</g>')
     suffix = extract_id_suffix("M35_42_Sk1-3von6-final.svg")
     number = extract_moldenhauer_number("M_143_TF1")
     ids, comments = extract_svg_group_ids(entry_data)
     link_boxes = extract_link_boxes(entry_data)
-    has_tkk_class = has_class_token(class_attr, "tkk")
+    has_tkk_class = has_class_token("tkk important", "tkk")
 """
 
 import re
-
-
-def extract_class_attr_value(tag_text: str) -> str:
-    """
-    Extracts the value of the class attribute from an SVG tag string.
-    Returns the class value if found, otherwise an empty string.
-    """
-    match = re.search(r'class\s*=\s*(["\']).*?\1', tag_text, flags=re.IGNORECASE)
-
-    if match:
-        # Remove quotes and return the value
-        return match.group(0).split('=', 1)[1].strip().strip('"\'')
-    return ""
 
 
 def extract_id_suffix(svg_filename):

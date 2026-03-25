@@ -8,7 +8,6 @@ used in TKK ID processing. The extraction_utils module handles extraction
 and parsing of various identifiers and data structures.
 
 Test Categories:
-- extract_class_attr_value function tests (class attribute extraction from SVG tags)
 - extract_id_suffix function tests (linkBox ID suffix extraction from SVG filenames)
 - extract_link_boxes function tests (linkBox extraction from entries)
 - extract_moldenhauer_number function tests (catalog number extraction)
@@ -17,7 +16,6 @@ Test Categories:
 
 Usage:
     pytest tests/test_extraction_utils.py -v
-    pytest tests/test_extraction_utils.py::TestExtractClassAttrValue -v
     pytest tests/test_extraction_utils.py::TestExtractIdSuffix -v
     pytest tests/test_extraction_utils.py::TestExtractLinkBoxes -v
     pytest tests/test_extraction_utils.py::TestExtractMoldenhauerNumber -v
@@ -29,53 +27,12 @@ import pytest
 
 # Import extraction functions from extraction_utils
 from utils.extraction_utils import (
-    extract_class_attr_value,
     extract_id_suffix,
     extract_link_boxes,
     extract_moldenhauer_number,
     extract_svg_group_ids,
     has_class_token
 )
-
-
-@pytest.mark.unit
-class TestExtractClassAttrValue(unittest.TestCase):
-    """Test cases for the extract_class_attr_value function"""
-
-    def test_extract_class_attr_value_from_double_quotes(self):
-        """Test extracting class attribute value from a tag with double quotes"""
-        tag = '<g class="tkk other-class" id="foo">'
-        self.assertEqual(extract_class_attr_value(tag), 'tkk other-class')
-
-    def test_extract_class_attr_value_from_single_quotes(self):
-        """Test extracting class attribute value from a tag with single quotes"""
-        tag = "<rect class='link-box' id='bar'>"
-        self.assertEqual(extract_class_attr_value(tag), 'link-box')
-
-    def test_extract_class_attr_value_with_spaces(self):
-        """Test extracting class attribute value from a tag with extra spaces"""
-        tag = '<g   class =   "active tkk selected"   id="foo">'
-        self.assertEqual(extract_class_attr_value(tag), 'active tkk selected')
-
-    def test_extract_class_attr_value_with_no_class(self):
-        """Test extracting class attribute value from a tag that has no class attribute"""
-        tag = '<g id="foo">'
-        self.assertEqual(extract_class_attr_value(tag), '')
-
-    def test_extract_class_attr_value_with_empty_class(self):
-        """Test extracting class attribute value from a tag with an empty class attribute"""
-        tag = '<g class="" id="foo">'
-        self.assertEqual(extract_class_attr_value(tag), '')
-
-    def test_extract_class_attr_value_with_class_at_end(self):
-        """Test extracting class attribute value from a tag where class is the last attribute"""
-        tag = '<g id="foo" class="tkk">'
-        self.assertEqual(extract_class_attr_value(tag), 'tkk')
-
-    def test_extract_class_attr_value_with_multiple_attributes(self):
-        """Test extracting class attribute value from a tag with multiple attributes"""
-        tag = '<g class="tkk" data-x="1" id="foo">'
-        self.assertEqual(extract_class_attr_value(tag), 'tkk')
 
 
 @pytest.mark.unit

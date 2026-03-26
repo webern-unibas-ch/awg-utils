@@ -6,8 +6,9 @@ This directory contains comprehensive tests for the `unify_tkk_ids.py` script an
 
 The project now uses a clean package structure:
 ```
-unify_tkk_ids/
+unify_ids/
 ├── unify_tkk_ids.py          # Main script
+├── unify_link_box_ids.py     # Link-box unification script
 ├── utils/                    # Utility package
 │   ├── __init__.py
 │   ├── models.py             # Data models (dataclasses)
@@ -20,11 +21,14 @@ unify_tkk_ids/
 ├── tests/
 │   ├── test_fixtures.py      # Shared test data and fixtures
 │   ├── test_unify_tkk_ids.py # Main script tests
+│   ├── test_unify_link_box_ids.py
+│   ├── test_unifier_main_contracts.py
 │   ├── test_extraction_utils.py
 │   ├── test_file_utils.py
 │   ├── test_stats_utils.py
 │   ├── test_svg_utils.py
 │   └── test_validation_utils.py
+├── requirements-notebook.txt # Notebook-specific dependencies
 ├── requirements.txt          # All dependencies (including test deps)
 └── pytest.ini
 ```
@@ -73,6 +77,9 @@ pytest tests/test_extraction_utils.py -v
 # Test file operations
 pytest tests/test_file_utils.py -v
 
+# Test stats handling
+pytest tests/test_stats_utils.py -v
+
 # Test SVG processing
 pytest tests/test_svg_utils.py -v
 
@@ -93,21 +100,24 @@ pytest tests/test_unify_tkk_ids.py -v
 ### Shared Test Fixtures (`test_fixtures.py`)
 Centralized test data and helper functions used across all test modules:
 - **JSON data structures**: Various prefixed/unprefixed ID configurations
-- **SVG content samples**: Single/multiple files with different ID patterns  
-- **Helper functions**: `_create_textcritic_entry()`, `_create_json_data()`
+- **SVG content samples**: Single/multiple files with different ID patterns
 - **Organized sections**: Individual samples, JSON structures, SVG content
 
 ### Extraction Utils Tests (`test_extraction_utils.py`)
 Tests for `utils/extraction_utils.py`:
-- **`extract_moldenhauer_number()`**: Number extraction from various ID formats
-- **`extract_svg_group_ids()`**: svgGroupId extraction from JSON structures
+- **`extract_id_suffix()`**: Suffix letter derivation from `NvonM` filename patterns
+- **`extract_link_boxes()`**: linkBox extraction from entry structures
+- **`extract_moldenhauer_number()`**: Catalog number extraction from various ID formats
+- **`extract_svg_group_ids()`**: svgGroupId collection from JSON comment structures
+- **`has_class_token()`**: CSS class token presence checks
 - Edge cases and different entry formats
 
 ### File Utils Tests (`test_file_utils.py`) 
 Tests for `utils/file_utils.py`:
 - **`load_and_validate_inputs()`**: JSON/SVG file loading and validation
 - **`create_svg_loader()`**: SVG file caching system
-- **`save_results()`**: File saving operations
+- **`save_svg_files()`**: Writing updated SVG content back to disk
+- **`save_json_file()`**: Writing updated JSON data with proper formatting
 - Error handling for missing files and permissions
 
 ### Stats Utils Tests (`test_stats_utils.py`)
@@ -121,17 +131,29 @@ Tests for `utils/stats_utils.py`:
 Tests for `utils/svg_utils.py`:
 - **`find_matching_svg_files_by_class()`**: SVG file discovery with ID matching by class
 - **`find_relevant_svg_files()`**: File filtering by entry type (TF, Sk, SkRT)
-- **`update_svg_id()`**: ID replacement in SVG content with tkk class preservation
-- Different quote styles, attribute orders, and CSS class combinations
+- **`update_svg_id_by_class()`**: ID replacement in SVG content with CSS class targeting
+- Partial class name non-matches, multiple occurrences, invalid XML, and XML declaration handling
 
 ### Validation Utils Tests (`test_validation_utils.py`)
 Tests for `utils/validation_utils.py`:
-- **`display_validation_report()`**: Comprehensive validation reporting (7 test scenarios)
+- **`display_validation_report()`**: Comprehensive validation reporting across success, orphan, TODO, empty, and malformed scenarios
 - **`validate_json_entries()`**: JSON ID validation with TODO handling
 - **`validate_svg_entries()`**: SVG orphan detection
 - Error reporting and success scenarios
 
-### Main Script Tests (`test_unify_tkk_ids.py`)
+### Main Contract Tests (`test_unifier_main_contracts.py`)
+Contract tests for script entry points:
+- CLI and main-function behavior consistency
+- Common execution contracts across unifier scripts
+
+### Link Box Script Tests (`test_unify_link_box_ids.py`)
+Tests for `unify_link_box_ids.py`:
+- **`process_single_link_box()`**: Single link-box processing including SVG and JSON update
+- **`process_textcritics_entry()`**: Entry-level link-box processing and iteration
+- **`unify_link_box_ids()`**: Complete link-box unification workflow
+- **`main()`**: CLI entry point behavior and error handling
+
+### Tkk Script Tests (`test_unify_tkk_ids.py`)
 Integration tests for the main `unify_tkk_ids.py` script:
 - **`process_single_svg_group_id()`**: Single ID processing workflow
 - **`process_textcritics_entry()`**: Entry-level processing
@@ -147,7 +169,11 @@ The test suite uses a centralized fixture system in `test_fixtures.py`:
 - **`JSON_DATA_WITH_2_PREFIXED_IDS`**: Two correctly updated IDs  
 - **`JSON_DATA_WITH_4_PREFIXED_IDS`**: Four correctly updated IDs
 - **`JSON_DATA_WITH_TODO`**: Contains TODO entries (should be ignored)
+- **`JSON_DATA_WITH_TODO_AND_MIXED_IDS`**: TODO entries combined with mixed prefixed/unprefixed IDs
 - **`JSON_DATA_WITH_MIXED_IDS`**: Mix of updated and unchanged IDs
+- **`JSON_DATA_WITH_MULTIPLE_MIXED_IDS`**: Multiple entries with mixed prefixed/unprefixed IDs
+- **`JSON_DATA_INTEGRATION`**: Multi-entry structure used for integration-style tests
+- **`JSON_DATA_MULTIPLE_ENTRIES`**: Multiple textcritics entries for multi-entry processing tests
 - **`JSON_DATA_EMPTY`**: Empty data structure
 - **`JSON_DATA_MALFORMED`**: Invalid JSON for error testing
 

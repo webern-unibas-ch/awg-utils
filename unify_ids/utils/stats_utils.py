@@ -4,7 +4,6 @@
 Shared processing statistics for ID unification scripts.
 """
 
-
 class Stats:
     """Accumulates counters during an ID unification run."""
 
@@ -18,9 +17,11 @@ class Stats:
         self.svg_unchanged = 0
 
     def bump(self, key, amount=1):
+        """Increment counter *key* by *amount*."""
         setattr(self, key, getattr(self, key) + amount)
 
     def summary(self):
+        """Return a human-readable summary string of all counters."""
         return (
             f"entries={self.entries_seen}, "
             f"ids_seen={self.ids_seen}, "
@@ -30,11 +31,3 @@ class Stats:
             f"svg_errors={self.svg_errors}, "
             f"svg_unchanged={self.svg_unchanged}"
         )
-
-
-class Settings:
-    """Configuration for ID unification runs."""
-
-    def __init__(self, dry_run=False, verbose=True):
-        self.dry_run = dry_run
-        self.verbose = verbose

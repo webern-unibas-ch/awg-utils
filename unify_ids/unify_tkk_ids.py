@@ -15,7 +15,8 @@ from utils.extraction_utils import (
 from utils.file_utils import (
     load_and_validate_inputs, create_svg_loader, save_results
 )
-from utils.stats_utils import Stats, Settings
+from utils.models import Settings
+from utils.stats_utils import Stats
 from utils.svg_utils import (
     find_matching_svg_files_by_class, find_relevant_svg_files, update_svg_id_by_class
 )

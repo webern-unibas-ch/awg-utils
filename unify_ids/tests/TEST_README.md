@@ -10,8 +10,11 @@ unify_tkk_ids/
 ├── unify_tkk_ids.py          # Main script
 ├── utils/                    # Utility package
 │   ├── __init__.py
+│   ├── models.py             # Data models (dataclasses)
+│   ├── constants.py          # Shared constants
 │   ├── extraction_utils.py   # Data extraction functions
 │   ├── file_utils.py         # File I/O operations
+│   ├── stats_utils.py        # Processing statistics tracking
 │   ├── svg_utils.py          # SVG processing functions
 │   └── validation_utils.py   # Validation and reporting
 ├── tests/
@@ -19,6 +22,7 @@ unify_tkk_ids/
 │   ├── test_unify_tkk_ids.py # Main script tests
 │   ├── test_extraction_utils.py
 │   ├── test_file_utils.py
+│   ├── test_stats_utils.py
 │   ├── test_svg_utils.py
 │   └── test_validation_utils.py
 ├── requirements.txt          # All dependencies (including test deps)
@@ -105,6 +109,13 @@ Tests for `utils/file_utils.py`:
 - **`create_svg_loader()`**: SVG file caching system
 - **`save_results()`**: File saving operations
 - Error handling for missing files and permissions
+
+### Stats Utils Tests (`test_stats_utils.py`)
+Tests for `utils/stats_utils.py`:
+- **`Stats` initialization**: Verify all counters initialize to 0
+- **`bump()` method**: Test incrementing counters with default and custom amounts
+- **`summary()` method**: Test formatted string output with various counter values
+- Multiple increments and multi-counter operations
 
 ### SVG Utils Tests (`test_svg_utils.py`)
 Tests for `utils/svg_utils.py`:

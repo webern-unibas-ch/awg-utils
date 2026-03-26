@@ -48,14 +48,14 @@ def extract_id_suffix(svg_filename):
     Returns:
         str: The extracted suffix for the ID, or 'x' if not found.
     """
-    m = re.search(r'-(\d+)von(\d+)-', svg_filename)
+    m = re.search(r"-(\d+)von(\d+)-", svg_filename)
     if m:
         num = int(m.group(1))
         total = int(m.group(2))
         if num == 1 and total == 1:
-            return ''
-        return chr(ord('a') + num - 1)
-    return 'x'
+            return ""
+        return chr(ord("a") + num - 1)
+    return "x"
 
 
 def extract_link_boxes(entry):
@@ -67,7 +67,7 @@ def extract_link_boxes(entry):
     Returns:
         list: List of linkBox objects with svgGroupId and linkTo information
     """
-    link_boxes = entry.get('linkBoxes', [])
+    link_boxes = entry.get("linkBoxes", [])
     return link_boxes if isinstance(link_boxes, list) else []
 
 
@@ -87,7 +87,7 @@ def extract_moldenhauer_number(text):
     Returns:
         str: The extracted Moldenhauer number as string, or empty string if no match found.
     """
-    match = re.search(r'Mx?_?(\d+)', str(text))
+    match = re.search(r"Mx?_?(\d+)", str(text))
     return match.group(1) if match else ""
 
 
@@ -103,10 +103,10 @@ def extract_svg_group_ids(entry):
     svg_group_ids = []
     block_comments = []
 
-    comments_list = entry.get('commentary', {}).get('comments', [])
+    comments_list = entry.get("commentary", {}).get("comments", [])
     for comment_group in comments_list:
-        for block_comment in comment_group.get('blockComments', []):
-            svg_group_id = block_comment.get('svgGroupId')
+        for block_comment in comment_group.get("blockComments", []):
+            svg_group_id = block_comment.get("svgGroupId")
             if svg_group_id and svg_group_id != "TODO":
                 svg_group_ids.append(svg_group_id)
                 block_comments.append(block_comment)

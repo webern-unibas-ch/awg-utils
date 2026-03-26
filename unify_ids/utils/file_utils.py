@@ -32,20 +32,24 @@ def load_and_validate_inputs(json_path, svg_folder):
         raise FileNotFoundError(f"SVG folder not found: {svg_folder}")
 
     # Load JSON data
-    with open(json_path, 'r', encoding='utf-8') as f:
+    with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     # Get SVG files and validate folder content
     try:
         all_files = os.listdir(svg_folder)
-        all_svg_files = [f for f in all_files if f.lower().endswith('.svg')]
+        all_svg_files = [f for f in all_files if f.lower().endswith(".svg")]
     except OSError as e:
-        raise PermissionError(f"Cannot list contents of SVG folder: {svg_folder} - {e}") from e
+        raise PermissionError(
+            f"Cannot list contents of SVG folder: {svg_folder} - {e}"
+        ) from e
 
     if not all_svg_files:
         raise ValueError(f"No SVG files found in folder: {svg_folder}")
 
-    entry_count = len(data.get('textcritics', [])) if isinstance(data, dict) else 'nested'
+    entry_count = (
+        len(data.get("textcritics", [])) if isinstance(data, dict) else "nested"
+    )
     print(f"Loaded JSON with {entry_count} textcritics entries")
     print(f"Found {len(all_svg_files)} SVG files in folder")
 
@@ -62,43 +66,16 @@ def create_svg_loader(svg_folder, svg_file_cache):
     Returns:
         function: A function that loads and caches SVG content
     """
+
     def get_svg_text(filename):
         if filename not in svg_file_cache:
             path = os.path.join(svg_folder, filename)
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
             svg_file_cache[filename] = {"content": content, "path": path}
         return svg_file_cache[filename]
+
     return get_svg_text
-
-
-def save_svg_files(loaded_svg_texts):
-    """Save all currently loaded SVG files to disk.
-
-    Args:
-        loaded_svg_texts (dict): Dictionary of loaded SVG data with content and paths
-
-    Returns:
-        None: Saves files directly to disk
-    """
-    for _, sdata in loaded_svg_texts.items():
-        with open(sdata['path'], 'w', encoding='utf-8') as f:
-            f.write(sdata['content'])
-
-
-def save_json_file(data, json_path):
-    """Save JSON data to file with proper formatting.
-
-    Args:
-        data (dict): JSON data to save
-        json_path (str): Path to save the JSON file
-
-    Returns:
-        None: Saves file directly to disk
-    """
-    with open(json_path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
-        f.write('\n')  # Add trailing newline
 
 
 def save_results(data, svg_file_cache, json_path):
@@ -113,7 +90,36 @@ def save_results(data, svg_file_cache, json_path):
         None: Saves files
     """
     # Final save of any remaining SVG files
-    save_svg_files(svg_file_cache)
+    _save_svg_files(svg_file_cache)
 
     # Save updated JSON
-    save_json_file(data, json_path)
+    _save_json_file(data, json_path)
+
+
+def _save_svg_files(loaded_svg_texts):
+    """Save all currently loaded SVG files to disk.
+
+    Args:
+        loaded_svg_texts (dict): Dictionary of loaded SVG data with content and paths
+
+    Returns:
+        None: Saves files directly to disk
+    """
+    for _, sdata in loaded_svg_texts.items():
+        with open(sdata["path"], "w", encoding="utf-8") as f:
+            f.write(sdata["content"])
+
+
+def _save_json_file(data, json_path):
+    """Save JSON data to file with proper formatting.
+
+    Args:
+        data (dict): JSON data to save
+        json_path (str): Path to save the JSON file
+
+    Returns:
+        None: Saves file directly to disk
+    """
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+        f.write("\n")

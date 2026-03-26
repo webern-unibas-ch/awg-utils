@@ -11,6 +11,7 @@ import re
 
 from .extraction_utils import has_class_token
 
+
 def validate_json_entries(data, prefix):
     """Validate JSON entries for unchanged svgGroupId values.
 
@@ -22,16 +23,18 @@ def validate_json_entries(data, prefix):
         int: Number of errors found
     """
     errors_found = 0
-    all_entries = data.get('textcritics', data) if isinstance(data, dict) else data
+    all_entries = data.get("textcritics", data) if isinstance(data, dict) else data
 
     for entry in all_entries:
-        entry_id = entry.get('id', 'Unknown')
-        comments_list = entry.get('commentary', {}).get('comments', [])
+        entry_id = entry.get("id", "Unknown")
+        comments_list = entry.get("commentary", {}).get("comments", [])
         for comment_group in comments_list:
-            for block_comment in comment_group.get('blockComments', []):
-                val = block_comment.get('svgGroupId')
+            for block_comment in comment_group.get("blockComments", []):
+                val = block_comment.get("svgGroupId")
                 if val and not val.startswith(prefix) and val != "TODO":
-                    print(f"  [!] JSON ERROR: Unchanged ID '{val}' in Entry: {entry_id}")
+                    print(
+                        f"  [!] JSON ERROR: Unchanged ID '{val}' in Entry: {entry_id}"
+                    )
                     errors_found += 1
 
     return errors_found
@@ -55,7 +58,6 @@ def _extract_attrs(tag_text):
     for name, quoted in _ATTR_RE.findall(tag_text):
         attrs[name.lower()] = quoted[1:-1]
     return attrs
-
 
 
 def validate_svg_entries(svg_file_cache, prefix, target_class="tkk"):
@@ -123,9 +125,7 @@ def display_validation_report(data, svg_file_cache, prefix, target_class="tkk"):
     print("\n--- UNCERTAINTY & ERROR REPORT ---")
 
     json_errors = validate_json_entries(data, prefix)
-    svg_errors = validate_svg_entries(
-        svg_file_cache, prefix, target_class=target_class
-    )
+    svg_errors = validate_svg_entries(svg_file_cache, prefix, target_class=target_class)
     total_errors = json_errors + svg_errors
 
     if total_errors == 0:

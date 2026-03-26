@@ -12,8 +12,9 @@ import xml.etree.ElementTree as ET
 from .extraction_utils import extract_moldenhauer_number
 
 
-def find_matching_svg_files_by_class(svg_group_id, relevant_svg_files, get_svg_data,
-                                     target_class="tkk"):
+def find_matching_svg_files_by_class(
+    svg_group_id, relevant_svg_files, get_svg_data, target_class="tkk"
+):
     """
     Find all SVG files that contain a specific svgGroupId with a required class.
 
@@ -37,7 +38,9 @@ def find_matching_svg_files_by_class(svg_group_id, relevant_svg_files, get_svg_d
         parsed_svg_content, error = _parse_svg_xml(svg_content)
         if error:
             continue
-        matches = _find_elements_by_id_and_class(parsed_svg_content, svg_group_id, target_class)
+        matches = _find_elements_by_id_and_class(
+            parsed_svg_content, svg_group_id, target_class
+        )
         if matches:
             matching_files.append(svg_filename)
 
@@ -68,31 +71,30 @@ def find_relevant_svg_files(new_id, all_svg_files, current_mnr_number):
     # SkRT entries: only row table files
     if "SkRT" in new_id:
         return [
-            info["file_name"] for info in file_info
+            info["file_name"]
+            for info in file_info
             if info["mnr"] == current_mnr_number and info["is_rowtable"]
         ]
 
     # Filter candidate files: matching Moldenhauer number, excluding row table files
     candidate_svg_files = [
-        info["file_name"] for info in file_info
+        info["file_name"]
+        for info in file_info
         if info["mnr"] == current_mnr_number and not info["is_rowtable"]
     ]
 
     # Look for specific patterns in the filename for TF and Sk entries
-    tf_match = re.search(r'TF(\d+)', new_id)
-    sk_match = re.search(r'(Sk\d+(?:_\d+)*)', new_id)
+    tf_match = re.search(r"TF(\d+)", new_id)
+    sk_match = re.search(r"(Sk\d+(?:_\d+)*)", new_id)
 
     if tf_match:
         tf_number = tf_match.group(1)
-        return [
-            f for f in candidate_svg_files
-            if f"Textfassung{tf_number}" in f
-        ]
+        return [f for f in candidate_svg_files if f"Textfassung{tf_number}" in f]
 
     if sk_match:
         sk_identifier = sk_match.group(1)
         # Prevent matching when the Sk identifier is followed by any digit or underscore
-        pattern = rf'{re.escape(sk_identifier)}(?![\d_])'
+        pattern = rf"{re.escape(sk_identifier)}(?![\d_])"
         return [f for f in candidate_svg_files if re.search(pattern, f)]
 
     # Default: all non-Reihentabelle files for this Moldenhauer number
@@ -116,10 +118,10 @@ def update_svg_id_by_class(svg_content, old_id, new_id, target_class):
                error_message is None if successful, string if error occurred
     """
     # Check if the SVG content has an XML declaration
-    has_xml_declaration = bool(re.match(r'^\s*<\?xml\b', svg_content))
+    has_xml_declaration = bool(re.match(r"^\s*<\?xml\b", svg_content))
 
     # Register the SVG namespace before serialization
-    ET.register_namespace('', 'http://www.w3.org/2000/svg')
+    ET.register_namespace("", "http://www.w3.org/2000/svg")
 
     # Parse SVG content
     parsed_svg_content, parse_error = _parse_svg_xml(svg_content)
@@ -143,7 +145,7 @@ def update_svg_id_by_class(svg_content, old_id, new_id, target_class):
         )
 
     # Update the id
-    matches[0].set('id', new_id)
+    matches[0].set("id", new_id)
 
     # Serialize back to SVG content with stable formatting
     updated_content = _serialize_svg_xml(
@@ -167,8 +169,8 @@ def _find_elements_by_id_and_class(parsed_svg_content, element_id, target_class)
     """
     matches = []
     for elem in parsed_svg_content.iter():
-        if elem.get('id') == element_id:
-            class_attr = elem.get('class', '')
+        if elem.get("id") == element_id:
+            class_attr = elem.get("class", "")
             if target_class in class_attr.split():
                 matches.append(elem)
 
@@ -201,24 +203,23 @@ def _serialize_svg_xml(parsed_svg_content, include_xml_declaration=True):
         str: Serialized SVG content.
     """
     updated_content = ET.tostring(
-        parsed_svg_content,
-        encoding='unicode',
-        xml_declaration=include_xml_declaration)
+        parsed_svg_content, encoding="unicode", xml_declaration=include_xml_declaration
+    )
 
     # Normalize XML declaration:
-    if updated_content.startswith('<?xml'):
-        decl_end = updated_content.find('?>') + 2
+    if updated_content.startswith("<?xml"):
+        decl_end = updated_content.find("?>") + 2
         xml_decl = updated_content[:decl_end]
         rest = updated_content[decl_end:]
         xml_decl = xml_decl.replace("'", '"')
-        xml_decl = xml_decl.replace('utf-8', 'UTF-8')
+        xml_decl = xml_decl.replace("utf-8", "UTF-8")
         updated_content = xml_decl + rest
 
     # Remove whitespace before self-closing tags
-    updated_content = re.sub(r'\s+/>', '/>', updated_content)
+    updated_content = re.sub(r"\s+/>", "/>", updated_content)
 
     # Add newline at the end if not present
-    if not updated_content.endswith('\n'):
-        updated_content += '\n'
+    if not updated_content.endswith("\n"):
+        updated_content += "\n"
 
     return updated_content

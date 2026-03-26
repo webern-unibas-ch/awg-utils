@@ -1,6 +1,6 @@
-# Testing Guide for unify_tkk_ids
+# Testing Guide for unify_ids
 
-This directory contains comprehensive tests for the `unify_tkk_ids.py` script and its utility modules that unify TKK Group IDs in JSON textcritic files and corresponding SVG files.
+This directory contains comprehensive tests for the `unify_tkk_ids.py` and `unify_link_box_ids.py` scripts and their shared utility modules.
 
 ## Project Structure
 
@@ -15,7 +15,7 @@ unify_ids/
 │   ├── constants.py          # Shared constants
 │   ├── extraction_utils.py   # Data extraction functions
 │   ├── file_utils.py         # File I/O operations
-│   ├── stats_utils.py        # Processing statistics tracking
+│   ├── logger_utils.py       # Processing logging
 │   ├── svg_utils.py          # SVG processing functions
 │   └── validation_utils.py   # Validation and reporting
 ├── tests/
@@ -25,7 +25,7 @@ unify_ids/
 │   ├── test_unifier_main_contracts.py
 │   ├── test_extraction_utils.py
 │   ├── test_file_utils.py
-│   ├── test_stats_utils.py
+│   ├── test_logger_utils.py
 │   ├── test_svg_utils.py
 │   └── test_validation_utils.py
 ├── requirements-notebook.txt # Notebook-specific dependencies
@@ -58,7 +58,7 @@ pytest tests/test_validation_utils.py -v
 Run with coverage to see which parts of the code are tested:
 ```bash
 # Generate HTML and terminal coverage report
-pytest tests/ --cov=utils --cov=unify_tkk_ids --cov-report=html --cov-report=term
+pytest tests/ --cov=utils --cov=unify_link_box_ids --cov=unify_tkk_ids --cov-report=html --cov-report=term
 
 # Coverage for specific module
 pytest tests/test_validation_utils.py --cov=utils.validation_utils --cov-report=term
@@ -77,8 +77,8 @@ pytest tests/test_extraction_utils.py -v
 # Test file operations
 pytest tests/test_file_utils.py -v
 
-# Test stats handling
-pytest tests/test_stats_utils.py -v
+# Test logger handling
+pytest tests/test_logger_utils.py -v
 
 # Test SVG processing
 pytest tests/test_svg_utils.py -v
@@ -90,8 +90,11 @@ pytest tests/test_validation_utils.py -v
 #### Integration Tests  
 Test the complete workflow:
 ```bash
-# Main integration tests
+# Integration tests for TKK unifier
 pytest tests/test_unify_tkk_ids.py -v
+
+# Integration tests for link-box unifier
+pytest tests/test_unify_link_box_ids.py -v
 ```
 
 
@@ -116,16 +119,16 @@ Tests for `utils/extraction_utils.py`:
 Tests for `utils/file_utils.py`:
 - **`load_and_validate_inputs()`**: JSON/SVG file loading and validation
 - **`create_svg_loader()`**: SVG file caching system
-- **`save_svg_files()`**: Writing updated SVG content back to disk
-- **`save_json_file()`**: Writing updated JSON data with proper formatting
+- **`save_results()`**: Combined SVG and JSON save operation
 - Error handling for missing files and permissions
 
-### Stats Utils Tests (`test_stats_utils.py`)
-Tests for `utils/stats_utils.py`:
-- **`Stats` initialization**: Verify all counters initialize to 0
-- **`bump()` method**: Test incrementing counters with default and custom amounts
-- **`summary()` method**: Test formatted string output with various counter values
-- Multiple increments and multi-counter operations
+### Logger Utils Tests (`test_logger_utils.py`)
+Tests for `utils/logger_utils.py`:
+- **`Logger` initialization**: Verify all stats counters initialize to 0
+- **`log()` method**: Message formatting, list appending, and conditional printing
+- **`print_report()` method**: Categorized output for errors, warnings, and info messages
+- **`bump_stats()` method**: Counter increments and invalid-key error handling
+- **`print_stats_summary()` method**: Formatted stats summary output
 
 ### SVG Utils Tests (`test_svg_utils.py`)
 Tests for `utils/svg_utils.py`:
@@ -133,13 +136,6 @@ Tests for `utils/svg_utils.py`:
 - **`find_relevant_svg_files()`**: File filtering by entry type (TF, Sk, SkRT)
 - **`update_svg_id_by_class()`**: ID replacement in SVG content with CSS class targeting
 - Partial class name non-matches, multiple occurrences, invalid XML, and XML declaration handling
-
-### Validation Utils Tests (`test_validation_utils.py`)
-Tests for `utils/validation_utils.py`:
-- **`display_validation_report()`**: Comprehensive validation reporting across success, orphan, TODO, empty, and malformed scenarios
-- **`validate_json_entries()`**: JSON ID validation with TODO handling
-- **`validate_svg_entries()`**: SVG orphan detection
-- Error reporting and success scenarios
 
 ### Main Contract Tests (`test_unifier_main_contracts.py`)
 Contract tests for script entry points:
@@ -154,17 +150,25 @@ Tests for `unify_link_box_ids.py`:
 - **`main()`**: CLI entry point behavior and error handling
 
 ### Tkk Script Tests (`test_unify_tkk_ids.py`)
-Integration tests for the main `unify_tkk_ids.py` script:
+Unit and integration tests for `unify_tkk_ids.py`:
 - **`process_single_svg_group_id()`**: Single ID processing workflow
-- **`process_textcritics_entry()`**: Entry-level processing
-- **`unify_tkk_ids()`**: Complete unification workflow
-- Error handling and edge cases
+- **`process_textcritics_entry()`**: Entry-level processing and counter management
+- **`unify_tkk_ids()`**: Complete unification workflow including dry-run and idempotency
+- **`main()`**: CLI entry point behavior and error handling
+
+### Validation Utils Tests (`test_validation_utils.py`)
+Tests for `utils/validation_utils.py`:
+- **`display_validation_report()`**: Comprehensive validation reporting across success, orphan, TODO, empty, and malformed scenarios
+- **`validate_json_entries()`**: JSON ID validation with TODO handling
+- **`validate_svg_entries()`**: SVG orphan detection
 
 ## Test Data & Fixtures
 
 The test suite uses a centralized fixture system in `test_fixtures.py`:
 
 ### JSON Test Data
+- **`GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY`**: Generic entry with two svgGroupIds for reuse across unit tests
+- **`GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY_MULTIPLE`**: Generic entry with multiple comment blocks
 - **`JSON_DATA_WITH_SINGLE_PREFIXED_ID`**: Single correctly updated ID
 - **`JSON_DATA_WITH_2_PREFIXED_IDS`**: Two correctly updated IDs  
 - **`JSON_DATA_WITH_4_PREFIXED_IDS`**: Four correctly updated IDs
@@ -208,16 +212,16 @@ When adding new functionality:
 ## Example Test Run Output
 
 ```
-$ pytest tests/ --cov=utils --cov=unify_tkk_ids --cov-report=term
+$ pytest tests/ --cov=utils --cov=unify_link_box_ids --cov=unify_tkk_ids --cov-report=term
 
 ======== test session starts ========
-collected 50+ items
 
-tests/test_extraction_utils.py::TestExtractMoldenhauerNumber::test_extract_moldenhauer_number_standard PASSED
-tests/test_file_utils.py::TestLoadAndValidateInputs::test_load_and_validate_inputs_success PASSED  
-tests/test_svg_utils.py::TestUpdateSvgId::test_update_svg_id_basic_replacement PASSED
-tests/test_validation_utils.py::TestDisplayValidationReport::test_display_validation_report_no_errors PASSED
-tests/test_unify_tkk_ids.py::TestProcessSingleSvgGroupId::test_process_single_svg_group_id_success PASSED
+tests/test_extraction_utils.py::... PASSED
+tests/test_file_utils.py::... PASSED
+tests/test_svg_utils.py::... PASSED
+tests/test_unify_link_box_ids.py::... PASSED
+tests/test_unify_tkk_ids.py::... PASSED
+tests/test_validation_utils.py::... PASSED
 ...
 
 ======== 50+ passed in 3.45s ========
@@ -233,11 +237,3 @@ utils/validation_utils.py        45     1    98%   67
 -----------------------------------------------------------
 TOTAL                           394    18    95%
 ```
-
-## Key Improvements
-
-- **Eliminated duplicate code** through centralized fixtures
-- **Organized by functionality** with separate test modules per utility
-- **Comprehensive coverage** with 7 validation scenarios and multiple edge cases  
-- **Clean package structure** following Python best practices
-- **Maintainable test data** using programmatic generation instead of inline constants

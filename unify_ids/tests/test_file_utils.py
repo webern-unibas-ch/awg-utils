@@ -31,11 +31,11 @@ import pytest
 
 # Import the functions we want to test
 from utils.file_utils import (
+    _save_json_file,
+    _save_svg_files,
     load_and_validate_inputs,
     create_svg_loader,
     save_results,
-    save_svg_files,
-    save_json_file
 )
 
 
@@ -58,20 +58,14 @@ class TestLoadAndValidateInputs(unittest.TestCase):
                 {
                     "id": "M143_TF1",
                     "commentary": {
-                        "comments": [
-                            {
-                                "blockComments": [
-                                    {"svgGroupId": "old-id-1"}
-                                ]
-                            }
-                        ]
-                    }
+                        "comments": [{"blockComments": [{"svgGroupId": "old-id-1"}]}]
+                    },
                 }
             ]
         }
 
         # Write valid JSON file
-        with open(self.json_file, 'w', encoding='utf-8') as f:
+        with open(self.json_file, "w", encoding="utf-8") as f:
             json.dump(self.test_data, f)
 
     def tearDown(self):
@@ -79,20 +73,19 @@ class TestLoadAndValidateInputs(unittest.TestCase):
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
 
-    def test_load_and_validate_inputs_success(self):
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_load_and_validate_inputs_success(self, mock_stdout):
         """Test successful loading with valid inputs"""
         # Create test SVG files
         svg1 = os.path.join(self.svg_folder, "test1.svg")
         svg2 = os.path.join(self.svg_folder, "test2.SVG")  # Test case insensitive
 
-        with open(svg1, 'w', encoding='utf-8') as f:
+        with open(svg1, "w", encoding="utf-8") as f:
             f.write('<svg><g id="test1" class="tkk"></g></svg>')
-        with open(svg2, 'w', encoding='utf-8') as f:
+        with open(svg2, "w", encoding="utf-8") as f:
             f.write('<svg><g id="test2" class="tkk"></g></svg>')
 
-        # Capture prints
-        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            data, svg_files = load_and_validate_inputs(self.json_file, self.svg_folder)
+        data, svg_files = load_and_validate_inputs(self.json_file, self.svg_folder)
 
         # Verify returned data
         self.assertEqual(data, self.test_data)
@@ -129,7 +122,7 @@ class TestLoadAndValidateInputs(unittest.TestCase):
         """Test ValueError when no SVG files found in folder"""
         # Create non-SVG files
         txt_file = os.path.join(self.svg_folder, "not_svg.txt")
-        with open(txt_file, 'w', encoding='utf-8') as f:
+        with open(txt_file, "w", encoding="utf-8") as f:
             f.write("Not an SVG file")
 
         with self.assertRaises(ValueError) as context:
@@ -141,7 +134,7 @@ class TestLoadAndValidateInputs(unittest.TestCase):
     def test_load_and_validate_inputs_with_invalid_json(self):
         """Test JSON parsing error with malformed JSON"""
         # Write invalid JSON
-        with open(self.json_file, 'w', encoding='utf-8') as f:
+        with open(self.json_file, "w", encoding="utf-8") as f:
             f.write('{"invalid": json syntax')
 
         with self.assertRaises(json.JSONDecodeError):
@@ -149,7 +142,7 @@ class TestLoadAndValidateInputs(unittest.TestCase):
 
     def test_load_and_validate_inputs_with_permission_error(self):
         """Test PermissionError when cannot list directory contents"""
-        with patch('os.listdir') as mock_listdir:
+        with patch("os.listdir") as mock_listdir:
             mock_listdir.side_effect = OSError("Permission denied")
 
             with self.assertRaises(PermissionError) as context:
@@ -158,26 +151,21 @@ class TestLoadAndValidateInputs(unittest.TestCase):
             self.assertIn("Cannot list contents of SVG folder", str(context.exception))
             self.assertIn("Permission denied", str(context.exception))
 
-    def test_load_and_validate_inputs_with_nested_data_structure(self):
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_load_and_validate_inputs_with_nested_data_structure(self, mock_stdout):
         """Test with nested data structure (non-dict at root level)"""
         # Create nested data structure
-        nested_data = [
-            {
-                "id": "M123_TF1",
-                "commentary": {"comments": []}
-            }
-        ]
+        nested_data = [{"id": "M123_TF1", "commentary": {"comments": []}}]
 
-        with open(self.json_file, 'w', encoding='utf-8') as f:
+        with open(self.json_file, "w", encoding="utf-8") as f:
             json.dump(nested_data, f)
 
         # Create SVG file
         svg_file = os.path.join(self.svg_folder, "test.svg")
-        with open(svg_file, 'w', encoding='utf-8') as f:
-            f.write('<svg></svg>')
+        with open(svg_file, "w", encoding="utf-8") as f:
+            f.write("<svg></svg>")
 
-        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            data, svg_files = load_and_validate_inputs(self.json_file, self.svg_folder)
+        data, svg_files = load_and_validate_inputs(self.json_file, self.svg_folder)
 
         self.assertEqual(data, nested_data)
         self.assertEqual(len(svg_files), 1)
@@ -192,8 +180,8 @@ class TestLoadAndValidateInputs(unittest.TestCase):
         extensions = [".svg", ".SVG", ".Svg", ".sVg"]
         for i, ext in enumerate(extensions):
             svg_file = os.path.join(self.svg_folder, f"test{i}{ext}")
-            with open(svg_file, 'w', encoding='utf-8') as f:
-                f.write('<svg></svg>')
+            with open(svg_file, "w", encoding="utf-8") as f:
+                f.write("<svg></svg>")
 
         _, svg_files = load_and_validate_inputs(self.json_file, self.svg_folder)
 
@@ -210,12 +198,12 @@ class TestLoadAndValidateInputs(unittest.TestCase):
             ("script.py", "python content"),
             ("data.json", "json content"),
             ("another.SVG", "svg content"),
-            ("readme.md", "markdown content")
+            ("readme.md", "markdown content"),
         ]
 
         for filename, content in file_types:
             filepath = os.path.join(self.svg_folder, filename)
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
 
         _, svg_files = load_and_validate_inputs(self.json_file, self.svg_folder)
@@ -245,9 +233,9 @@ class TestCreateSvgLoader(unittest.TestCase):
         self.svg1_path = os.path.join(self.svg_folder, "test1.svg")
         self.svg2_path = os.path.join(self.svg_folder, "test2.svg")
 
-        with open(self.svg1_path, 'w', encoding='utf-8') as f:
+        with open(self.svg1_path, "w", encoding="utf-8") as f:
             f.write(self.svg1_content)
-        with open(self.svg2_path, 'w', encoding='utf-8') as f:
+        with open(self.svg2_path, "w", encoding="utf-8") as f:
             f.write(self.svg2_content)
 
     def tearDown(self):
@@ -331,21 +319,18 @@ class TestSaveOperations(unittest.TestCase):
 
         # Create loaded SVG texts structure
         loaded_svg_texts = {
-            "test.svg": {
-                "content": updated_content,
-                "path": self.svg_file
-            }
+            "test.svg": {"content": updated_content, "path": self.svg_file}
         }
 
         # Write original content to file
-        with open(self.svg_file, 'w', encoding='utf-8') as f:
+        with open(self.svg_file, "w", encoding="utf-8") as f:
             f.write(original_content)
 
         # Save using function
-        save_svg_files(loaded_svg_texts)
+        _save_svg_files(loaded_svg_texts)
 
         # Verify file was updated
-        with open(self.svg_file, 'r', encoding='utf-8') as f:
+        with open(self.svg_file, "r", encoding="utf-8") as f:
             saved_content = f.read()
 
         self.assertEqual(saved_content, updated_content)
@@ -359,35 +344,31 @@ class TestSaveOperations(unittest.TestCase):
                     "id": "M143_TF1",
                     "commentary": {
                         "comments": [
-                            {
-                                "blockComments": [
-                                    {"svgGroupId": "awg-tkk-m32_Sk1-001"}
-                                ]
-                            }
+                            {"blockComments": [{"svgGroupId": "awg-tkk-m32_Sk1-001"}]}
                         ]
-                    }
+                    },
                 }
             ]
         }
 
         # Save JSON
-        save_json_file(test_data, self.json_file)
+        _save_json_file(test_data, self.json_file)
 
         # Verify file was saved correctly
         self.assertTrue(os.path.exists(self.json_file))
 
         # Load and verify content
-        with open(self.json_file, 'r', encoding='utf-8') as f:
+        with open(self.json_file, "r", encoding="utf-8") as f:
             loaded_data = json.load(f)
 
         self.assertEqual(loaded_data, test_data)
 
         # Verify formatting (indented)
-        with open(self.json_file, 'r', encoding='utf-8') as f:
+        with open(self.json_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         self.assertIn('    "textcritics"', content)  # Should be indented
-        self.assertIn('        {', content)  # Nested indentation
+        self.assertIn("        {", content)  # Nested indentation
 
     def test_save_results_integration(self):
         """Test the save_results function integration"""
@@ -396,27 +377,29 @@ class TestSaveOperations(unittest.TestCase):
         svg_file_cache = {
             "test.svg": {
                 "content": '<svg><g id="awg-tkk-m32_Sk1-001" class="tkk"></g></svg>',
-                "path": self.svg_file
+                "path": self.svg_file,
             }
         }
 
         # Create original SVG file
-        with open(self.svg_file, 'w', encoding='utf-8') as f:
+        with open(self.svg_file, "w", encoding="utf-8") as f:
             f.write('<svg><g id="old-id" class="tkk"></g></svg>')
 
         # Call save_results
         save_results(test_data, svg_file_cache, self.json_file)
 
         # Verify SVG file was saved
-        with open(self.svg_file, 'r', encoding='utf-8') as f:
+        with open(self.svg_file, "r", encoding="utf-8") as f:
             svg_content = f.read()
-        self.assertEqual(svg_content, '<svg><g id="awg-tkk-m32_Sk1-001" class="tkk"></g></svg>')
+        self.assertEqual(
+            svg_content, '<svg><g id="awg-tkk-m32_Sk1-001" class="tkk"></g></svg>'
+        )
 
         # Verify JSON file was saved
-        with open(self.json_file, 'r', encoding='utf-8') as f:
+        with open(self.json_file, "r", encoding="utf-8") as f:
             json_data = json.load(f)
         self.assertEqual(json_data, test_data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

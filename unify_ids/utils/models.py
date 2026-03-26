@@ -13,6 +13,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class IdMapping:
     """Pair a CSS class with the ID prefix used for rewritten identifiers."""
+
     css_class: str
     prefix: str
 
@@ -20,5 +21,6 @@ class IdMapping:
 @dataclass
 class Settings:
     """Configuration for ID unification runs."""
+
     dry_run: bool = False
     verbose: bool = True

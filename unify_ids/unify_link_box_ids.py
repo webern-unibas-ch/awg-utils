@@ -21,49 +21,40 @@ import sys
 
 from utils.constants import LINKBOX
 from utils.extraction_utils import (
-        extract_id_suffix,
-        extract_moldenhauer_number,
-        extract_link_boxes
-    )
-from utils.file_utils import (
-    load_and_validate_inputs, create_svg_loader, save_results
+    extract_id_suffix,
+    extract_moldenhauer_number,
+    extract_link_boxes,
 )
+from utils.file_utils import load_and_validate_inputs, create_svg_loader, save_results
+from utils.logger_utils import Logger
+from utils.models import Settings
 from utils.svg_utils import (
-    find_matching_svg_files_by_class, find_relevant_svg_files, update_svg_id_by_class
+    find_matching_svg_files_by_class,
+    find_relevant_svg_files,
+    update_svg_id_by_class,
 )
 
 
-# Helper function to append structured messages
-def log_report_message(message_list, type_, code, textcritics_entry_id, message):
-    """Helper function to log structured messages with consistent formatting.
-
-    Args:
-        message_list (list): List to append the message to
-        type_ (str): Type of message ("error", "warning", "info")
-        code (str): Unique code for the message type
-        textcritics_entry_id (str): ID of the textcritics entry for context
-        message (str): The message text to log
-    """
-    msg = f" [{type_.upper()}] {textcritics_entry_id}: {message} [{code}]"
-    if message_list is not None:
-        message_list.append(msg)
-    print(msg)
-
-
-def process_single_link_box(svg_group_id, parent_link_boxes, textcritics_entry_id,
-                        relevant_svgs, get_svg_data, messages=None):
+def process_single_link_box(
+    textcritics_entry_id,
+    svg_group_id,
+    parent_link_boxes,
+    relevant_svgs,
+    get_svg_data,
+    logger,
+):
     """Process a single linkBox through the complete update workflow.
 
     Handles duplicate detection, JSON updates, and SVG file modifications
     for a single link box svgGroupId.
 
     Args:
+        textcritics_entry_id (str): The textcritics entry ID for naming
         svg_group_id (str): The original ID to replace
         parent_link_boxes (list): List of all linkBoxes in the entry
-        textcritics_entry_id (str): The textcritics entry ID for naming
         relevant_svgs (list): List of relevant SVG files for this entry
         get_svg_data (function): Function to load SVG data
-        messages (list, optional): List to append structured log messages
+        logger (Logger): Logger instance for reporting
 
     Returns:
         bool: True if updated successfully, False if skipped
@@ -75,32 +66,41 @@ def process_single_link_box(svg_group_id, parent_link_boxes, textcritics_entry_i
     )
 
     if len(matching_files) == 0:
-        log_report_message(
-            messages, "error", "svg_group_id_not_found", textcritics_entry_id,
-            f"'{svg_group_id}' with class '{LINKBOX.css_class}' not found in any relevant SVG files"
+        logger.log(
+            "error",
+            "svg_group_id_not_found",
+            textcritics_entry_id,
+            (
+                f"'{svg_group_id}' with class '{LINKBOX.css_class}' "
+                "not found in any relevant SVG files"
+            ),
         )
         return False
 
     # Find the link box to update by svg_group_id
-    link_box = next((lb for lb in parent_link_boxes if lb.get('svgGroupId') == svg_group_id), None)
+    link_box = next(
+        (lb for lb in parent_link_boxes if lb.get("svgGroupId") == svg_group_id), None
+    )
 
     # Get target sheetId from linkBox
-    target_sheet_id = link_box.get('linkTo', {}).get('sheetId', '')
+    target_sheet_id = link_box.get("linkTo", {}).get("sheetId", "")
     if not target_sheet_id:
-        log_report_message(
-            messages, "error", "missing_sheetid", textcritics_entry_id,
-            f"No target sheetId found in linkBox with svgGroupId '{svg_group_id}'"
+        logger.log(
+            "error",
+            "missing_sheetid",
+            textcritics_entry_id,
+            f"No target sheetId found in linkBox with svgGroupId '{svg_group_id}'",
         )
         return False
-
 
     # Log if multiple SVGs reference the same original svgGroupId
     expanded_json = False
     if len(matching_files) > 1:
-        print(
-            f" [!] MULTIPLE SVGs reference '{svg_group_id}'. "
-            f"Expanding JSON entry to {len(matching_files)} distinct IDs."
-        )
+        if logger.verbose:
+            print(
+                f" [!] MULTIPLE SVGs reference '{svg_group_id}'. "
+                f"Expanding JSON entry to {len(matching_files)} distinct IDs."
+            )
         expanded_json = True
 
     # Remove the original linkBox from the parent list
@@ -114,13 +114,15 @@ def process_single_link_box(svg_group_id, parent_link_boxes, textcritics_entry_i
 
         # Warn if entry_id is identical to target_sheet_id
         if entry_id == target_sheet_id:
-            log_report_message(
-                messages, "warning", "self_reference", textcritics_entry_id,
+            logger.log(
+                "warning",
+                "self_reference",
+                textcritics_entry_id,
                 (
                     f"Self-reference detected: entry_id ('{entry_id}') "
                     f"is identical to target_sheet_id ('{target_sheet_id}') "
                     f"for svgGroupId '{svg_group_id}'"
-                )
+                ),
             )
 
         # Create new ID
@@ -128,18 +130,21 @@ def process_single_link_box(svg_group_id, parent_link_boxes, textcritics_entry_i
 
         # Duplicate linkBox and update ID in JSON
         new_link_box = dict(link_box)
-        new_link_box['svgGroupId'] = new_group_id
+        new_link_box["svgGroupId"] = new_group_id
         parent_link_boxes.append(new_link_box)
 
         if expanded_json:
-            log_report_message(
-                messages, "info", "json_expanded", textcritics_entry_id,
+            logger.log(
+                "info",
+                "json_expanded",
+                textcritics_entry_id,
                 (
                     f"Expanded JSON entry: Added new linkBox with svgGroupId '{new_group_id}' "
                     f"for original '{svg_group_id}'"
-                )
-                )
-        print(f" [JSON] Changing '{svg_group_id}' -> '{new_group_id}'")
+                ),
+            )
+        if logger.verbose:
+            print(f" [JSON] Changing '{svg_group_id}' -> '{new_group_id}'")
 
         # Update SVG file
         svg_data = get_svg_data(svg_filename)
@@ -147,22 +152,26 @@ def process_single_link_box(svg_group_id, parent_link_boxes, textcritics_entry_i
             svg_data["content"], svg_group_id, new_group_id, LINKBOX.css_class
         )
         if error:
-            print(f" [!] WARNING: {error} in {svg_filename}")
+            if logger.verbose:
+                print(f" [!] WARNING: {error} in {svg_filename}")
             success = False
         else:
-            print(f" [SVG]  Changing '{svg_group_id}' -> '{new_group_id}' in {svg_filename}")
+            if logger.verbose:
+                print(
+                    f" [SVG]  Changing '{svg_group_id}' -> '{new_group_id}' in {svg_filename}"
+                )
 
     return success
 
 
-def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, messages=None):
+def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, logger):
     """Process a single textcritics entry and all its linkBoxes.
 
     Args:
         textcritics_entry (dict): Single textcritics entry
         all_svg_files (list): List of all available SVG files
         get_svg_data (function): Function to load SVG data
-        messages (list, optional): List to append structured log messages
+        logger (Logger): Logger instance for reporting
 
     Returns:
         None: Modifies entry in place and handles file operations
@@ -170,7 +179,7 @@ def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, me
     if not isinstance(textcritics_entry, dict):
         return
 
-    textcritics_entry_id = textcritics_entry.get('id', '')
+    textcritics_entry_id = textcritics_entry.get("id", "")
     if not textcritics_entry_id:
         return
 
@@ -200,91 +209,81 @@ def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, me
 
     # Iterate over a copy to avoid modifying the list during iteration
     for link_box in list(link_boxes):
-        svg_group_id = link_box.get('svgGroupId', '')
+        svg_group_id = link_box.get("svgGroupId", "")
         if not svg_group_id:
-            log_report_message(
-                messages, "error", "missing_svgGroupId",
-                textcritics_entry_id, "linkBox without svgGroupId"
+            logger.log(
+                "error",
+                "missing_svgGroupId",
+                textcritics_entry_id,
+                "linkBox without svgGroupId",
             )
             continue
 
         process_single_link_box(
-            svg_group_id, link_boxes, textcritics_entry_id,
-            relevant_svgs, get_svg_data, messages
+            textcritics_entry_id,
+            svg_group_id,
+            link_boxes,
+            relevant_svgs,
+            get_svg_data,
+            logger=logger,
         )
 
     # Sort linkBoxes by svgGroupId after all processing
     if isinstance(link_boxes, list):
-        link_boxes.sort(key=lambda lb: lb.get('svgGroupId', ''))
+        link_boxes.sort(key=lambda lb: lb.get("svgGroupId", ""))
 
 
-def unify_link_box_ids(json_path, svg_folder):
+def unify_link_box_ids(json_path, svg_folder, settings):
     """Unify link box IDs in JSON and SVG files.
 
     For each JSON entry:
     1. Collect all linkBoxes
     2. Find those IDs in relevant SVG files (with link-box class)
-    3. Replace with {entry_id}to{sheetId} format
+    3. Replace with new linkbox IDs in both JSON and SVG
 
     Args:
         json_path (str): Path to the JSON textcritics file
         svg_folder (str): Path to the folder containing SVG files
+        settings (Settings): Configuration settings for processing
 
     Returns:
         bool: True if processing completed successfully
     """
-    print("--- Starting Link Box ID processing ---")
+    logger = Logger(verbose=settings.verbose)
 
-    # Load and validate inputs
+    if settings.verbose:
+        print("--- Starting Link Box ID processing ---")
+        if settings.dry_run:
+            print(" [DRY-RUN] No files will be written.")
+
     json_data, all_svg_files = load_and_validate_inputs(json_path, svg_folder)
 
-    # Initialize SVG loader
     svg_file_cache = {}
-    get_svg_data = create_svg_loader(
-        svg_folder, svg_file_cache
-    )
+    get_svg_data = create_svg_loader(svg_folder, svg_file_cache)
 
-    # Get entries from textcritics data structure
     all_textcritics_entries = (
-        json_data.get('textcritics', json_data)
+        json_data.get("textcritics", json_data)
         if isinstance(json_data, dict)
         else json_data
     )
 
-    # Collect all report messages across entries
-    report_messages = []
-
-    # Process each textcritics entry independently
     for textcritics_entry in all_textcritics_entries:
         process_textcritics_entry(
-            textcritics_entry, all_svg_files, get_svg_data, report_messages
+            textcritics_entry, all_svg_files, get_svg_data, logger=logger
         )
 
-    # Save all modified files
-    save_results(json_data, svg_file_cache, json_path)
+    if not settings.dry_run:
+        save_results(json_data, svg_file_cache, json_path)
 
-    print("\n--- Link Box ID processing completed ---")
+        print("\n--- Link Box ID processing completed ---")
+        logger.print_report()
 
-    # later TODO: Validation that there is no link-box class in relevant svgs
-    # that do not have a corresponding entry in textcritics.json
+        # later TODO: Validation that there is no link-box class in relevant svgs
+        # that do not have a corresponding entry in textcritics.json
 
-    if report_messages:
-        print("\n--- REPORT ---")
-        error_warning_msgs = [
-            msg for msg in report_messages
-            if msg.startswith(" [ERROR]") or msg.startswith(" [WARNING]")
-        ]
-        info_msgs = [msg for msg in report_messages if msg.startswith(" [INFO]")]
-        if error_warning_msgs:
-            print("\n--- Errors and Warnings ---")
-            for msg in error_warning_msgs:
-                print(msg)
-        if info_msgs:
-            print("\n--- Info Messages ---")
-            for msg in info_msgs:
-                print(msg)
-    else:
-        print("\n [✓] All JSON and SVG 'linkbox' IDs successfully updated.")
+    elif settings.verbose:
+        print(" [DRY-RUN] Skipping write + validation report.")
+        logger.print_report()
 
     return True
 
@@ -295,13 +294,14 @@ def main():
     # --- CONFIGURATION ---
 
     ##### fill in:
-    json_path = './tests/data/textcritics.json'
+    json_path = "./tests/data/textcritics.json"
 
     ##### fill in:
-    svg_folder = './tests/img/'
+    svg_folder = "./tests/img/"
 
     try:
-        success = unify_link_box_ids(json_path, svg_folder)
+        settings = Settings(dry_run=False, verbose=True)
+        success = unify_link_box_ids(json_path, svg_folder, settings)
         if success:
             print("\n Finished!")
         else:

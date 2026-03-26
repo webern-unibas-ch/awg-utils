@@ -1,502 +1,550 @@
 """Tests for unify_link_box_ids.py."""
 
-from unittest.mock import call
+from io import StringIO
+import unittest
+from unittest.mock import call, patch, MagicMock
 import pytest
 
 from unify_link_box_ids import (
-    log_report_message,
     main,
     process_single_link_box,
     process_textcritics_entry,
     unify_link_box_ids,
 )
+from utils.models import Settings
+from utils.logger_utils import Logger
 
 
-class TestLogReportMessage:
-    """Tests for log_report_message."""
-
-    def test_log_report_message_appends_to_list_and_prints(self, capsys):
-        """Test that the formatted message is appended and printed when a message list is provided"""
-        messages = []
-        log_report_message(messages, "error", "some_code", "M143_TF1", "something went wrong")
-
-        expected = " [ERROR] M143_TF1: something went wrong [some_code]"
-        assert messages == [expected]
-        assert expected in capsys.readouterr().out
-
-    def test_log_report_message_with_none_list_only_prints(self, capsys):
-        """Test that the message is printed but not stored when message_list is None."""
-        log_report_message(None, "warning", "my_code", "M99", "a warning")
-
-        expected = " [WARNING] M99: a warning [my_code]"
-        assert expected in capsys.readouterr().out
-
-
-@pytest.fixture(name="sample_svg_data")
-def fixture_sample_svg_data():
-    """Return mutable SVG data."""
-    return {"content": "<svg-content>"}
-
-
-class TestProcessSingleLinkBox:
+@pytest.mark.unit
+class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-instance-attributes
     """Tests for process_single_link_box."""
 
-    def test_process_single_link_box_with_success(
-        self, mocker, capsys, sample_svg_data
-    ):
-        """Test successful processing of a link box with valid inputs."""
-        link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M317_Sk2"}}
-        parent_link_boxes = [link_box]
-        get_svg_data = mocker.Mock(return_value=sample_svg_data)
-        mocker.patch(
+    def setUp(self):
+        self.textcritics_entry_id = "M143_TF1"
+        self.svg_group_id = "g6407"
+        self.svg_data = {"content": "<svg-content>"}
+        self.link_box = {
+            "svgGroupId": self.svg_group_id,
+            "linkTo": {"sheetId": "M317_Sk2"},
+        }
+        self.parent_link_boxes = [self.link_box]
+
+        self.mock_get_svg_data = MagicMock(return_value=self.svg_data)
+
+        self.find_matching_patcher = patch(
             "unify_link_box_ids.find_matching_svg_files_by_class",
-            return_value=["sheet.svg"],
+            return_value=["sheet-1von1-final.svg"],
         )
-        update_mock = mocker.patch(
+        self.mock_find_matching = self.find_matching_patcher.start()
+
+        self.update_svg_patcher = patch(
             "unify_link_box_ids.update_svg_id_by_class",
             return_value=("<updated-svg-content>", None),
         )
+        self.mock_update_svg = self.update_svg_patcher.start()
 
+        self._stdout = StringIO()
+        self.stdout_patcher = patch("sys.stdout", self._stdout)
+        self.stdout_patcher.start()
+
+    def tearDown(self):
+        self.find_matching_patcher.stop()
+        self.update_svg_patcher.stop()
+        self.stdout_patcher.stop()
+
+    def test_process_single_link_box_with_success(self):
+        """Test successful processing of a link box with valid inputs."""
+        expected_new_id = "awg-lb-m143_tf1-to-m317_sk2"
+
+        logger = Logger(verbose=True)
         result = process_single_link_box(
-            "g6407", parent_link_boxes, "op25_WE", ["sheet.svg"], get_svg_data
+            self.textcritics_entry_id,
+            self.svg_group_id,
+            self.parent_link_boxes,
+            ["sheet-1von1-final.svg"],
+            self.mock_get_svg_data,
+            logger,
         )
 
-        expected_new_id = "awg-lb-op25_wex-to-m317_sk2"  # 'x' suffix: no -NvonM- pattern in 'sheet.svg'
-
-        assert result is True
-        assert link_box not in parent_link_boxes  # original removed
-        assert any(lb.get("svgGroupId") == expected_new_id for lb in parent_link_boxes)
-        get_svg_data.assert_called_once_with("sheet.svg")
-        update_mock.assert_called_once_with(
+        self.assertTrue(result)
+        self.assertNotIn(self.link_box, self.parent_link_boxes)
+        self.assertTrue(
+            any(
+                lb.get("svgGroupId") == expected_new_id for lb in self.parent_link_boxes
+            )
+        )
+        self.mock_get_svg_data.assert_called_once_with("sheet-1von1-final.svg")
+        self.mock_update_svg.assert_called_once_with(
             "<svg-content>",
-            "g6407",
+            self.svg_group_id,
             expected_new_id,
             "link-box",
         )
-        new_link_box = next(lb for lb in parent_link_boxes if lb.get("svgGroupId") == expected_new_id)
-        assert new_link_box["linkTo"] == {"sheetId": "M317_Sk2"}
-        assert sample_svg_data["content"] == "<updated-svg-content>"
-
-        output = capsys.readouterr().out
-        assert f"[JSON] Changing 'g6407' -> '{expected_new_id}'" in output
-        assert f"[SVG]  Changing 'g6407' -> '{expected_new_id}' in sheet.svg" in output
-
-    def test_process_single_link_box_with_no_matching_files(self, mocker, capsys):
-        """Test processing of a link box when no matching SVG files are found."""
-        link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M317_Sk2"}}
-        parent_link_boxes = [link_box]
-        get_svg_data = mocker.Mock()
-        mocker.patch(
-            "unify_link_box_ids.find_matching_svg_files_by_class",
-            return_value=[],
+        new_link_box = next(
+            lb
+            for lb in self.parent_link_boxes
+            if lb.get("svgGroupId") == expected_new_id
+        )
+        self.assertEqual(new_link_box["linkTo"], {"sheetId": "M317_Sk2"})
+        self.assertEqual(self.svg_data["content"], "<updated-svg-content>")
+        output = self._stdout.getvalue()
+        self.assertIn(
+            f"[JSON] Changing '{self.svg_group_id}' -> '{expected_new_id}'", output
+        )
+        self.assertIn(
+            f"[SVG]  Changing '{self.svg_group_id}' -> '{expected_new_id}'"
+            f" in sheet-1von1-final.svg",
+            output,
         )
 
-        result = process_single_link_box("g6407", parent_link_boxes, "op25_WE", [], get_svg_data)
+    def test_process_single_link_box_with_no_matching_files(self):
+        """Test processing of a link box when no matching SVG files are found."""
+        self.mock_find_matching.return_value = []
 
-        assert result is False
-        assert link_box in parent_link_boxes  # unchanged: nothing removed when no matches
-        get_svg_data.assert_not_called()
-        output = capsys.readouterr().out
-        assert "not found in any relevant SVG files" in output
+        logger = Logger(verbose=True)
+        result = process_single_link_box(
+            self.textcritics_entry_id,
+            self.svg_group_id,
+            self.parent_link_boxes,
+            [],
+            self.mock_get_svg_data,
+            logger,
+        )
 
-    def test_process_single_link_box_with_multiple_matching_files(self, mocker, capsys):
+        self.assertFalse(result)
+        self.assertIn(self.link_box, self.parent_link_boxes)
+        self.mock_get_svg_data.assert_not_called()
+        self.assertIn("not found in any relevant SVG files", self._stdout.getvalue())
+
+    def test_process_single_link_box_with_multiple_matching_files(self):
         """Test processing of a link box when multiple SVG files match — JSON is expanded."""
-        link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M317_Sk2"}}
-        parent_link_boxes = [link_box]
         svg_data_a = {"content": "<svg/>"}
         svg_data_b = {"content": "<svg/>"}
-        get_svg_data = mocker.Mock(side_effect=[svg_data_a, svg_data_b])
-        mocker.patch(
-            "unify_link_box_ids.find_matching_svg_files_by_class",
-            return_value=["a.svg", "b.svg"],
-        )
-        mocker.patch(
-            "unify_link_box_ids.update_svg_id_by_class",
-            return_value=("<updated/>", None),
-        )
+        self.mock_get_svg_data.side_effect = [svg_data_a, svg_data_b]
+        self.mock_find_matching.return_value = ["a.svg", "b.svg"]
+        self.mock_update_svg.return_value = ("<updated/>", None)
 
+        logger = Logger(verbose=True)
         result = process_single_link_box(
-            "g6407",
-            parent_link_boxes,
-            "op25_WE",
+            self.textcritics_entry_id,
+            self.svg_group_id,
+            self.parent_link_boxes,
             ["a.svg", "b.svg"],
-            get_svg_data,
+            self.mock_get_svg_data,
+            logger,
         )
 
-        assert result is True
-        assert link_box not in parent_link_boxes  # original removed
-        assert len(parent_link_boxes) == 2  # two new entries added
-        get_svg_data.assert_any_call("a.svg")
-        get_svg_data.assert_any_call("b.svg")
-        output = capsys.readouterr().out
-        assert "MULTIPLE SVGs reference 'g6407'" in output
-        assert "Expanding JSON entry to 2 distinct IDs" in output
+        self.assertTrue(result)
+        self.assertNotIn(self.link_box, self.parent_link_boxes)
+        self.assertEqual(len(self.parent_link_boxes), 2)
+        self.mock_get_svg_data.assert_any_call("a.svg")
+        self.mock_get_svg_data.assert_any_call("b.svg")
+        output = self._stdout.getvalue()
+        self.assertIn(f"MULTIPLE SVGs reference '{self.svg_group_id}'", output)
+        self.assertIn("Expanding JSON entry to 2 distinct IDs", output)
 
-    def test_process_single_link_box_with_missing_sheet_id(self, mocker, capsys):
+    def test_process_single_link_box_with_missing_sheet_id(self):
         """Test processing of a link box when the linked sheetId is missing."""
-        link_box = {"svgGroupId": "g6407", "linkTo": {}}
-        parent_link_boxes = [link_box]
-        get_svg_data = mocker.Mock()
-        mocker.patch(
-            "unify_link_box_ids.find_matching_svg_files_by_class",
-            return_value=["sheet.svg"],
-        )
+        self.link_box["linkTo"] = {}
 
+        logger = Logger(verbose=True)
         result = process_single_link_box(
-            "g6407", parent_link_boxes, "op25_WE", ["sheet.svg"], get_svg_data
+            self.textcritics_entry_id,
+            self.svg_group_id,
+            self.parent_link_boxes,
+            ["sheet-1von1-final.svg"],
+            self.mock_get_svg_data,
+            logger,
         )
 
-        assert result is False
-        assert link_box["svgGroupId"] == "g6407"
-        get_svg_data.assert_not_called()
-        output = capsys.readouterr().out
-        assert "No target sheetId found in linkBox with svgGroupId 'g6407'" in output
+        self.assertFalse(result)
+        self.assertEqual(self.link_box["svgGroupId"], self.svg_group_id)
+        self.mock_get_svg_data.assert_not_called()
+        self.assertIn(
+            f"No target sheetId found in linkBox with svgGroupId '{self.svg_group_id}'",
+            self._stdout.getvalue(),
+        )
 
-    def test_process_single_link_box_with_svg_update_error(
-        self, mocker, capsys, sample_svg_data
-    ):
+    def test_process_single_link_box_with_svg_update_error(self):
         """Test processing of a link box when the SVG update fails."""
-        link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M317_Sk2"}}
-        parent_link_boxes = [link_box]
-        get_svg_data = mocker.Mock(return_value=sample_svg_data)
-        mocker.patch(
-            "unify_link_box_ids.find_matching_svg_files_by_class",
-            return_value=["sheet.svg"],
-        )
-        mocker.patch(
-            "unify_link_box_ids.update_svg_id_by_class",
-            return_value=("<svg-content>", "Could not update id"),
-        )
+        self.mock_update_svg.return_value = ("<svg-content>", "Could not update id")
+        expected_new_id = "awg-lb-m143_tf1-to-m317_sk2"
 
+        logger = Logger(verbose=True)
         result = process_single_link_box(
-            "g6407", parent_link_boxes, "op25_WE", ["sheet.svg"], get_svg_data
+            self.textcritics_entry_id,
+            self.svg_group_id,
+            self.parent_link_boxes,
+            ["sheet-1von1-final.svg"],
+            self.mock_get_svg_data,
+            logger,
         )
 
-        expected_new_id = "awg-lb-op25_wex-to-m317_sk2"  # 'x' suffix: no -NvonM- pattern in 'sheet.svg'
+        self.assertFalse(result)
+        self.assertNotIn(self.link_box, self.parent_link_boxes)
+        self.assertTrue(
+            any(
+                lb.get("svgGroupId") == expected_new_id for lb in self.parent_link_boxes
+            )
+        )
+        self.assertIn("WARNING: Could not update id", self._stdout.getvalue())
 
-        assert result is False
-        # Original link_box is removed; a new entry with the updated ID is appended
-        assert link_box not in parent_link_boxes
-        assert any(lb.get("svgGroupId") == expected_new_id for lb in parent_link_boxes)
-        output = capsys.readouterr().out
-        assert "WARNING: Could not update id" in output
-
-    def test_process_single_link_box_warns_on_self_reference(self, mocker, capsys, sample_svg_data):
+    def test_process_single_link_box_warns_on_self_reference(self):
         """When entry_id equals target_sheet_id, a self-reference warning is logged."""
-        # Use a -1von1- filename so extract_id_suffix returns "" → entry_id = textcritics_entry_id
-        # Set sheetId equal to textcritics_entry_id so entry_id == target_sheet_id
-        link_box = {"svgGroupId": "g6407", "linkTo": {"sheetId": "M143_TF1"}}
-        parent_link_boxes = [link_box]
-        messages = []
-        get_svg_data = mocker.Mock(return_value=sample_svg_data)
-        mocker.patch(
-            "unify_link_box_ids.find_matching_svg_files_by_class",
-            return_value=["sheet-1von1-.svg"],
-        )
-        mocker.patch(
-            "unify_link_box_ids.update_svg_id_by_class",
-            return_value=("<updated/>", None),
-        )
+        self.link_box["linkTo"] = {"sheetId": self.textcritics_entry_id}
+        self.mock_update_svg.return_value = ("<updated/>", None)
 
+        logger = Logger(verbose=True)
         result = process_single_link_box(
-            "g6407", parent_link_boxes, "M143_TF1", ["sheet-1von1-.svg"], get_svg_data,
-            messages=messages,
+            self.textcritics_entry_id,
+            self.svg_group_id,
+            self.parent_link_boxes,
+            ["sheet-1von1-final.svg"],
+            self.mock_get_svg_data,
+            logger,
         )
 
-        assert result is True
-        assert any("self_reference" in m for m in messages)
-        output = capsys.readouterr().out
-        assert "Self-reference detected" in output
+        self.assertTrue(result)
+        self.assertTrue(any("self_reference" in msg for msg in logger.messages))
+        self.assertIn("Self-reference detected", self._stdout.getvalue())
 
 
-class TestProcessTextcriticsEntry:
+@pytest.mark.unit
+class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-many-instance-attributes
     """Tests for process_textcritics_entry."""
 
-    def test_process_textcritics_entry_returns_for_non_dict(self, mocker):
+    def setUp(self):
+        self.entry = {"id": "M143_TF1"}
+        self.all_svg_files = ["test1.svg", "test2.svg"]
+        self.mock_get_svg_data = MagicMock()
+
+        self.extract_number_patcher = patch(
+            "unify_link_box_ids.extract_moldenhauer_number", return_value="143"
+        )
+        self.mock_extract_number = self.extract_number_patcher.start()
+
+        self.find_relevant_patcher = patch(
+            "unify_link_box_ids.find_relevant_svg_files",
+            return_value=self.all_svg_files,
+        )
+        self.mock_find_relevant = self.find_relevant_patcher.start()
+
+        self.extract_link_boxes_patcher = patch(
+            "unify_link_box_ids.extract_link_boxes", return_value=[]
+        )
+        self.mock_extract_link_boxes = self.extract_link_boxes_patcher.start()
+
+        self.process_single_patcher = patch(
+            "unify_link_box_ids.process_single_link_box", return_value=True
+        )
+        self.mock_process_single = self.process_single_patcher.start()
+
+        self._stdout = StringIO()
+        self.stdout_patcher = patch("sys.stdout", self._stdout)
+        self.stdout_patcher.start()
+
+    def tearDown(self):
+        self.extract_number_patcher.stop()
+        self.find_relevant_patcher.stop()
+        self.extract_link_boxes_patcher.stop()
+        self.process_single_patcher.stop()
+        self.stdout_patcher.stop()
+
+    def test_process_textcritics_entry_returns_for_non_dict(self):
         """Test that process_textcritics_entry returns early when entry is not a dict."""
-        extract_number_mock = mocker.patch(
-            "unify_link_box_ids.extract_moldenhauer_number"
+
+        logger = Logger(verbose=True)
+        process_textcritics_entry(
+            "not-a-dict", self.all_svg_files, self.mock_get_svg_data, logger
         )
+        self.mock_extract_number.assert_not_called()
 
-        process_textcritics_entry("not-a-dict", ["a.svg"], mocker.Mock())
-
-        extract_number_mock.assert_not_called()
-
-    def test_process_textcritics_entry_returns_when_id_missing(self, mocker):
+    def test_process_textcritics_entry_returns_when_id_missing(self):
         """Test that process_textcritics_entry returns early when 'id' is missing."""
-        extract_number_mock = mocker.patch(
-            "unify_link_box_ids.extract_moldenhauer_number"
+
+        logger = Logger(verbose=True)
+        process_textcritics_entry(
+            {}, self.all_svg_files, self.mock_get_svg_data, logger
         )
+        self.mock_extract_number.assert_not_called()
 
-        process_textcritics_entry({}, ["a.svg"], mocker.Mock())
-
-        extract_number_mock.assert_not_called()
-
-    def test_process_textcritics_entry_success_basic(self, mocker, capsys):
+    def test_process_textcritics_entry_success_basic(self):
         """Test successful processing of a textcritics entry with valid link boxes."""
-        entry = {"id": "M143_TF1"}
-        all_svg_files = ["test1.svg", "test2.svg"]
         link_boxes = [
             {"svgGroupId": "g1", "linkTo": {"sheetId": "M143_Sk1"}},
             {"svgGroupId": "g2", "linkTo": {"sheetId": "M143_Sk2"}},
         ]
-        get_svg_data = mocker.Mock()
+        self.mock_extract_link_boxes.return_value = link_boxes
 
-        extract_number_mock = mocker.patch(
-            "unify_link_box_ids.extract_moldenhauer_number", return_value="143"
-        )
-        find_relevant_mock = mocker.patch(
-            "unify_link_box_ids.find_relevant_svg_files",
-            return_value=["test1.svg", "test2.svg"],
-        )
-        extract_link_boxes_mock = mocker.patch(
-            "unify_link_box_ids.extract_link_boxes", return_value=link_boxes
-        )
-        process_single_mock = mocker.patch(
-            "unify_link_box_ids.process_single_link_box", return_value=True
+        logger = Logger(verbose=True)
+        process_textcritics_entry(
+            self.entry, self.all_svg_files, self.mock_get_svg_data, logger
         )
 
-        process_textcritics_entry(entry, all_svg_files, get_svg_data)
-
-        extract_number_mock.assert_called_once_with("M143_TF1")
-        find_relevant_mock.assert_called_once_with("M143_TF1", all_svg_files, "143")
-        extract_link_boxes_mock.assert_called_once_with(entry)
-        assert process_single_mock.call_args_list == [
-            call("g1", link_boxes, "M143_TF1", ["test1.svg", "test2.svg"], get_svg_data, None),
-            call("g2", link_boxes, "M143_TF1", ["test1.svg", "test2.svg"], get_svg_data, None),
+        self.mock_extract_number.assert_called_once_with("M143_TF1")
+        self.mock_find_relevant.assert_called_once_with(
+            "M143_TF1", self.all_svg_files, "143"
+        )
+        self.mock_extract_link_boxes.assert_called_once_with(self.entry)
+        expected_calls = [
+            call(
+                "M143_TF1",
+                "g1",
+                link_boxes,
+                self.all_svg_files,
+                self.mock_get_svg_data,
+                logger=logger,
+            ),
+            call(
+                "M143_TF1",
+                "g2",
+                link_boxes,
+                self.all_svg_files,
+                self.mock_get_svg_data,
+                logger=logger,
+            ),
         ]
+        self.assertEqual(self.mock_process_single.call_args_list, expected_calls)
 
-        output = capsys.readouterr().out
-        assert "Processing textcritics entry ID: M143_TF1" in output
-        assert "Standard anchor: M143_TF1" in output
-        assert "Relevant SVGs (2): ['test1.svg', 'test2.svg']" in output
-        assert "Found 2 linkBox(es)" in output
+        output = self._stdout.getvalue()
+        self.assertIn("Processing textcritics entry ID: M143_TF1", output)
+        self.assertIn("Standard anchor: M143_TF1", output)
+        self.assertIn("Relevant SVGs (2): ['test1.svg', 'test2.svg']", output)
+        self.assertIn("Found 2 linkBox(es)", output)
 
-    def test_process_textcritics_entry_prints_skrt_anchor_and_no_link_boxes(
-        self, mocker, capsys
-    ):
+    def test_process_textcritics_entry_prints_skrt_anchor_and_no_link_boxes(self):
         """Test that process_textcritics_entry identifies SkRT anchor and handles no link boxes."""
         entry = {"id": "M143_SkRT1"}
-        all_svg_files = ["test1.svg"]
-        get_svg_data = mocker.Mock()
+        self.mock_find_relevant.return_value = ["test1.svg"]
 
-        mocker.patch(
-            "unify_link_box_ids.extract_moldenhauer_number", return_value="143"
-        )
-        mocker.patch(
-            "unify_link_box_ids.find_relevant_svg_files",
-            return_value=["test1.svg"],
-        )
-        mocker.patch("unify_link_box_ids.extract_link_boxes", return_value=[])
-        find_matching_mock = mocker.patch(
-            "unify_link_box_ids.find_matching_svg_files_by_class"
-        )
-        process_single_mock = mocker.patch(
-            "unify_link_box_ids.process_single_link_box"
-        )
+        logger = Logger(verbose=True)
+        process_textcritics_entry(entry, ["test1.svg"], self.mock_get_svg_data, logger)
 
-        process_textcritics_entry(entry, all_svg_files, get_svg_data)
+        self.mock_process_single.assert_not_called()
+        self.assertIn("No linkBoxes to process", self._stdout.getvalue())
 
-        find_matching_mock.assert_not_called()
-        process_single_mock.assert_not_called()
-        output = capsys.readouterr().out
-        assert "No linkBoxes to process" in output
-
-    def test_process_textcritics_entry_prints_skrt_anchor_with_link_boxes(
-        self, mocker, capsys
-    ):
+    def test_process_textcritics_entry_prints_skrt_anchor_with_link_boxes(self):
         """Test that 'SkRT anchor detected' is printed when the entry has link boxes."""
         entry = {"id": "M143_SkRT1"}
-        all_svg_files = ["test1.svg"]
-        link_boxes = [{"svgGroupId": "g1", "linkTo": {"sheetId": "M143_Sk1"}}]
-        get_svg_data = mocker.Mock()
+        self.mock_extract_link_boxes.return_value = [
+            {"svgGroupId": "g1", "linkTo": {"sheetId": "M143_Sk1"}}
+        ]
+        self.mock_find_relevant.return_value = ["test1.svg"]
 
-        mocker.patch("unify_link_box_ids.extract_moldenhauer_number", return_value="143")
-        mocker.patch("unify_link_box_ids.find_relevant_svg_files", return_value=["test1.svg"])
-        mocker.patch("unify_link_box_ids.extract_link_boxes", return_value=link_boxes)
-        mocker.patch("unify_link_box_ids.process_single_link_box", return_value=True)
+        logger = Logger(verbose=True)
+        process_textcritics_entry(entry, ["test1.svg"], self.mock_get_svg_data, logger)
 
-        process_textcritics_entry(entry, all_svg_files, get_svg_data)
+        self.assertIn("SkRT anchor detected: M143_SkRT1", self._stdout.getvalue())
 
-        output = capsys.readouterr().out
-        assert "SkRT anchor detected: M143_SkRT1" in output
-        self, mocker, capsys
-
-
-    def test_process_single_link_box_with_missing_svg_group_id(self, mocker, capsys):
+    def test_process_single_link_box_with_missing_svg_group_id(self):
         """Test that process_textcritics_entry skips link boxes that are missing svgGroupId."""
-        entry = {"id": "M143_TF1"}
-        all_svg_files = ["sheet.svg"]
         link_boxes = [
             {"linkTo": {"sheetId": "M143_Sk1"}},
             {"svgGroupId": "g2", "linkTo": {"sheetId": "M143_Sk2"}},
         ]
-        get_svg_data = mocker.Mock()
+        self.mock_extract_link_boxes.return_value = link_boxes
+        self.mock_find_relevant.return_value = ["sheet.svg"]
 
-        mocker.patch(
-            "unify_link_box_ids.extract_moldenhauer_number", return_value="143"
-        )
-        mocker.patch(
-            "unify_link_box_ids.find_relevant_svg_files",
-            return_value=["sheet.svg"],
-        )
-        mocker.patch("unify_link_box_ids.extract_link_boxes", return_value=link_boxes)
-        process_single_mock = mocker.patch(
-            "unify_link_box_ids.process_single_link_box", return_value=True
+        logger = Logger(verbose=True)
+        process_textcritics_entry(
+            self.entry, ["sheet.svg"], self.mock_get_svg_data, logger
         )
 
-        process_textcritics_entry(entry, all_svg_files, get_svg_data)
-
-        process_single_mock.assert_called_once_with(
-            "g2", link_boxes, "M143_TF1", ["sheet.svg"], get_svg_data, None
+        self.mock_process_single.assert_called_once_with(
+            "M143_TF1",
+            "g2",
+            link_boxes,
+            ["sheet.svg"],
+            self.mock_get_svg_data,
+            logger=logger,
         )
-        output = capsys.readouterr().out
-        assert "[ERROR]" in output
-        assert "linkBox without svgGroupId" in output
+        output = self._stdout.getvalue()
+        self.assertIn("[ERROR]", output)
+        self.assertIn("linkBox without svgGroupId", output)
 
 
-class TestUnifyLinkBoxIds:
+@pytest.mark.unit
+class TestUnifyLinkBoxIds(unittest.TestCase):  # pylint: disable=too-many-instance-attributes
     """Tests for unify_link_box_ids."""
 
-    def test_unify_link_box_ids_processes_dict_textcritics(self, mocker, capsys):
+    def setUp(self):
+        self.mock_get_svg_data = MagicMock(name="get_svg_data")
+
+        self.load_patcher = patch(
+            "unify_link_box_ids.load_and_validate_inputs",
+            return_value=({"textcritics": []}, []),
+        )
+        self.mock_load = self.load_patcher.start()
+
+        self.create_loader_patcher = patch(
+            "unify_link_box_ids.create_svg_loader",
+            return_value=self.mock_get_svg_data,
+        )
+        self.mock_create_loader = self.create_loader_patcher.start()
+
+        self.process_entry_patcher = patch(
+            "unify_link_box_ids.process_textcritics_entry"
+        )
+        self.mock_process_entry = self.process_entry_patcher.start()
+
+        self.save_results_patcher = patch("unify_link_box_ids.save_results")
+        self.mock_save_results = self.save_results_patcher.start()
+
+        self._stdout = StringIO()
+        self.stdout_patcher = patch("sys.stdout", self._stdout)
+        self.stdout_patcher.start()
+
+    def tearDown(self):
+        self.load_patcher.stop()
+        self.create_loader_patcher.stop()
+        self.process_entry_patcher.stop()
+        self.save_results_patcher.stop()
+        self.stdout_patcher.stop()
+
+    def test_unify_link_box_ids_processes_dict_textcritics(self):
         """
         Test that unify_link_box_ids processes textcritics when root is a dict
         with 'textcritics' key.
         """
         json_data = {"textcritics": [{"id": "A"}, {"id": "B"}]}
         all_svg_files = ["A.svg", "B.svg"]
-        get_svg_data = mocker.Mock(name="get_svg_data")
         captured = {}
-
-        load_mock = mocker.patch(
-            "unify_link_box_ids.load_and_validate_inputs",
-            return_value=(json_data, all_svg_files),
-        )
+        self.mock_load.return_value = (json_data, all_svg_files)
 
         def _fake_create_svg_loader(svg_folder, svg_file_cache):
             captured["svg_folder"] = svg_folder
             captured["svg_file_cache"] = svg_file_cache
-            return get_svg_data
+            return self.mock_get_svg_data
 
-        create_loader_mock = mocker.patch(
-            "unify_link_box_ids.create_svg_loader",
-            side_effect=_fake_create_svg_loader,
-        )
-        process_entry_mock = mocker.patch("unify_link_box_ids.process_textcritics_entry")
-        save_results_mock = mocker.patch("unify_link_box_ids.save_results")
+        self.mock_create_loader.side_effect = _fake_create_svg_loader
 
-        result = unify_link_box_ids("textcritics.json", "img/")
+        settings = Settings(dry_run=False, verbose=True)
+        result = unify_link_box_ids("textcritics.json", "img/", settings)
 
-        assert result is True
-        load_mock.assert_called_once_with("textcritics.json", "img/")
-        create_loader_mock.assert_called_once()
-        assert captured["svg_folder"] == "img/"
-        assert captured["svg_file_cache"] == {}
-        assert process_entry_mock.call_count == 2
-        first_call_args = process_entry_mock.call_args_list[0][0]
-        second_call_args = process_entry_mock.call_args_list[1][0]
-        assert first_call_args[0] == {"id": "A"}
-        assert first_call_args[1] == all_svg_files
-        assert first_call_args[2] is get_svg_data
-        assert second_call_args[0] == {"id": "B"}
-        save_results_mock.assert_called_once_with(
+        self.assertTrue(result)
+        self.mock_load.assert_called_once_with("textcritics.json", "img/")
+        self.mock_create_loader.assert_called_once()
+        self.assertEqual(captured["svg_folder"], "img/")
+        self.assertEqual(captured["svg_file_cache"], {})
+        self.assertEqual(self.mock_process_entry.call_count, 2)
+        first_call_args = self.mock_process_entry.call_args_list[0][0]
+        second_call_args = self.mock_process_entry.call_args_list[1][0]
+        self.assertEqual(first_call_args[0], {"id": "A"})
+        self.assertEqual(first_call_args[1], all_svg_files)
+        self.assertIs(first_call_args[2], self.mock_get_svg_data)
+        self.assertEqual(second_call_args[0], {"id": "B"})
+        self.mock_save_results.assert_called_once_with(
             json_data, captured["svg_file_cache"], "textcritics.json"
         )
+        output = self._stdout.getvalue()
+        self.assertIn("--- Starting Link Box ID processing ---", output)
+        self.assertIn("--- Link Box ID processing completed ---", output)
 
-        output = capsys.readouterr().out
-        assert "--- Starting Link Box ID processing ---" in output
-        assert "--- Link Box ID processing completed ---" in output
-
-    def test_unify_link_box_ids_processes_list_root(self, mocker):
+    def test_unify_link_box_ids_processes_list_root(self):
         """
         Test that unify_link_box_ids processes textcritics when root is a list
         (legacy format).
         """
         json_data = [{"id": "A"}, {"id": "B"}]
         all_svg_files = ["A.svg"]
-        get_svg_data = mocker.Mock(name="get_svg_data")
+        self.mock_load.return_value = (json_data, all_svg_files)
 
-        mocker.patch(
-            "unify_link_box_ids.load_and_validate_inputs",
-            return_value=(json_data, all_svg_files),
+        settings = Settings(dry_run=False, verbose=True)
+        result = unify_link_box_ids("textcritics.json", "img/", settings)
+
+        self.assertTrue(result)
+        self.assertEqual(self.mock_process_entry.call_count, 2)
+        self.assertEqual(self.mock_process_entry.call_args_list[0][0][0], {"id": "A"})
+        self.assertEqual(self.mock_process_entry.call_args_list[1][0][0], {"id": "B"})
+        self.mock_save_results.assert_called_once()
+        self.assertEqual(self.mock_save_results.call_args[0][0], json_data)
+
+    def test_unify_link_box_ids_dry_run(self):
+        """
+        Test that unify_link_box_ids in dry_run mode does not write files
+        and prints dry-run message.
+        """
+        json_data = {"textcritics": [{"id": "A"}]}
+        all_svg_files = ["A.svg"]
+        self.mock_load.return_value = (json_data, all_svg_files)
+
+        settings = Settings(dry_run=True, verbose=True)
+        result = unify_link_box_ids("textcritics.json", "img/", settings)
+
+        self.assertTrue(result)
+        self.mock_process_entry.assert_called_once_with(
+            {"id": "A"},
+            all_svg_files,
+            self.mock_get_svg_data,
+            logger=unittest.mock.ANY,
         )
-        mocker.patch(
-            "unify_link_box_ids.create_svg_loader",
-            return_value=get_svg_data,
-        )
-        process_entry_mock = mocker.patch("unify_link_box_ids.process_textcritics_entry")
-        save_results_mock = mocker.patch("unify_link_box_ids.save_results")
 
-        result = unify_link_box_ids("textcritics.json", "img/")
-
-        assert result is True
-        assert process_entry_mock.call_count == 2
-        assert process_entry_mock.call_args_list[0][0][0] == {"id": "A"}
-        assert process_entry_mock.call_args_list[1][0][0] == {"id": "B"}
-        save_results_mock.assert_called_once()
-        assert save_results_mock.call_args[0][0] == json_data
-        assert save_results_mock.call_args[0][2] == "textcritics.json"
+        self.mock_save_results.assert_not_called()
+        output = self._stdout.getvalue()
+        self.assertIn("[DRY-RUN] No files will be written.", output)
+        self.assertIn("[DRY-RUN] Skipping write + validation report.", output)
 
 
-class TestMain:
+@pytest.mark.unit
+class TestMain(unittest.TestCase):
     """Tests for main."""
 
-    def test_main_success_path(self, mocker, capsys):
-        """Test the successful execution path of main."""
-        process_mock = mocker.patch(
+    def setUp(self):
+        self.process_patcher = patch(
             "unify_link_box_ids.unify_link_box_ids", return_value=True
         )
-        exit_mock = mocker.patch("sys.exit")
+        self.mock_process = self.process_patcher.start()
 
+        self.exit_patcher = patch("sys.exit")
+        self.mock_exit = self.exit_patcher.start()
+
+        self._stdout = StringIO()
+        self.stdout_patcher = patch("sys.stdout", self._stdout)
+        self.stdout_patcher.start()
+
+    def tearDown(self):
+        self.process_patcher.stop()
+        self.exit_patcher.stop()
+        self.stdout_patcher.stop()
+
+    def test_main_success_path(self):
+        """Test the successful execution path of main."""
         main()
-
-        process_mock.assert_called_once_with(
-            "./tests/data/textcritics.json", "./tests/img/"
+        self.mock_process.assert_called_once_with(
+            "./tests/data/textcritics.json",
+            "./tests/img/",
+            Settings(dry_run=False, verbose=True),
         )
-        exit_mock.assert_not_called()
-        output = capsys.readouterr().out
-        assert "Finished!" in output
+        self.mock_exit.assert_not_called()
+        self.assertIn("Finished!", self._stdout.getvalue())
 
-    def test_main_with_warnings(self, mocker, capsys):
+    def test_main_with_warnings(self):
         """Test main when unify_link_box_ids returns False indicating warnings."""
-        process_mock = mocker.patch(
-            "unify_link_box_ids.unify_link_box_ids", return_value=False
-        )
-        exit_mock = mocker.patch("sys.exit")
+        self.mock_process.return_value = False
 
         main()
-
-        process_mock.assert_called_once_with(
-            "./tests/data/textcritics.json", "./tests/img/"
+        self.mock_process.assert_called_once_with(
+            "./tests/data/textcritics.json",
+            "./tests/img/",
+            Settings(dry_run=False, verbose=True),
         )
-        exit_mock.assert_not_called()
-        output = capsys.readouterr().out
-        assert "Processing completed with warnings." in output
+        self.mock_exit.assert_not_called()
+        self.assertIn("Processing completed with warnings.", self._stdout.getvalue())
 
-    def test_main_handles_file_not_found(self, mocker, capsys):
+    def test_main_handles_file_not_found(self):
         """Test main when unify_link_box_ids raises FileNotFoundError."""
-        mocker.patch(
-            "unify_link_box_ids.unify_link_box_ids",
-            side_effect=FileNotFoundError("missing-file"),
-        )
-        exit_mock = mocker.patch("sys.exit")
+        self.mock_process.side_effect = FileNotFoundError("missing-file")
 
         main()
 
-        exit_mock.assert_called_once_with(1)
-        output = capsys.readouterr().out
-        assert "Error: missing-file" in output
+        self.mock_exit.assert_called_once_with(1)
+        self.assertIn("Error: missing-file", self._stdout.getvalue())
 
-    def test_main_handles_unexpected_error(self, mocker, capsys):
+    def test_main_handles_unexpected_error(self):
         """Test main when unify_link_box_ids raises an unexpected exception."""
-        mocker.patch(
-            "unify_link_box_ids.unify_link_box_ids",
-            side_effect=ValueError("bad-config"),
-        )
-        exit_mock = mocker.patch("sys.exit")
+        self.mock_process.side_effect = ValueError("bad-config")
 
         main()
 
-        exit_mock.assert_called_once_with(1)
-        output = capsys.readouterr().out
-        assert "Unexpected error: bad-config" in output
+        self.mock_exit.assert_called_once_with(1)
+        self.assertIn("Unexpected error: bad-config", self._stdout.getvalue())

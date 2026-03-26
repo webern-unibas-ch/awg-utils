@@ -19,6 +19,7 @@ Usage:
 # HELPER FUNCTIONS
 # =============================================================================
 
+
 def _create_textcritic_entry(m_id, svg_group_ids, preamble="", block_header=""):
     """
     Helper function to create textcritic entries with consistent structure
@@ -41,10 +42,10 @@ def _create_textcritic_entry(m_id, svg_group_ids, preamble="", block_header=""):
                     "blockHeader": block_header,
                     "blockComments": [
                         {"svgGroupId": svg_id} for svg_id in svg_group_ids
-                    ]
+                    ],
                 }
-            ]
-        }
+            ],
+        },
     }
 
 
@@ -62,8 +63,37 @@ def _create_json_data(textcritic_entries):
 
 
 # =============================================================================
+# GENERIC COMMENTARY/BLOCKCOMMENTS FIXTURE FOR DUPLICATE TEST DATA
+# =============================================================================
+
+GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY = _create_textcritic_entry(
+    "M143_TF1", ["id-1", "id-2"]
+)
+
+GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY_MULTIPLE = {
+    "id": "M_143_TF1",
+    "commentary": {
+        "preamble": "",
+        "comments": [
+            {
+                "blockHeader": "",
+                "blockComments": [
+                    {"svgGroupId": "id-1", "text": "Comment 1"},
+                    {"svgGroupId": "id-2", "text": "Comment 2"},
+                ],
+            },
+            {
+                "blockHeader": "",
+                "blockComments": [{"svgGroupId": "id-3", "text": "Comment 3"}],
+            },
+        ],
+    },
+}
+
+# =============================================================================
 # INDIVIDUAL TEXTCRITIC SAMPLES
 # =============================================================================
+
 
 # Basic textcritic entry with valid awg-tkk prefixed IDs
 SAMPLE_TEXTCRITICS_WITH_SINGLE_PREFIXED_ID = _create_textcritic_entry(
@@ -73,12 +103,13 @@ SAMPLE_TEXTCRITICS_WITH_2_PREFIXED_IDS = _create_textcritic_entry(
     "M142_Sk1", ["awg-tkk-m142_sk1-001", "awg-tkk-m142_sk1-002"]
 )
 SAMPLE_TEXTCRITICS_WITH_4_PREFIXED_IDS = _create_textcritic_entry(
-    "M142_Sk1", [
+    "M142_Sk1",
+    [
         "awg-tkk-m142_sk1-001",
         "awg-tkk-m142_sk1-002",
         "awg-tkk-m142_sk1-003",
-        "awg-tkk-m142_sk1-004"
-    ]
+        "awg-tkk-m142_sk1-004",
+    ],
 )
 
 # Textcritic entry with single unprefixed ID
@@ -88,7 +119,8 @@ SAMPLE_TEXTCRITICS_WITH_MIXED_IDS = _create_textcritic_entry(
 
 # Textcritic entry with multiple mixed IDs (some prefixed, some old/unprefixed)
 SAMPLE_TEXTCRITICS_WITH_MULTIPLE_MIXED_IDS = _create_textcritic_entry(
-    "M150_Sk2_1", ["awg-tkk-m150_sk2_1-001", "old-id-2", "old-id-3", "awg-tkk-m150_sk2_1-002"]
+    "M150_Sk2_1",
+    ["awg-tkk-m150_sk2_1-001", "old-id-2", "old-id-3", "awg-tkk-m150_sk2_1-002"],
 )
 
 # Textcritic entry with TODO svgGroupId (should be ignored)
@@ -100,12 +132,8 @@ SAMPLE_TEXTCRITICS_WITH_TODO_AND_MIXED_IDS = _create_textcritic_entry(
 )
 
 # Integration test samples (matches test_unify_tkk_ids.py structure)
-SAMPLE_TEXTCRITICS_M143 = _create_textcritic_entry(
-    "M143", ["old-id-1", "old-id-2"]
-)
-SAMPLE_TEXTCRITICS_WITH_SKRT = _create_textcritic_entry(
-    "M144_SkRT", ["skrt-old-1"]
-)
+SAMPLE_TEXTCRITICS_M143 = _create_textcritic_entry("M143", ["old-id-1", "old-id-2"])
+SAMPLE_TEXTCRITICS_WITH_SKRT = _create_textcritic_entry("M144_SkRT", ["skrt-old-1"])
 SAMPLE_TEXTCRITICS_SECOND = _create_textcritic_entry(
     "M144_SkRT", ["old-id-3", "old-id-4"]
 )
@@ -125,9 +153,7 @@ JSON_DATA_WITH_2_PREFIXED_IDS = _create_json_data(
 JSON_DATA_WITH_4_PREFIXED_IDS = _create_json_data(
     [SAMPLE_TEXTCRITICS_WITH_4_PREFIXED_IDS]
 )
-JSON_DATA_WITH_MIXED_IDS = _create_json_data(
-    [SAMPLE_TEXTCRITICS_WITH_MIXED_IDS]
-)
+JSON_DATA_WITH_MIXED_IDS = _create_json_data([SAMPLE_TEXTCRITICS_WITH_MIXED_IDS])
 JSON_DATA_WITH_MULTIPLE_MIXED_IDS = _create_json_data(
     [SAMPLE_TEXTCRITICS_WITH_MULTIPLE_MIXED_IDS]
 )
@@ -139,10 +165,9 @@ JSON_DATA_WITH_TODO_AND_MIXED_IDS = _create_json_data(
 JSON_DATA_INTEGRATION = _create_json_data(
     [SAMPLE_TEXTCRITICS_M143, SAMPLE_TEXTCRITICS_WITH_SKRT]
 )
-JSON_DATA_MULTIPLE_ENTRIES = _create_json_data([
-    SAMPLE_TEXTCRITICS_WITH_MULTIPLE_MIXED_IDS,
-    SAMPLE_TEXTCRITICS_SECOND
-])
+JSON_DATA_MULTIPLE_ENTRIES = _create_json_data(
+    [SAMPLE_TEXTCRITICS_WITH_MULTIPLE_MIXED_IDS, SAMPLE_TEXTCRITICS_SECOND]
+)
 
 # Special case JSON structures
 JSON_DATA_EMPTY = {"textcritics": []}
@@ -157,8 +182,8 @@ JSON_DATA_MALFORMED = {
             "id": "M148",
             "commentary": {
                 # Missing comments
-            }
-        }
+            },
+        },
     ]
 }
 
@@ -169,16 +194,12 @@ JSON_DATA_MALFORMED = {
 
 # Single SVG file with prefixed awg-tkk ID
 SAMPLE_SVG_WITH_SINGLE_PREFIXED_ID = {
-    "test.svg": {
-        "content": '<g class="tkk" id="awg-tkk-m142_sk1-001">content</g>'
-    }
+    "test.svg": {"content": '<g class="tkk" id="awg-tkk-m142_sk1-001">content</g>'}
 }
 
 # Single SVG file with old/unprefixed ID
 SAMPLE_SVG_WITH_SINGLE_UNPREFIXED_ID = {
-    "test.svg": {
-        "content": '<g class="tkk" id="old-id-1">content</g>'
-    }
+    "test.svg": {"content": '<g class="tkk" id="old-id-1">content</g>'}
 }
 
 # Single SVG file with multiple prefixed awg-tkk IDs
@@ -224,7 +245,7 @@ SAMPLE_MULTIPLE_SVG_WITH_PREFIXED_IDS = {
             '<g class="tkk" id="awg-tkk-m142_sk3-003">content</g>'
             '<g class="tkk" id="awg-tkk-m142_sk4-004">content</g>'
         )
-    }
+    },
 }
 
 # Multiple SVG files with old/unprefixed IDs
@@ -240,7 +261,7 @@ SAMPLE_MULTIPLE_SVG_WITH_UNPREFIXED_IDS = {
             '<g class="tkk" id="old-id-3">content</g>'
             '<g class="tkk" id="old-id-4">content</g>'
         )
-    }
+    },
 }
 
 # Multiple SVG files with mixed prefixed and old IDs
@@ -256,5 +277,5 @@ SAMPLE_MULTIPLE_SVG_WITH_MIXED_IDS = {
             '<g class="tkk" id="old-id-3">content</g>'
             '<g class="tkk" id="awg-tkk-m142_sk2-002">content</g>'
         )
-    }
+    },
 }

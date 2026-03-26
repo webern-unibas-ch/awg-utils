@@ -31,7 +31,13 @@ from utils.extraction_utils import (
     extract_link_boxes,
     extract_moldenhauer_number,
     extract_svg_group_ids,
-    has_class_token
+    has_class_token,
+)
+
+# Import shared fixtures for duplicate test data
+from tests.test_fixtures import (
+    GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY,
+    GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY_MULTIPLE,
 )
 
 
@@ -41,31 +47,35 @@ class TestExtractIdSuffix(unittest.TestCase):
 
     def test_extract_id_suffix_with_single_file_partial(self):
         """Test extracting suffix from a filename with '-1von1-' pattern"""
-        self.assertEqual(extract_id_suffix('file-1von1-.svg'), '')
-        self.assertEqual(extract_id_suffix('something-1von1-.svg'), '')
+        self.assertEqual(extract_id_suffix("file-1von1-.svg"), "")
+        self.assertEqual(extract_id_suffix("something-1von1-.svg"), "")
 
     def test_extract_id_suffix_with_multiple_file_partials(self):
         """Test extracting suffix from filenames with '-NvonM-' patterns"""
-        self.assertEqual(extract_id_suffix('file-1von6-.svg'), 'a')
-        self.assertEqual(extract_id_suffix('file-2von7-.svg'), 'b')
-        self.assertEqual(extract_id_suffix('file-3von5-.svg'), 'c')
-        self.assertEqual(extract_id_suffix('file-4von8-.svg'), 'd')
-        self.assertEqual(extract_id_suffix('file-5von9-.svg'), 'e')
-        self.assertEqual(extract_id_suffix('file-6von6-.svg'), 'f')
-        self.assertEqual(extract_id_suffix('file-9von12-.svg'), 'i')
-        self.assertEqual(extract_id_suffix('file-15von15-.svg'), 'o')
+        self.assertEqual(extract_id_suffix("file-1von6-.svg"), "a")
+        self.assertEqual(extract_id_suffix("file-2von7-.svg"), "b")
+        self.assertEqual(extract_id_suffix("file-3von5-.svg"), "c")
+        self.assertEqual(extract_id_suffix("file-4von8-.svg"), "d")
+        self.assertEqual(extract_id_suffix("file-5von9-.svg"), "e")
+        self.assertEqual(extract_id_suffix("file-6von6-.svg"), "f")
+        self.assertEqual(extract_id_suffix("file-9von12-.svg"), "i")
+        self.assertEqual(extract_id_suffix("file-15von15-.svg"), "o")
 
     def test_extract_id_suffix_with_pattern_not_found(self):
         """Test extracting suffix from filenames that do not match the pattern"""
-        self.assertEqual(extract_id_suffix('file-no-pattern.svg'), 'x')
-        self.assertEqual(extract_id_suffix('file-abcvonxyz-.svg'), 'x')
-        self.assertEqual(extract_id_suffix('file-.svg'), 'x')
+        self.assertEqual(extract_id_suffix("file-no-pattern.svg"), "x")
+        self.assertEqual(extract_id_suffix("file-abcvonxyz-.svg"), "x")
+        self.assertEqual(extract_id_suffix("file-.svg"), "x")
 
     def test_extract_id_suffix_edge_cases(self):
         """Test extracting suffix from edge case filenames"""
-        self.assertEqual(extract_id_suffix('file-0von1-.svg'), '`')  # 0->chr(ord('a')-1)
-        self.assertEqual(extract_id_suffix('file-1von0-.svg'), 'a')  # total=0, num=1
-        self.assertEqual(extract_id_suffix('file-100von100-.svg'), 'Ä')  # 100->chr(ord('a')+99)
+        self.assertEqual(
+            extract_id_suffix("file-0von1-.svg"), "`"
+        )  # 0->chr(ord('a')-1)
+        self.assertEqual(extract_id_suffix("file-1von0-.svg"), "a")  # total=0, num=1
+        self.assertEqual(
+            extract_id_suffix("file-100von100-.svg"), "Ä"
+        )  # 100->chr(ord('a')+99)
 
 
 @pytest.mark.unit
@@ -75,16 +85,19 @@ class TestExtractLinkBoxes(unittest.TestCase):
     def test_extract_link_boxes_normal(self):
         """Test extracting linkBoxes from a normal entry structure"""
         entry = {
-            'linkBoxes': [
-                {'svgGroupId': 'g1', 'linkTo': 'foo'},
-                {'svgGroupId': 'g2', 'linkTo': 'bar'}
+            "linkBoxes": [
+                {"svgGroupId": "g1", "linkTo": "foo"},
+                {"svgGroupId": "g2", "linkTo": "bar"},
             ]
         }
         result = extract_link_boxes(entry)
-        self.assertEqual(result, [
-            {'svgGroupId': 'g1', 'linkTo': 'foo'},
-            {'svgGroupId': 'g2', 'linkTo': 'bar'}
-        ])
+        self.assertEqual(
+            result,
+            [
+                {"svgGroupId": "g1", "linkTo": "foo"},
+                {"svgGroupId": "g2", "linkTo": "bar"},
+            ],
+        )
 
     def test_extract_link_boxes_with_missing_key(self):
         """Test extracting linkBoxes when the key is missing"""
@@ -94,13 +107,13 @@ class TestExtractLinkBoxes(unittest.TestCase):
 
     def test_extract_link_boxes_with_wrong_type(self):
         """Test extracting linkBoxes when the key is not a list"""
-        entry = {'linkBoxes': 'not-a-list'}
+        entry = {"linkBoxes": "not-a-list"}
         result = extract_link_boxes(entry)
         self.assertEqual(result, [])
 
     def test_extract_link_boxes_empty(self):
         """Test extracting linkBoxes when the list is empty"""
-        entry = {'linkBoxes': []}
+        entry = {"linkBoxes": []}
         result = extract_link_boxes(entry)
         self.assertEqual(result, [])
 
@@ -154,53 +167,26 @@ class TestExtractSvgGroupIds(unittest.TestCase):
 
     def test_extract_svg_group_ids_basic(self):
         """Test extracting svgGroupIds from a basic entry structure"""
-        entry = {
-            "id": "M_143_TF1",
-            "commentary": {
-                "preamble": "",
-                "comments": [
-                    {
-                        "blockHeader": "",
-                        "blockComments": [
-                            {"svgGroupId": "test-id-1", "text": "Comment 1"},
-                            {"svgGroupId": "test-id-2", "text": "Comment 2"}
-                        ]
-                    }
-                ]
-            }
-        }
+        entry = GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY.copy()
+        # Add text fields for compatibility with original test
+        entry["commentary"]["comments"][0]["blockComments"][0]["text"] = "Comment 1"
+        entry["commentary"]["comments"][0]["blockComments"][1]["text"] = "Comment 2"
 
         svg_group_ids, block_comments = extract_svg_group_ids(entry)
 
-        expected_ids = ["test-id-1", "test-id-2"]
+        expected_ids = ["id-1", "id-2"]
         self.assertEqual(svg_group_ids, expected_ids)
         self.assertEqual(len(block_comments), 2)
-        self.assertEqual(block_comments[0]["svgGroupId"], "test-id-1")
-        self.assertEqual(block_comments[1]["svgGroupId"], "test-id-2")
+        self.assertEqual(block_comments[0]["svgGroupId"], "id-1")
+        self.assertEqual(block_comments[1]["svgGroupId"], "id-2")
 
     def test_extract_svg_group_ids_with_multiple_comment_groups(self):
         """Test extracting svgGroupIds from multiple comment groups"""
-        entry = {
-            "id": "M_143_TF1",
-            "commentary": {
-                "preamble": "",
-                "comments": [
-                    {
-                        "blockHeader": "",
-                        "blockComments": [
-                            {"svgGroupId": "id-1", "text": "Comment 1"},
-                            {"svgGroupId": "id-2", "text": "Comment 2"}
-                        ]
-                    },
-                    {
-                        "blockHeader": "",
-                        "blockComments": [
-                            {"svgGroupId": "id-3", "text": "Comment 3"}
-                        ]
-                    }
-                ]
-            }
-        }
+        entry = GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY_MULTIPLE.copy()
+        # Add text fields for compatibility
+        entry["commentary"]["comments"][0]["blockComments"][0]["text"] = "Comment 1"
+        entry["commentary"]["comments"][0]["blockComments"][1]["text"] = "Comment 2"
+        entry["commentary"]["comments"][1]["blockComments"][0]["text"] = "Comment 3"
 
         svg_group_ids, block_comments = extract_svg_group_ids(entry)
 
@@ -210,22 +196,13 @@ class TestExtractSvgGroupIds(unittest.TestCase):
 
     def test_extract_svg_group_ids_with_todo_entries(self):
         """Test that TODO entries are filtered out"""
-        entry = {
-            "id": "M_143_TF1",
-            "commentary": {
-                "preamble": "",
-                "comments": [
-                    {
-                        "blockHeader": "",
-                        "blockComments": [
-                            {"svgGroupId": "test-id-1", "text": "Comment 1"},
-                            {"svgGroupId": "TODO", "text": "TODO Comment"},
-                            {"svgGroupId": "test-id-2", "text": "Comment 2"}
-                        ]
-                    }
-                ]
-            }
-        }
+        entry = GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY.copy()
+        # Replace blockComments with TODO and valid IDs
+        entry["commentary"]["comments"][0]["blockComments"] = [
+            {"svgGroupId": "test-id-1", "text": "Comment 1"},
+            {"svgGroupId": "TODO", "text": "TODO Comment"},
+            {"svgGroupId": "test-id-2", "text": "Comment 2"},
+        ]
 
         svg_group_ids, block_comments = extract_svg_group_ids(entry)
 
@@ -240,24 +217,15 @@ class TestExtractSvgGroupIds(unittest.TestCase):
 
     def test_extract_svg_group_ids_with_empty_ids(self):
         """Test that empty or None svgGroupId entries are filtered out"""
-        entry = {
-            "id": "M_143_TF1",
-            "commentary": {
-                "preamble": "",
-                "comments": [
-                    {
-                        "blockHeader": "",
-                        "blockComments": [
-                            {"svgGroupId": "test-id-1", "text": "Comment 1"},
-                            {"svgGroupId": "", "text": "Empty ID"},
-                            {"svgGroupId": None, "text": "None ID"},
-                            {"text": "No svgGroupId field"},
-                            {"svgGroupId": "test-id-2", "text": "Comment 2"}
-                        ]
-                    }
-                ]
-            }
-        }
+        entry = GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY.copy()
+        # Replace blockComments with valid, empty, None, and missing svgGroupId
+        entry["commentary"]["comments"][0]["blockComments"] = [
+            {"svgGroupId": "test-id-1", "text": "Comment 1"},
+            {"svgGroupId": "", "text": "Empty ID"},
+            {"svgGroupId": None, "text": "None ID"},
+            {"text": "No svgGroupId field"},
+            {"svgGroupId": "test-id-2", "text": "Comment 2"},
+        ]
 
         svg_group_ids, block_comments = extract_svg_group_ids(entry)
 
@@ -277,10 +245,7 @@ class TestExtractSvgGroupIds(unittest.TestCase):
 
     def test_extract_svg_group_ids_with_no_comments(self):
         """Test entry with commentary but no comments"""
-        entry = {
-            "id": "M_143_TF1",
-            "commentary": {"preamble": "", "comments": []}
-        }
+        entry = {"id": "M_143_TF1", "commentary": {"preamble": "", "comments": []}}
 
         svg_group_ids, block_comments = extract_svg_group_ids(entry)
 
@@ -289,16 +254,12 @@ class TestExtractSvgGroupIds(unittest.TestCase):
 
     def test_extract_svg_group_ids_with_no_block_comments(self):
         """Test entry with comments but no blockComments"""
-        entry = {
-            "id": "M_143_TF1",
-            "commentary": {
-                "preamble": "",
-                "comments": [
-                    {"blockHeader": "", "blockComments": []},
-                    {"blockHeader": "", "otherField": "value"}
-                ]
-            }
-        }
+        entry = GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY.copy()
+        # Replace comments with one with empty blockComments and one with no blockComments field
+        entry["commentary"]["comments"] = [
+            {"blockHeader": "", "blockComments": []},
+            {"blockHeader": "", "otherField": "value"},
+        ]
 
         svg_group_ids, block_comments = extract_svg_group_ids(entry)
 
@@ -307,22 +268,13 @@ class TestExtractSvgGroupIds(unittest.TestCase):
 
     def test_extract_svg_group_ids_preserves_order(self):
         """Test that the order of svgGroupIds is preserved"""
-        entry = {
-            "id": "M_143_TF1",
-            "commentary": {
-                "preamble": "",
-                "comments": [
-                    {
-                        "blockHeader": "",
-                        "blockComments": [
-                            {"svgGroupId": "z-last", "text": "Should be first"},
-                            {"svgGroupId": "a-first", "text": "Should be second"},
-                            {"svgGroupId": "m-middle", "text": "Should be third"}
-                        ]
-                    }
-                ]
-            }
-        }
+        entry = GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY.copy()
+        # Replace blockComments with custom order
+        entry["commentary"]["comments"][0]["blockComments"] = [
+            {"svgGroupId": "z-last", "text": "Should be first"},
+            {"svgGroupId": "a-first", "text": "Should be second"},
+            {"svgGroupId": "m-middle", "text": "Should be third"},
+        ]
 
         svg_group_ids, block_comments = extract_svg_group_ids(entry)
 
@@ -342,10 +294,8 @@ class TestExtractSvgGroupIds(unittest.TestCase):
             "id": "M_143_TF1",
             "commentary": {
                 "preamble": "",
-                "comments": [
-                    {"blockHeader": "", "blockComments": [original_comment]}
-                ]
-            }
+                "comments": [{"blockHeader": "", "blockComments": [original_comment]}],
+            },
         }
 
         _, block_comments = extract_svg_group_ids(entry)
@@ -392,5 +342,5 @@ class TestHasClassToken(unittest.TestCase):
         self.assertTrue(has_class_token("active   tkk   selected", "tkk"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

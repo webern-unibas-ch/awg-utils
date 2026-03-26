@@ -24,7 +24,7 @@ def _create_textcritic_entry(m_id, svg_group_ids, preamble="", block_header=""):
     Helper function to create textcritic entries with consistent structure
 
     Args:
-        m_id: The M identifier (e.g., "M_142")
+        m_id: The M identifier (e.g., "M142")
         svg_group_ids: List of svgGroupId values
         preamble: Optional preamble text
         block_header: Optional block header text
@@ -67,13 +67,13 @@ def _create_json_data(textcritic_entries):
 
 # Basic textcritic entry with valid awg-tkk prefixed IDs
 SAMPLE_TEXTCRITICS_WITH_SINGLE_PREFIXED_ID = _create_textcritic_entry(
-    "M_142_Sk1", ["awg-tkk-m142_sk1-001"]
+    "M142_Sk1", ["awg-tkk-m142_sk1-001"]
 )
 SAMPLE_TEXTCRITICS_WITH_2_PREFIXED_IDS = _create_textcritic_entry(
-    "M_142_Sk1", ["awg-tkk-m142_sk1-001", "awg-tkk-m142_sk1-002"]
+    "M142_Sk1", ["awg-tkk-m142_sk1-001", "awg-tkk-m142_sk1-002"]
 )
 SAMPLE_TEXTCRITICS_WITH_4_PREFIXED_IDS = _create_textcritic_entry(
-    "M_142_Sk1", [
+    "M142_Sk1", [
         "awg-tkk-m142_sk1-001",
         "awg-tkk-m142_sk1-002",
         "awg-tkk-m142_sk1-003",
@@ -83,31 +83,31 @@ SAMPLE_TEXTCRITICS_WITH_4_PREFIXED_IDS = _create_textcritic_entry(
 
 # Textcritic entry with single unprefixed ID
 SAMPLE_TEXTCRITICS_WITH_MIXED_IDS = _create_textcritic_entry(
-    "M_145_TF1", ["old-id-1", "awg-tkk-m145_tf1-001"]
+    "M145_TF1", ["old-id-1", "awg-tkk-m145_tf1-001"]
 )
 
 # Textcritic entry with multiple mixed IDs (some prefixed, some old/unprefixed)
 SAMPLE_TEXTCRITICS_WITH_MULTIPLE_MIXED_IDS = _create_textcritic_entry(
-    "M_150_Sk2_1", ["awg-tkk-m150_sk2_1-001", "old-id-2", "old-id-3", "awg-tkk-m150_sk2_1-002"]
+    "M150_Sk2_1", ["awg-tkk-m150_sk2_1-001", "old-id-2", "old-id-3", "awg-tkk-m150_sk2_1-002"]
 )
 
 # Textcritic entry with TODO svgGroupId (should be ignored)
 SAMPLE_TEXTCRITICS_WITH_TODO = _create_textcritic_entry(
-    "M_146_TF2", ["TODO", "awg-tkk-m146_tf2-001"]
+    "M146_TF2", ["TODO", "awg-tkk-m146_tf2-001"]
 )
 SAMPLE_TEXTCRITICS_WITH_TODO_AND_MIXED_IDS = _create_textcritic_entry(
-    "M_146_TF2", ["TODO", "awg-tkk-m146_tf2-001", "old-id-1"]
+    "M146_TF2", ["TODO", "awg-tkk-m146_tf2-001", "old-id-1"]
 )
 
 # Integration test samples (matches test_unify_tkk_ids.py structure)
 SAMPLE_TEXTCRITICS_M143 = _create_textcritic_entry(
-    "M_143", ["old-id-1", "old-id-2"]
+    "M143", ["old-id-1", "old-id-2"]
 )
 SAMPLE_TEXTCRITICS_WITH_SKRT = _create_textcritic_entry(
-    "M_144_SkRT", ["skrt-old-1"]
+    "M144_SkRT", ["skrt-old-1"]
 )
 SAMPLE_TEXTCRITICS_SECOND = _create_textcritic_entry(
-    "M_144_SkRT", ["old-id-3", "old-id-4"]
+    "M144_SkRT", ["old-id-3", "old-id-4"]
 )
 
 

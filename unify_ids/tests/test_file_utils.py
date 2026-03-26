@@ -257,10 +257,9 @@ class TestCreateSvgLoader(unittest.TestCase):
 
     def test_create_svg_loader_basic_functionality(self):
         """Test basic SVG loading functionality"""
-        final_svg_cache = {}
-        loaded_svg_texts = {}
+        svg_file_cache = {}
 
-        get_svg_text = create_svg_loader(self.svg_folder, final_svg_cache, loaded_svg_texts)
+        get_svg_text = create_svg_loader(self.svg_folder, svg_file_cache)
 
         # Load first SVG
         svg_data = get_svg_text("test1.svg")
@@ -269,17 +268,14 @@ class TestCreateSvgLoader(unittest.TestCase):
         self.assertEqual(svg_data["path"], self.svg1_path)
 
         # Verify caching
-        self.assertIn("test1.svg", loaded_svg_texts)
-        self.assertIn("test1.svg", final_svg_cache)
-        self.assertEqual(loaded_svg_texts["test1.svg"], svg_data)
-        self.assertEqual(final_svg_cache["test1.svg"], svg_data)
+        self.assertIn("test1.svg", svg_file_cache)
+        self.assertEqual(svg_file_cache["test1.svg"], svg_data)
 
     def test_create_svg_loader_caching_behavior(self):
         """Test that SVG loader caches files and doesn't reload them"""
-        final_svg_cache = {}
-        loaded_svg_texts = {}
+        svg_file_cache = {}
 
-        get_svg_text = create_svg_loader(self.svg_folder, final_svg_cache, loaded_svg_texts)
+        get_svg_text = create_svg_loader(self.svg_folder, svg_file_cache)
 
         # Load same file multiple times
         svg_data1 = get_svg_text("test1.svg")
@@ -289,15 +285,13 @@ class TestCreateSvgLoader(unittest.TestCase):
         self.assertIs(svg_data1, svg_data2)
 
         # Verify only one entry in cache
-        self.assertEqual(len(loaded_svg_texts), 1)
-        self.assertEqual(len(final_svg_cache), 1)
+        self.assertEqual(len(svg_file_cache), 1)
 
     def test_create_svg_loader_multiple_files(self):
         """Test loading multiple different SVG files"""
-        final_svg_cache = {}
-        loaded_svg_texts = {}
+        svg_file_cache = {}
 
-        get_svg_text = create_svg_loader(self.svg_folder, final_svg_cache, loaded_svg_texts)
+        get_svg_text = create_svg_loader(self.svg_folder, svg_file_cache)
 
         # Load different files
         svg1_data = get_svg_text("test1.svg")
@@ -308,8 +302,7 @@ class TestCreateSvgLoader(unittest.TestCase):
         self.assertEqual(svg2_data["content"], self.svg2_content)
 
         # Verify both are cached
-        self.assertEqual(len(loaded_svg_texts), 2)
-        self.assertEqual(len(final_svg_cache), 2)
+        self.assertEqual(len(svg_file_cache), 2)
 
         # Verify they are different objects
         self.assertIsNot(svg1_data, svg2_data)
@@ -400,7 +393,7 @@ class TestSaveOperations(unittest.TestCase):
         """Test the save_results function integration"""
         # Prepare test data
         test_data = {"textcritics": [{"id": "test", "commentary": {"comments": []}}]}
-        loaded_svg_texts = {
+        svg_file_cache = {
             "test.svg": {
                 "content": '<svg><g id="awg-tkk-m32_Sk1-001" class="tkk"></g></svg>',
                 "path": self.svg_file
@@ -411,8 +404,8 @@ class TestSaveOperations(unittest.TestCase):
         with open(self.svg_file, 'w', encoding='utf-8') as f:
             f.write('<svg><g id="old-id" class="tkk"></g></svg>')
 
-        # Call save_results with new signature
-        save_results(test_data, loaded_svg_texts, self.json_file)
+        # Call save_results
+        save_results(test_data, svg_file_cache, self.json_file)
 
         # Verify SVG file was saved
         with open(self.svg_file, 'r', encoding='utf-8') as f:

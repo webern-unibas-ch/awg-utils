@@ -23,6 +23,8 @@ from unittest.mock import patch
 from io import StringIO
 import pytest
 
+from utils.constants import TKK
+
 # Import validation functions from utils.validation_utils
 from utils.validation_utils import (
     display_validation_report,
@@ -56,10 +58,6 @@ from tests.test_fixtures import (
 class TestDisplayValidationReport(unittest.TestCase):
     """Test cases for the display_validation_report function"""
 
-    def setUp(self):
-        """Set up test fixtures"""
-        self.prefix = "awg-tkk-"
-
     @patch('sys.stdout', new_callable=StringIO)
     def test_display_validation_report_with_single_file_single_entry_no_errors(
             self, mock_stdout):
@@ -67,7 +65,7 @@ class TestDisplayValidationReport(unittest.TestCase):
         data = JSON_DATA_WITH_SINGLE_PREFIXED_ID.copy()
         loaded_svgs = SAMPLE_SVG_WITH_SINGLE_PREFIXED_ID.copy()
 
-        display_validation_report(data, self.prefix, loaded_svgs)
+        display_validation_report(data, loaded_svgs, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("All JSON and SVG 'tkk' IDs successfully updated", output)
 
@@ -78,7 +76,7 @@ class TestDisplayValidationReport(unittest.TestCase):
         loaded_svgs = SAMPLE_SVG_WITH_MULTIPLE_PREFIXED_IDS.copy()
 
         with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            display_validation_report(data, self.prefix, loaded_svgs)
+            display_validation_report(data, loaded_svgs, TKK.prefix)
             output = mock_stdout.getvalue()
             self.assertIn(
                 "All JSON and SVG 'tkk' IDs successfully updated", output)
@@ -90,7 +88,7 @@ class TestDisplayValidationReport(unittest.TestCase):
         data = JSON_DATA_WITH_4_PREFIXED_IDS.copy()
         loaded_svgs = SAMPLE_MULTIPLE_SVG_WITH_PREFIXED_IDS.copy()
 
-        display_validation_report(data, self.prefix, loaded_svgs)
+        display_validation_report(data, loaded_svgs, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("All JSON and SVG 'tkk' IDs successfully updated", output)
 
@@ -102,7 +100,7 @@ class TestDisplayValidationReport(unittest.TestCase):
 
         loaded_svgs = SAMPLE_SVG_WITH_SINGLE_PREFIXED_ID.copy()
 
-        display_validation_report(data, self.prefix, loaded_svgs)
+        display_validation_report(data, loaded_svgs, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("JSON ERROR: Unchanged ID 'old-id-1'", output)
         self.assertIn("Total issues found: 1", output)
@@ -116,7 +114,7 @@ class TestDisplayValidationReport(unittest.TestCase):
 
         loaded_svgs = SAMPLE_SVG_WITH_MIXED_IDS.copy()
 
-        display_validation_report(data, self.prefix, loaded_svgs)
+        display_validation_report(data, loaded_svgs, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("SVG ORPHAN: ID 'old-id-1'", output)
 
@@ -128,7 +126,7 @@ class TestDisplayValidationReport(unittest.TestCase):
         data = JSON_DATA_WITH_2_PREFIXED_IDS.copy()
         loaded_svgs = SAMPLE_MULTIPLE_SVG_WITH_MIXED_IDS.copy()
 
-        display_validation_report(data, self.prefix, loaded_svgs)
+        display_validation_report(data, loaded_svgs, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("SVG ORPHAN: ID 'old-id-2'", output)
         self.assertIn("SVG ORPHAN: ID 'old-id-3'", output)
@@ -140,7 +138,7 @@ class TestDisplayValidationReport(unittest.TestCase):
 
         loaded_svgs = SAMPLE_SVG_WITH_SINGLE_PREFIXED_ID.copy()
 
-        display_validation_report(data, self.prefix, loaded_svgs)
+        display_validation_report(data, loaded_svgs, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("All JSON and SVG 'tkk' IDs successfully updated", output)
 
@@ -152,7 +150,7 @@ class TestDisplayValidationReport(unittest.TestCase):
 
         loaded_svgs = SAMPLE_SVG_WITH_SINGLE_PREFIXED_ID.copy()
 
-        display_validation_report(data, self.prefix, loaded_svgs)
+        display_validation_report(data, loaded_svgs, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("JSON ERROR: Unchanged ID 'old-id-1'", output)
         self.assertIn("Total issues found: 1", output)
@@ -160,7 +158,7 @@ class TestDisplayValidationReport(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_display_validation_report_with_empty_data(self, mock_stdout):
         """Empty JSON data and empty SVG data (should report success)"""
-        display_validation_report({}, "awg-tkk-", {})
+        display_validation_report({}, {}, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("All JSON and SVG 'tkk' IDs successfully updated", output)
 
@@ -170,7 +168,7 @@ class TestDisplayValidationReport(unittest.TestCase):
         (should report success since validation should be skipped)"""
         data = JSON_DATA_MALFORMED.copy()
 
-        display_validation_report(data, "awg-tkk-", {})
+        display_validation_report(data, {}, TKK.prefix)
         output = mock_stdout.getvalue()
         self.assertIn("All JSON and SVG 'tkk' IDs successfully updated", output)
 
@@ -179,50 +177,46 @@ class TestDisplayValidationReport(unittest.TestCase):
 class TestValidateJsonEntries(unittest.TestCase):
     """Test cases for the validate_json_entries function"""
 
-    def setUp(self):
-        """Set up test fixtures"""
-        self.prefix = "awg-tkk-"
-
     def test_validate_json_entries_with_single_entry_no_errors(self):
         """Test json data with a single ID correctly prefixed"""
         data = JSON_DATA_WITH_SINGLE_PREFIXED_ID.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 0)
 
     def test_validate_json_entries_with_two_entries_no_errors(self):
         """Test json data with multiple entries all correctly prefixed"""
         data = JSON_DATA_WITH_2_PREFIXED_IDS.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 0)
 
     def test_validate_json_entries_with_four_entries_no_errors(self):
         """Test json data with multiple entries all correctly prefixed"""
         data = JSON_DATA_WITH_4_PREFIXED_IDS.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 0)
 
     def test_validate_json_entries_with_a_single_unchanged_id(self):
         """Test with a single unchanged JSON ID"""
         data = JSON_DATA_WITH_MIXED_IDS.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 1)
 
     def test_validate_json_entries_with_multiple_unchanged_ids(self):
         """Test with multiple unchanged JSON IDs"""
         data = JSON_DATA_WITH_MULTIPLE_MIXED_IDS.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 2)
 
     def test_validate_json_entries_with_todo_ignored(self):
         """Test that TODO entries are ignored"""
         data = JSON_DATA_WITH_TODO.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 0)
 
     def test_validate_json_entries_with_todo_and_mixed_ids(self):
@@ -230,14 +224,14 @@ class TestValidateJsonEntries(unittest.TestCase):
         with unchanged IDs"""
         data = JSON_DATA_WITH_TODO_AND_MIXED_IDS.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 1)
 
     def test_validate_json_entries_with_empty_data(self):
         """Test with empty JSON data (should report no errors)"""
         data = JSON_DATA_EMPTY.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 0)
 
     def test_validate_json_entries_with_malformed_data(self):
@@ -245,7 +239,7 @@ class TestValidateJsonEntries(unittest.TestCase):
         (should report no errors since validation should be skipped)"""
         data = JSON_DATA_MALFORMED.copy()
 
-        errors = validate_json_entries(data, self.prefix)
+        errors = validate_json_entries(data, TKK.prefix)
         self.assertEqual(errors, 0)
 
 
@@ -253,101 +247,126 @@ class TestValidateJsonEntries(unittest.TestCase):
 class TestValidateSvgEntries(unittest.TestCase):
     """Test cases for the validate_svg_entries function"""
 
-    def setUp(self):
-        """Set up test fixtures"""
-        self.prefix = "awg-tkk-"
-
     def test_validate_single_svg_entry_with_no_errors(self):
         """Test with a single SVG ID correctly prefixed"""
         loaded_svgs = SAMPLE_SVG_WITH_SINGLE_PREFIXED_ID.copy()
 
-        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
         self.assertEqual(errors, 0)
 
     def test_validate_multiple_svg_entries_with_no_errors(self):
         """Test with multiple SVG IDs correctly prefixed"""
         loaded_svgs = SAMPLE_SVG_WITH_MULTIPLE_PREFIXED_IDS.copy()
 
-        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
         self.assertEqual(errors, 0)
 
     def test_validate_multiple_svg_files_with_no_errors(self):
         """Test with multiple SVG IDs correctly prefixed"""
         loaded_svgs = SAMPLE_MULTIPLE_SVG_WITH_PREFIXED_IDS.copy()
 
-        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
         self.assertEqual(errors, 0)
 
     def test_validate_single_svg_file_with_single_orphans(self):
         """Test with only SVG IDs that weren't updated"""
         loaded_svgs = SAMPLE_SVG_WITH_SINGLE_UNPREFIXED_ID.copy()
 
-        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
         self.assertEqual(errors, 1)
 
     def test_validate_single_svg_file_with_all_orphans(self):
         """Test with only SVG IDs that weren't updated"""
         loaded_svgs = SAMPLE_SVG_WITH_MULTIPLE_UNPREFIXED_IDS.copy()
 
-        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
         self.assertEqual(errors, 2)
 
     def test_validate_multiple_svg_files_with_all_orphans(self):
         """Test with only SVG IDs that weren't updated"""
         loaded_svgs = SAMPLE_MULTIPLE_SVG_WITH_UNPREFIXED_IDS.copy()
 
-        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
         self.assertEqual(errors, 4)
 
     def test_validate_single_svg_file_with_mixed_results(self):
         """Test single SVG file with mix of updated and non-updated IDs"""
         loaded_svgs = SAMPLE_SVG_WITH_MIXED_IDS.copy()
 
-        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
         self.assertEqual(errors, 1)
 
     def test_validate_multiple_svg_files_with_mixed_results(self):
         """Test multiple SVG files with mix of updated and non-updated IDs"""
         loaded_svgs = SAMPLE_MULTIPLE_SVG_WITH_MIXED_IDS.copy()
 
-        errors = validate_svg_entries(loaded_svgs, self.prefix)
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
         self.assertEqual(errors, 2)
 
+    def test_validate_svg_entries_skips_g_tags_without_id(self):
+        """A <g> with the target class but no id attribute should not count as an error."""
+        loaded_svgs = {
+            "sheet.svg": {"content": "<g class='tkk'></g>"}
+        }
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
+        self.assertEqual(errors, 0)
 
-def _call_validate_svg_entries(loaded_svgs, prefix, required_class):
+    def test_validate_svg_entries_skips_g_tags_without_target_class(self):
+        """A <g> with an id but a different class should not be counted."""
+        loaded_svgs = {
+            "sheet.svg": {"content": "<g id='old-id' class='other'></g>"}
+        }
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
+        self.assertEqual(errors, 0)
+
+    def test_validate_svg_entries_counts_duplicate_id_only_once(self):
+        """The same unprefixed id appearing twice in a file should count as one error."""
+        loaded_svgs = {
+            "sheet.svg": {
+                "content": (
+                    "<g id='old-id' class='tkk'></g>"
+                    "<g id='old-id' class='tkk'></g>"
+                )
+            }
+        }
+        errors = validate_svg_entries(loaded_svgs, TKK.prefix)
+        self.assertEqual(errors, 1)
+
+
+def _call_validate_svg_entries(loaded_svgs, prefix, target_class):
     """
-    Helper function to call validate_svg_entries with optional required_class parameter.
+    Helper function to call validate_svg_entries with optional target_class parameter.
 
     Provides compatibility for testing different versions of validate_svg_entries
-    that may or may not support the required_class parameter.
+    that may or may not support the target_class parameter.
 
     Args:
         loaded_svgs: Dictionary of loaded SVG data
         prefix: The prefix to validate against
-        required_class: The required CSS class to filter by
+        target_class: The target CSS class to filter by
 
     Returns:
         Number of validation errors found
 
     Raises:
-        pytest.fail: If required_class is not "tkk" and function doesn't support filtering
+        pytest.fail: If target_class is not "tkk" and function doesn't support filtering
     """
     sig = inspect.signature(validate_svg_entries)
-    if "required_class" in sig.parameters:
+    if "target_class" in sig.parameters:
         return validate_svg_entries(
-            loaded_svgs, prefix, required_class=required_class
+            loaded_svgs, prefix, target_class=target_class
         )
-    if required_class != "tkk":
+    if target_class != "tkk":
         pytest.fail("validate_svg_entries must support LinkBox class filtering.")
     return validate_svg_entries(loaded_svgs, prefix)
 
 
 @pytest.mark.parametrize(
-    "prefix,required_class",
+    "prefix,target_class",
     [("awg-tkk-", "tkk"), ("awg-lb-", "link-box")],
     ids=["tkk", "linkbox"],
 )
-def test_shared_validate_json_and_svg_support_both_unifiers(prefix, required_class):
+def test_shared_validate_json_and_svg_support_both_unifiers(prefix, target_class):
     """Test that validation methods support both tkk and linkBox unifiers"""
     data = {
         "textcritics": [
@@ -362,9 +381,9 @@ def test_shared_validate_json_and_svg_support_both_unifiers(prefix, required_cla
     loaded_svgs = {
         "sheet.svg": {
             "content": (
-                f"<g class='x {required_class} y' id='old-id'></g>"
-                f"<g id='{prefix}123' class='{required_class}'></g>"
+                f"<g class='x {target_class} y' id='old-id'></g>"
+                f"<g id='{prefix}123' class='{target_class}'></g>"
             )
         }
     }
-    assert _call_validate_svg_entries(loaded_svgs, prefix, required_class) == 1
+    assert _call_validate_svg_entries(loaded_svgs, prefix, target_class) == 1

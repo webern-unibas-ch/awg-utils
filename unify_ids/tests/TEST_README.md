@@ -132,7 +132,7 @@ Tests for `utils/logger_utils.py`:
 
 ### SVG Utils Tests (`test_svg_utils.py`)
 Tests for `utils/svg_utils.py`:
-- **`find_matching_svg_files_by_class()`**: SVG file discovery with ID matching by class
+- **`build_id_to_file_index_by_class()`**: Builds an ID-to-file index for elements matching a target CSS class
 - **`find_relevant_svg_files()`**: File filtering by entry type (TF, Sk, SkRT)
 - **`update_svg_id_by_class()`**: ID replacement in SVG content with CSS class targeting
 - Partial class name non-matches, multiple occurrences, invalid XML, and XML declaration handling

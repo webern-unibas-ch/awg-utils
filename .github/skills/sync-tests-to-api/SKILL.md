@@ -67,6 +67,9 @@ After running this skill, all test files must:
    - If a `setUp` method exists solely to assign a constant, remove the `setUp` method and reference the constant directly at each call site.
 
 7. Validate
+   - Ensure the Python environment is active before running checks.
+   - Prefer explicit interpreter invocation when available (for example: `.venv/Scripts/python.exe -m pytest ...` on Windows, `.venv/bin/python -m pytest ...` on Unix).
+   - If using shell activation, activate first and run checks in the same command/session.
    - Run `pylint tests/` and confirm no `E1120`/`E1121` errors remain for the changed function.
    - Run `pytest tests/` and confirm all tests that previously passed still pass.
 
@@ -85,5 +88,6 @@ Before finishing:
 - All imports are correct and unused imports removed.
 - Hardcoded string literals that match constants have been replaced with the constant.
 - Unnecessary `setUp` methods have been removed.
+- Validation commands were run in the correct project environment (venv/poetry/conda as applicable).
 - `pylint tests/` shows no argument-count or argument-order errors for the changed function(s).
 - `pytest tests/` passes (or only fails on pre-existing unrelated failures).

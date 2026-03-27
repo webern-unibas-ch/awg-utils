@@ -22,7 +22,7 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
     def setUp(self):
         self.textcritics_entry_id = "M143_TF1"
         self.svg_group_id = "g6407"
-        self.svg_data = {"content": "<svg-content>"}
+        self.svg_data = {"svg_root": MagicMock()}
         self.link_box = {
             "svgGroupId": self.svg_group_id,
             "linkTo": {"sheetId": "M317_Sk2"},
@@ -31,15 +31,9 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
 
         self.mock_get_svg_data = MagicMock(return_value=self.svg_data)
 
-        self.find_matching_patcher = patch(
-            "unify_link_box_ids.find_matching_svg_files_by_class",
-            return_value=["sheet-1von1-final.svg"],
-        )
-        self.mock_find_matching = self.find_matching_patcher.start()
-
         self.update_svg_patcher = patch(
             "unify_link_box_ids.update_svg_id_by_class",
-            return_value=("<updated-svg-content>", None),
+            return_value=(True, None),
         )
         self.mock_update_svg = self.update_svg_patcher.start()
 
@@ -48,7 +42,6 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
         self.stdout_patcher.start()
 
     def tearDown(self):
-        self.find_matching_patcher.stop()
         self.update_svg_patcher.stop()
         self.stdout_patcher.stop()
 
@@ -75,7 +68,7 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
         )
         self.mock_get_svg_data.assert_called_once_with("sheet-1von1-final.svg")
         self.mock_update_svg.assert_called_once_with(
-            "<svg-content>",
+            self.svg_data,
             self.svg_group_id,
             expected_new_id,
             "link-box",
@@ -86,7 +79,6 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
             if lb.get("svgGroupId") == expected_new_id
         )
         self.assertEqual(new_link_box["linkTo"], {"sheetId": "M317_Sk2"})
-        self.assertEqual(self.svg_data["content"], "<updated-svg-content>")
         output = self._stdout.getvalue()
         self.assertIn(
             f"[JSON] Changing '{self.svg_group_id}' -> '{expected_new_id}'", output
@@ -99,8 +91,6 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
 
     def test_process_single_link_box_with_no_matching_files(self):
         """Test processing of a link box when no matching SVG files are found."""
-        self.mock_find_matching.return_value = []
-
         logger = Logger(verbose=True)
         result = process_single_link_box(
             self.textcritics_entry_id,
@@ -118,11 +108,10 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
 
     def test_process_single_link_box_with_multiple_matching_files(self):
         """Test processing of a link box when multiple SVG files match — JSON is expanded."""
-        svg_data_a = {"content": "<svg/>"}
-        svg_data_b = {"content": "<svg/>"}
+        svg_data_a = {"svg_root": MagicMock()}
+        svg_data_b = {"svg_root": MagicMock()}
         self.mock_get_svg_data.side_effect = [svg_data_a, svg_data_b]
-        self.mock_find_matching.return_value = ["a.svg", "b.svg"]
-        self.mock_update_svg.return_value = ("<updated/>", None)
+        self.mock_update_svg.return_value = (True, None)
 
         logger = Logger(verbose=True)
         result = process_single_link_box(
@@ -167,7 +156,7 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
 
     def test_process_single_link_box_with_svg_update_error(self):
         """Test processing of a link box when the SVG update fails."""
-        self.mock_update_svg.return_value = ("<svg-content>", "Could not update id")
+        self.mock_update_svg.return_value = (False, "Could not update id")
         expected_new_id = "awg-lb-m143_tf1-to-m317_sk2"
 
         logger = Logger(verbose=True)
@@ -192,7 +181,7 @@ class TestProcessSingleLinkBox(unittest.TestCase):  # pylint: disable=too-many-i
     def test_process_single_link_box_warns_on_self_reference(self):
         """When entry_id equals target_sheet_id, a self-reference warning is logged."""
         self.link_box["linkTo"] = {"sheetId": self.textcritics_entry_id}
-        self.mock_update_svg.return_value = ("<updated/>", None)
+        self.mock_update_svg.return_value = (True, None)
 
         logger = Logger(verbose=True)
         result = process_single_link_box(
@@ -239,6 +228,13 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         )
         self.mock_process_single = self.process_single_patcher.start()
 
+        self.mock_id_index = {"g1": ["test1.svg"], "g2": ["test2.svg"]}
+        self.build_index_patcher = patch(
+            "unify_link_box_ids.build_id_to_file_index_by_class",
+            return_value=self.mock_id_index,
+        )
+        self.mock_build_index = self.build_index_patcher.start()
+
         self._stdout = StringIO()
         self.stdout_patcher = patch("sys.stdout", self._stdout)
         self.stdout_patcher.start()
@@ -248,6 +244,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         self.find_relevant_patcher.stop()
         self.extract_link_boxes_patcher.stop()
         self.process_single_patcher.stop()
+        self.build_index_patcher.stop()
         self.stdout_patcher.stop()
 
     def test_process_textcritics_entry_returns_for_non_dict(self):
@@ -286,12 +283,17 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
             "M143_TF1", self.all_svg_files, "143"
         )
         self.mock_extract_link_boxes.assert_called_once_with(self.entry)
+        self.mock_build_index.assert_called_once_with(
+            self.all_svg_files,
+            self.mock_get_svg_data,
+            target_class="link-box",
+        )
         expected_calls = [
             call(
                 "M143_TF1",
                 "g1",
                 link_boxes,
-                self.all_svg_files,
+                ["test1.svg"],
                 self.mock_get_svg_data,
                 logger=logger,
             ),
@@ -299,7 +301,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
                 "M143_TF1",
                 "g2",
                 link_boxes,
-                self.all_svg_files,
+                ["test2.svg"],
                 self.mock_get_svg_data,
                 logger=logger,
             ),
@@ -344,6 +346,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         ]
         self.mock_extract_link_boxes.return_value = link_boxes
         self.mock_find_relevant.return_value = ["sheet.svg"]
+        self.mock_build_index.return_value = {"g2": ["sheet.svg"]}
 
         logger = Logger(verbose=True)
         process_textcritics_entry(

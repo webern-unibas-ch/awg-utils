@@ -43,7 +43,7 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):  # pylint: disable=too-man
         # Mock the update_svg_id_by_class function
         self.update_svg_id_patcher = patch("unify_tkk_ids.update_svg_id_by_class")
         self.mock_update_svg_id = self.update_svg_id_patcher.start()
-        self.mock_update_svg_id.return_value = ("updated_svg_content", None)
+        self.mock_update_svg_id.return_value = (True, None)
 
         # Common test data
         self.svg_group_id = "test-id"
@@ -53,7 +53,7 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):  # pylint: disable=too-man
         # Mock get_svg_data function
         self.mock_get_svg_data = MagicMock()
         self.mock_get_svg_data.return_value = {
-            "content": "<svg>test content</svg>",
+            "svg_root": MagicMock(),
             "path": "/path/to/test.svg",
         }
 
@@ -90,7 +90,10 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):  # pylint: disable=too-man
 
         # Should call update_svg_id_by_class to update SVG content
         self.mock_update_svg_id.assert_called_once_with(
-            "<svg>test content</svg>", self.svg_group_id, expected_new_id, "tkk"
+            self.mock_get_svg_data.return_value,
+            self.svg_group_id,
+            expected_new_id,
+            TKK.css_class,
         )
 
     def test_process_single_svg_group_id_with_no_files(self):
@@ -184,7 +187,10 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):  # pylint: disable=too-man
 
         # Should call update_svg_id with correct new ID
         self.mock_update_svg_id.assert_called_once_with(
-            "<svg>test content</svg>", self.svg_group_id, expected_new_id, TKK.css_class
+            self.mock_get_svg_data.return_value,
+            self.svg_group_id,
+            expected_new_id,
+            TKK.css_class,
         )
 
     def test_process_single_svg_group_id_modifies_comment_in_place(self):
@@ -219,7 +225,7 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):  # pylint: disable=too-man
 
         # Mock SVG data with specific content
         svg_data = {
-            "content": '<g class="tkk" id="test-id">Content</g>',
+            "svg_root": MagicMock(),
             "path": "/full/path/complex.svg",
         }
         self.mock_get_svg_data.return_value = svg_data
@@ -237,16 +243,13 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):  # pylint: disable=too-man
 
         self.assertTrue(result)
 
-        # Should call update_svg_id with the exact SVG content
+        # Should call update_svg_id with svg_data cache entry
         self.mock_update_svg_id.assert_called_once_with(
-            '<g class="tkk" id="test-id">Content</g>',
+            svg_data,
             self.svg_group_id,
             "awg-tkk-005",
             TKK.css_class,
         )
-
-        # SVG data's content should be updated with return value from update_svg_id
-        self.assertEqual(svg_data["content"], "updated_svg_content")
 
     def test_process_single_svg_group_id_prints_progress(self):
         """Test that progress messages are printed correctly"""
@@ -289,7 +292,7 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):  # pylint: disable=too-man
 
         # Mock update_svg_id to return an error
         error_message = "Multiple tkk elements found"
-        self.mock_update_svg_id.return_value = ("unchanged_content", error_message)
+        self.mock_update_svg_id.return_value = (False, error_message)
 
         result = process_single_svg_group_id(
             "",
@@ -308,9 +311,8 @@ class TestProcessSingleSvgGroupId(unittest.TestCase):  # pylint: disable=too-man
         # JSON should NOT be updated when SVG update fails
         self.assertEqual(self.block_comment["svgGroupId"], "test-id")
 
-        # SVG content should remain unchanged
-        svg_data = self.mock_get_svg_data.return_value
-        self.assertEqual(svg_data["content"], "<svg>test content</svg>")
+        # SVG cache entry remains unchanged by the function on error
+        self.assertIn("svg_root", self.mock_get_svg_data.return_value)
 
 
 @pytest.mark.unit
@@ -325,15 +327,15 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         )
         self.find_relevant_svgs_patcher = patch("unify_tkk_ids.find_relevant_svg_files")
         self.extract_svg_ids_patcher = patch("unify_tkk_ids.extract_svg_group_ids")
-        self.find_matching_patcher = patch(
-            "unify_tkk_ids.find_matching_svg_files_by_class"
+        self.build_index_patcher = patch(
+            "unify_tkk_ids.build_id_to_file_index_by_class"
         )
         self.process_single_patcher = patch("unify_tkk_ids.process_single_svg_group_id")
 
         self.mock_extract_moldenhauer = self.extract_moldenhauer_patcher.start()
         self.mock_find_relevant_svgs = self.find_relevant_svgs_patcher.start()
         self.mock_extract_svg_ids = self.extract_svg_ids_patcher.start()
-        self.mock_find_matching = self.find_matching_patcher.start()
+        self.mock_build_index = self.build_index_patcher.start()
         self.mock_process_single = self.process_single_patcher.start()
 
         # Set up default mock return values
@@ -343,7 +345,10 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
             ["id-1", "id-2"],
             [{"svgGroupId": "id-1"}, {"svgGroupId": "id-2"}],
         )
-        self.mock_find_matching.return_value = ["test1.svg"]
+        self.mock_build_index.return_value = {
+            "id-1": ["test1.svg"],
+            "id-2": ["test1.svg"],
+        }
         self.mock_process_single.return_value = True
 
         # Test data
@@ -367,7 +372,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         self.extract_moldenhauer_patcher.stop()
         self.find_relevant_svgs_patcher.stop()
         self.extract_svg_ids_patcher.stop()
-        self.find_matching_patcher.stop()
+        self.build_index_patcher.stop()
         self.process_single_patcher.stop()
 
     def test_process_textcritics_entry_success_basic(self):
@@ -392,8 +397,12 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         # Should extract svg group IDs from entry
         self.mock_extract_svg_ids.assert_called_once_with(self.test_textcritics_entry)
 
-        # Should find matching files for each ID
-        self.assertEqual(self.mock_find_matching.call_count, 2)
+        # Should build index once for relevant SVGs
+        self.mock_build_index.assert_called_once_with(
+            ["test1.svg", "test2.svg"],
+            self.mock_get_svg_data,
+            target_class=TKK.css_class,
+        )
 
         # Should process each ID with correct counter values
         self.assertEqual(self.mock_process_single.call_count, 2)
@@ -563,22 +572,11 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
 
         self.mock_extract_svg_ids.assert_called_once_with(self.test_textcritics_entry)
 
-        # Should call find_matching_svg_files_by_class for each svgGroupId
-        expected_calls = [
-            unittest.mock.call(
-                "id-1",
-                ["test1.svg", "test2.svg"],
-                self.mock_get_svg_data,
-                TKK.css_class,
-            ),
-            unittest.mock.call(
-                "id-2",
-                ["test1.svg", "test2.svg"],
-                self.mock_get_svg_data,
-                TKK.css_class,
-            ),
-        ]
-        self.mock_find_matching.assert_has_calls(expected_calls)
+        self.mock_build_index.assert_called_once_with(
+            ["test1.svg", "test2.svg"],
+            self.mock_get_svg_data,
+            target_class=TKK.css_class,
+        )
 
     def test_process_textcritics_entry_uses_tkk_prefix(self):
         """Test that new IDs always use TKK.prefix (not configurable)"""

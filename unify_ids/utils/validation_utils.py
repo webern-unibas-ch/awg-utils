@@ -7,8 +7,6 @@ This module contains functions for validating the success of TKK ID unification
 across JSON and SVG files, ensuring all IDs have been properly updated.
 """
 
-import re
-
 from .extraction_utils import has_class_token
 
 
@@ -40,26 +38,6 @@ def validate_json_entries(data, prefix):
     return errors_found
 
 
-_G_TAG_RE = re.compile(r"<g\b[^>]*>", re.IGNORECASE | re.DOTALL)
-_ATTR_RE = re.compile(r"([:\w-]+)\s*=\s*(\"[^\"]*\"|'[^']*')", re.DOTALL)
-
-
-def _extract_attrs(tag_text):
-    """
-    Extracts attribute key-value pairs from an SVG tag string.
-
-    Args:
-        tag_text (str): The SVG tag text to parse.
-
-    Returns:
-        dict: Dictionary of attribute names (lowercased) mapped to their values (unquoted).
-    """
-    attrs = {}
-    for name, quoted in _ATTR_RE.findall(tag_text):
-        attrs[name.lower()] = quoted[1:-1]
-    return attrs
-
-
 def validate_svg_entries(svg_file_cache, prefix, target_class="tkk"):
     """
     Validate SVG entries for IDs that have not been updated with the target prefix.
@@ -75,13 +53,14 @@ def validate_svg_entries(svg_file_cache, prefix, target_class="tkk"):
     """
     errors = 0
     for svg_filename, svg_data in svg_file_cache.items():
-        content = (svg_data or {}).get("content", "")
+        svg_root = (svg_data or {}).get("svg_root")
+        if svg_root is None:
+            continue
         seen = set()
 
-        for g_tag in _G_TAG_RE.findall(content):
-            attrs = _extract_attrs(g_tag)
-            svg_id = attrs.get("id")
-            class_attr = attrs.get("class", "")
+        for elem in svg_root.iter():
+            svg_id = elem.get("id")
+            class_attr = elem.get("class", "")
 
             if not svg_id or svg_id in seen:
                 continue

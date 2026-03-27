@@ -25,12 +25,15 @@ import json
 import os
 import tempfile
 import shutil
+import xml.etree.ElementTree as ET
 from unittest.mock import patch
 from io import StringIO
 import pytest
 
 # Import the functions we want to test
 from utils.file_utils import (
+    _parse_svg_xml,
+    _serialize_svg_xml,
     _save_json_file,
     _save_svg_files,
     load_and_validate_inputs,
@@ -252,8 +255,11 @@ class TestCreateSvgLoader(unittest.TestCase):
         # Load first SVG
         svg_data = get_svg_text("test1.svg")
 
-        self.assertEqual(svg_data["content"], self.svg1_content)
+        self.assertIsNotNone(svg_data["svg_root"])
+        self.assertEqual(svg_data["svg_root"].find(".//g").get("id"), "test1")
         self.assertEqual(svg_data["path"], self.svg1_path)
+        self.assertFalse(svg_data["dirty"])
+        self.assertFalse(svg_data["has_xml_declaration"])
 
         # Verify caching
         self.assertIn("test1.svg", svg_file_cache)
@@ -286,8 +292,8 @@ class TestCreateSvgLoader(unittest.TestCase):
         svg2_data = get_svg_text("test2.svg")
 
         # Verify both are loaded correctly
-        self.assertEqual(svg1_data["content"], self.svg1_content)
-        self.assertEqual(svg2_data["content"], self.svg2_content)
+        self.assertEqual(svg1_data["svg_root"].find(".//g").get("id"), "test1")
+        self.assertEqual(svg2_data["svg_root"].find(".//g").get("id"), "test2")
 
         # Verify both are cached
         self.assertEqual(len(svg_file_cache), 2)
@@ -317,9 +323,16 @@ class TestSaveOperations(unittest.TestCase):
         original_content = '<svg><g id="old-id" class="tkk"></g></svg>'
         updated_content = '<svg><g id="new-id" class="tkk"></g></svg>'
 
+        svg_root, _ = _parse_svg_xml(updated_content)
+
         # Create loaded SVG texts structure
         loaded_svg_texts = {
-            "test.svg": {"content": updated_content, "path": self.svg_file}
+            "test.svg": {
+                "svg_root": svg_root,
+                "path": self.svg_file,
+                "has_xml_declaration": False,
+                "dirty": True,
+            }
         }
 
         # Write original content to file
@@ -333,8 +346,32 @@ class TestSaveOperations(unittest.TestCase):
         with open(self.svg_file, "r", encoding="utf-8") as f:
             saved_content = f.read()
 
-        self.assertEqual(saved_content, updated_content)
+        self.assertIn('id="new-id"', saved_content)
         self.assertNotEqual(saved_content, original_content)
+
+    def test_save_svg_files_skips_non_dirty_files(self):
+        """Test that non-dirty cached SVG files are not written."""
+        original_content = '<svg><g id="old-id" class="tkk"></g></svg>'
+        svg_root, _ = _parse_svg_xml('<svg><g id="new-id" class="tkk"></g></svg>')
+
+        loaded_svg_texts = {
+            "test.svg": {
+                "svg_root": svg_root,
+                "path": self.svg_file,
+                "has_xml_declaration": False,
+                "dirty": False,
+            }
+        }
+
+        with open(self.svg_file, "w", encoding="utf-8") as f:
+            f.write(original_content)
+
+        _save_svg_files(loaded_svg_texts)
+
+        with open(self.svg_file, "r", encoding="utf-8") as f:
+            saved_content = f.read()
+
+        self.assertEqual(saved_content, original_content)
 
     def test_save_json_file(self):
         """Test saving JSON data with proper formatting"""
@@ -374,10 +411,15 @@ class TestSaveOperations(unittest.TestCase):
         """Test the save_results function integration"""
         # Prepare test data
         test_data = {"textcritics": [{"id": "test", "commentary": {"comments": []}}]}
+        svg_root, _ = _parse_svg_xml(
+            '<svg><g id="awg-tkk-m32_Sk1-001" class="tkk"></g></svg>'
+        )
         svg_file_cache = {
             "test.svg": {
-                "content": '<svg><g id="awg-tkk-m32_Sk1-001" class="tkk"></g></svg>',
+                "svg_root": svg_root,
                 "path": self.svg_file,
+                "has_xml_declaration": False,
+                "dirty": True,
             }
         }
 
@@ -391,14 +433,93 @@ class TestSaveOperations(unittest.TestCase):
         # Verify SVG file was saved
         with open(self.svg_file, "r", encoding="utf-8") as f:
             svg_content = f.read()
-        self.assertEqual(
-            svg_content, '<svg><g id="awg-tkk-m32_Sk1-001" class="tkk"></g></svg>'
-        )
+        self.assertIn('id="awg-tkk-m32_Sk1-001"', svg_content)
+        self.assertIn('class="tkk"', svg_content)
 
         # Verify JSON file was saved
         with open(self.json_file, "r", encoding="utf-8") as f:
             json_data = json.load(f)
         self.assertEqual(json_data, test_data)
+
+
+@pytest.mark.unit
+class TestSerializeSvgXML(unittest.TestCase):
+    """Test cases for the _serialize_svg_xml helper."""
+
+    def test_serialize_svg_xml_with_xml_declaration_and_newline(self):
+        """Test that serialized SVG includes declaration and EOF newline by default."""
+        root = ET.fromstring('<svg xmlns="http://www.w3.org/2000/svg"><g/></svg>')
+
+        result = _serialize_svg_xml(root)
+
+        self.assertTrue(result.startswith('<?xml version="1.0" encoding="UTF-8"?>'))
+        self.assertTrue(result.endswith("\n"))
+
+    def test_serialize_svg_xml_without_xml_declaration(self):
+        """Test that serialized SVG omits XML declaration when not requested."""
+        root = ET.fromstring('<svg xmlns="http://www.w3.org/2000/svg"><g/></svg>')
+
+        result = _serialize_svg_xml(root, include_xml_declaration=False)
+
+        self.assertFalse(result.lstrip().startswith("<?xml"))
+        self.assertTrue(result.endswith("\n"))
+
+    def test_serialize_svg_xml_normalizes_declaration_quotes_and_encoding_case(self):
+        """Test that XML declaration uses double quotes and UTF-8 casing."""
+        root = ET.fromstring('<svg xmlns="http://www.w3.org/2000/svg"><g/></svg>')
+
+        result = _serialize_svg_xml(root)
+
+        declaration = result.split("?>", 1)[0] + "?>"
+        self.assertIn('version="1.0"', declaration)
+        self.assertIn('encoding="UTF-8"', declaration)
+        self.assertNotIn("'", declaration)
+
+    def test_serialize_svg_xml_removes_whitespace_before_self_closing_tags(self):
+        """Test that self-closing tags do not have a space before '/>'."""
+        root = ET.fromstring('<svg xmlns="http://www.w3.org/2000/svg"><g /></svg>')
+
+        result = _serialize_svg_xml(root)
+
+        self.assertNotIn(" />", result)
+
+
+@pytest.mark.unit
+class TestParseSvgXML(unittest.TestCase):
+    """Test cases for the _parse_svg_xml helper."""
+
+    def test_parse_svg_xml_valid_xml_returns_root_and_no_error(self):
+        """Test that valid SVG returns a root element and no error."""
+        svg_content = '<svg xmlns="http://www.w3.org/2000/svg"><g/></svg>'
+
+        root, error = _parse_svg_xml(svg_content)
+
+        self.assertIsNotNone(root)
+        self.assertIsNone(error)
+        self.assertTrue(root.tag.endswith("svg"))
+
+    def test_parse_svg_xml_invalid_xml_returns_error(self):
+        """Test that invalid XML returns no root and a parse error message."""
+        svg_content = "<svg><g></svg>"
+
+        root, error = _parse_svg_xml(svg_content)
+
+        self.assertIsNone(root)
+        self.assertIsNotNone(error)
+        self.assertTrue(error.startswith("XML parse error:"))
+
+    def test_parse_svg_xml_with_declaration_and_leading_whitespace(self):
+        """Test that declaration after leading whitespace is rejected."""
+        svg_content = (
+            ' \n\t<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<svg xmlns="http://www.w3.org/2000/svg"><g/></svg>'
+        )
+
+        root, error = _parse_svg_xml(svg_content)
+
+        self.assertIsNone(root)
+        self.assertIsNotNone(error)
+        self.assertTrue(error.startswith("XML parse error:"))
 
 
 if __name__ == "__main__":

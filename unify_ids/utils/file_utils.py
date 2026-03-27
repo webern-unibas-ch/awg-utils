@@ -9,6 +9,8 @@ and saving JSON and SVG files during the TKK ID unification process.
 
 import json
 import os
+import re
+import xml.etree.ElementTree as ET
 
 
 def load_and_validate_inputs(json_path, svg_folder):
@@ -67,15 +69,22 @@ def create_svg_loader(svg_folder, svg_file_cache):
         function: A function that loads and caches SVG content
     """
 
-    def get_svg_text(filename):
+    def get_svg_data(filename):
         if filename not in svg_file_cache:
             path = os.path.join(svg_folder, filename)
             with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
-            svg_file_cache[filename] = {"content": content, "path": path}
+            has_xml_declaration = bool(re.match(r"^\s*<\?xml\b", content))
+            svg_root, _ = _parse_svg_xml(content)
+            svg_file_cache[filename] = {
+                "svg_root": svg_root,
+                "path": path,
+                "has_xml_declaration": has_xml_declaration,
+                "dirty": False,
+            }
         return svg_file_cache[filename]
 
-    return get_svg_text
+    return get_svg_data
 
 
 def save_results(data, svg_file_cache, json_path):
@@ -96,18 +105,39 @@ def save_results(data, svg_file_cache, json_path):
     _save_json_file(data, json_path)
 
 
-def _save_svg_files(loaded_svg_texts):
-    """Save all currently loaded SVG files to disk.
+def _parse_svg_xml(svg_content):
+    """Parse SVG XML content into an ElementTree root.
 
     Args:
-        loaded_svg_texts (dict): Dictionary of loaded SVG data with content and paths
+        svg_content (str): The SVG content to parse
+
+    Returns:
+        tuple: (root_element_or_none, error_message_or_none)
+    """
+    try:
+        return ET.fromstring(svg_content), None
+    except ET.ParseError as e:
+        return None, f"XML parse error: {e}"
+
+
+def _save_svg_files(loaded_svg_texts):
+    """Save all dirty SVG files to disk by serializing their parsed trees.
+
+    Args:
+        loaded_svg_texts (dict): Dictionary of loaded SVG data with svg_root and paths
 
     Returns:
         None: Saves files directly to disk
     """
     for _, sdata in loaded_svg_texts.items():
+        if not sdata.get("dirty", False):
+            continue
+        content = _serialize_svg_xml(
+            sdata["svg_root"],
+            include_xml_declaration=sdata.get("has_xml_declaration", True),
+        )
         with open(sdata["path"], "w", encoding="utf-8") as f:
-            f.write(sdata["content"])
+            f.write(content)
 
 
 def _save_json_file(data, json_path):
@@ -123,3 +153,37 @@ def _save_json_file(data, json_path):
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
         f.write("\n")
+
+
+def _serialize_svg_xml(parsed_svg_root, include_xml_declaration=True):
+    """Serialize SVG ElementTree root with stable declaration and EOF newline.
+
+    Args:
+        parsed_svg_root (Element): The root element of the parsed SVG.
+        include_xml_declaration (bool): Whether to include XML declaration.
+
+    Returns:
+        str: Serialized SVG content.
+    """
+    ET.register_namespace("", "http://www.w3.org/2000/svg")
+    updated_content = ET.tostring(
+        parsed_svg_root, encoding="unicode", xml_declaration=include_xml_declaration
+    )
+
+    # Normalize XML declaration:
+    if updated_content.startswith("<?xml"):
+        decl_end = updated_content.find("?>") + 2
+        xml_decl = updated_content[:decl_end]
+        rest = updated_content[decl_end:]
+        xml_decl = xml_decl.replace("'", '"')
+        xml_decl = xml_decl.replace("utf-8", "UTF-8")
+        updated_content = xml_decl + rest
+
+    # Remove whitespace before self-closing tags
+    updated_content = re.sub(r"\s+/>", "/>", updated_content)
+
+    # Add newline at the end if not present
+    if not updated_content.endswith("\n"):
+        updated_content += "\n"
+
+    return updated_content

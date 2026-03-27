@@ -29,7 +29,7 @@ from utils.file_utils import load_and_validate_inputs, create_svg_loader, save_r
 from utils.logger_utils import Logger
 from utils.models import Settings
 from utils.svg_utils import (
-    find_matching_svg_files_by_class,
+    build_id_to_file_index_by_class,
     find_relevant_svg_files,
     update_svg_id_by_class,
 )
@@ -39,7 +39,7 @@ def process_single_link_box(
     textcritics_entry_id,
     svg_group_id,
     parent_link_boxes,
-    relevant_svgs,
+    matching_files,
     get_svg_data,
     logger,
 ):
@@ -52,18 +52,13 @@ def process_single_link_box(
         textcritics_entry_id (str): The textcritics entry ID for naming
         svg_group_id (str): The original ID to replace
         parent_link_boxes (list): List of all linkBoxes in the entry
-        relevant_svgs (list): List of relevant SVG files for this entry
+        matching_files (list): SVG files that contain svg_group_id with link-box class
         get_svg_data (function): Function to load SVG data
         logger (Logger): Logger instance for reporting
 
     Returns:
         bool: True if updated successfully, False if skipped
     """
-
-    # Find all matching SVG files for this ID
-    matching_files = find_matching_svg_files_by_class(
-        svg_group_id, relevant_svgs, get_svg_data, LINKBOX.css_class
-    )
 
     if len(matching_files) == 0:
         logger.log(
@@ -148,8 +143,8 @@ def process_single_link_box(
 
         # Update SVG file
         svg_data = get_svg_data(svg_filename)
-        svg_data["content"], error = update_svg_id_by_class(
-            svg_data["content"], svg_group_id, new_group_id, LINKBOX.css_class
+        _, error = update_svg_id_by_class(
+            svg_data, svg_group_id, new_group_id, LINKBOX.css_class
         )
         if error:
             if logger.verbose:
@@ -195,9 +190,9 @@ def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, lo
     print(f" Found {len(link_boxes)} linkBox(es)")
 
     # Get relevant SVG files for this entry
-    current_main_number = extract_moldenhauer_number(textcritics_entry_id)
+    current_mnr_number = extract_moldenhauer_number(textcritics_entry_id)
     relevant_svgs = find_relevant_svg_files(
-        textcritics_entry_id, all_svg_files, current_main_number
+        textcritics_entry_id, all_svg_files, current_mnr_number
     )
 
     if "SkRT" in textcritics_entry_id:
@@ -206,6 +201,12 @@ def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, lo
         print(f" Standard anchor: {textcritics_entry_id}")
 
     print(f" Relevant SVGs ({len(relevant_svgs)}): {relevant_svgs}")
+
+    id_to_file_index = build_id_to_file_index_by_class(
+        relevant_svgs,
+        get_svg_data,
+        target_class=LINKBOX.css_class,
+    )
 
     # Iterate over a copy to avoid modifying the list during iteration
     for link_box in list(link_boxes):
@@ -219,11 +220,13 @@ def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, lo
             )
             continue
 
+        matching_files = id_to_file_index.get(svg_group_id, [])
+
         process_single_link_box(
             textcritics_entry_id,
             svg_group_id,
             link_boxes,
-            relevant_svgs,
+            matching_files,
             get_svg_data,
             logger=logger,
         )

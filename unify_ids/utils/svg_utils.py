@@ -7,44 +7,45 @@ Functions for finding, matching, and updating SVG files and their content.
 """
 
 import re
-import xml.etree.ElementTree as ET
 
 from .extraction_utils import extract_moldenhauer_number
 
 
-def find_matching_svg_files_by_class(
-    svg_group_id, relevant_svg_files, get_svg_data, target_class="tkk"
-):
-    """
-    Find all SVG files that contain a specific svgGroupId with a required class.
+def build_id_to_file_index_by_class(relevant_svg_files, get_svg_data, target_class):
+    """Build map: svg group ID -> list of SVG filenames for elements matching target class.
+
+    Each file is scanned once, and duplicate IDs within the same file are indexed once.
 
     Args:
-        svg_group_id (str): The ID to search for.
-        relevant_svg_files (list): List of relevant SVG filenames to search in.
+        relevant_svg_files (list): List of SVG filenames to scan.
         get_svg_data (function): Function to load SVG data.
-        target_class (str): The target class name for SVG elements to match
-                            (default is "tkk").
+        target_class (str): The class token that indexed elements must contain.
 
     Returns:
-        list: List of SVG filenames that contain the ID with the target class.
+        dict: Mapping of svg ID to list of filenames containing that ID with target class.
     """
-    matching_files = []
+    id_to_files = {}
 
     for svg_filename in relevant_svg_files:
         svg_data = get_svg_data(svg_filename)
-        if not svg_data:
+        svg_root = svg_data.get("svg_root") if svg_data else None
+        if svg_root is None:
             continue
-        svg_content = svg_data.get("content", "")
-        parsed_svg_content, error = _parse_svg_xml(svg_content)
-        if error:
-            continue
-        matches = _find_elements_by_id_and_class(
-            parsed_svg_content, svg_group_id, target_class
-        )
-        if matches:
-            matching_files.append(svg_filename)
 
-    return matching_files
+        seen_ids_in_file = set()
+        for elem in svg_root.iter():
+            svg_id = elem.get("id")
+            class_attr = elem.get("class", "")
+
+            if (
+                svg_id
+                and target_class in class_attr.split()
+                and svg_id not in seen_ids_in_file
+            ):
+                id_to_files.setdefault(svg_id, []).append(svg_filename)
+                seen_ids_in_file.add(svg_id)
+
+    return id_to_files
 
 
 def find_relevant_svg_files(new_id, all_svg_files, current_mnr_number):
@@ -101,66 +102,51 @@ def find_relevant_svg_files(new_id, all_svg_files, current_mnr_number):
     return candidate_svg_files
 
 
-def update_svg_id_by_class(svg_content, old_id, new_id, target_class):
-    """Update an ID in SVG content for elements with a specific class.
+def update_svg_id_by_class(svg_data, old_id, new_id, target_class):
+    """Update an ID in a cached SVG root for elements with a specific class.
 
-    Similar to update_svg_id but allows specifying which class to match.
-    Supports both single and double quotes, and various attribute orders.
+    Mutates the element in-place and marks the cache entry as dirty so it
+    will be serialized and written to disk during the save phase.
 
     Args:
-        svg_content (str): The SVG content to process
+        svg_data (dict): The SVG cache entry with an 'svg_root' key (Element)
         old_id (str): The old ID value to replace
         new_id (str): The new ID value to use as replacement
         target_class (str): The CSS class to match (e.g., "link-box", "tkk")
 
     Returns:
-        tuple: (updated_content, error_message)
-               error_message is None if successful, string if error occurred
+        tuple: (changed, error_message)
+               changed is True if the svg_root was modified, False otherwise.
+               error_message is None if no error occurred, string otherwise.
     """
-    # Check if the SVG content has an XML declaration
-    has_xml_declaration = bool(re.match(r"^\s*<\?xml\b", svg_content))
+    svg_root = svg_data.get("svg_root") if svg_data else None
+    if svg_root is None:
+        return False, "No parsed svg_root available"
 
-    # Register the SVG namespace before serialization
-    ET.register_namespace("", "http://www.w3.org/2000/svg")
-
-    # Parse SVG content
-    parsed_svg_content, parse_error = _parse_svg_xml(svg_content)
-    if parse_error:
-        return svg_content, parse_error
-
-    # Find all elements with the matching id and class
-    matches = _find_elements_by_id_and_class(parsed_svg_content, old_id, target_class)
+    matches = _find_elements_by_id_and_class(svg_root, old_id, target_class)
 
     if not matches:
-        return (
-            svg_content,
-            f"'{old_id}' with class containing '{target_class}' not found",
-        )
+        return False, f"'{old_id}' with class containing '{target_class}' not found"
     if len(matches) > 1:
         return (
-            svg_content,
-            "Multiple class="
-            f"'{target_class}' elements found with ID '{old_id}' "
+            False,
+            f"Multiple class='{target_class}' elements found with ID '{old_id}' "
             f"({len(matches)} occurrences)",
         )
 
-    # Update the id
+    if matches[0].get("id") == new_id:
+        return False, None
+
     matches[0].set("id", new_id)
-
-    # Serialize back to SVG content with stable formatting
-    updated_content = _serialize_svg_xml(
-        parsed_svg_content,
-        include_xml_declaration=has_xml_declaration,
-    )
-
-    return updated_content, None
+    svg_data["dirty"] = True
+    return True, None
 
 
-def _find_elements_by_id_and_class(parsed_svg_content, element_id, target_class):
+def _find_elements_by_id_and_class(parsed_svg_root, element_id, target_class):
     """Find all elements in parsed SVG with a specific ID and class.
 
     Args:
-        parsed_svg_content (Element): The root element of parsed SVG
+        parsed_svg_root (Element): The root element of parsed SVG
         element_id (str): The ID attribute value to match
         target_class (str): The CSS class token to match
 
@@ -168,58 +154,10 @@ def _find_elements_by_id_and_class(parsed_svg_content, element_id, target_class)
         list: List of matching Element objects, or empty list if no matches
     """
     matches = []
-    for elem in parsed_svg_content.iter():
+    for elem in parsed_svg_root.iter():
         if elem.get("id") == element_id:
             class_attr = elem.get("class", "")
             if target_class in class_attr.split():
                 matches.append(elem)
 
     return matches
-
-
-def _parse_svg_xml(svg_content):
-    """Parse SVG XML content into an ElementTree root.
-
-    Args:
-        svg_content (str): The SVG content to parse
-
-    Returns:
-        tuple: (root_element_or_none, error_message_or_none)
-    """
-    try:
-        return ET.fromstring(svg_content), None
-    except ET.ParseError as e:
-        return None, f"XML parse error: {e}"
-
-
-def _serialize_svg_xml(parsed_svg_content, include_xml_declaration=True):
-    """Serialize SVG ElementTree root with stable declaration and EOF newline.
-
-    Args:
-        parsed_svg_content (Element): The root element of the parsed SVG.
-        include_xml_declaration (bool): Whether to include XML declaration.
-
-    Returns:
-        str: Serialized SVG content.
-    """
-    updated_content = ET.tostring(
-        parsed_svg_content, encoding="unicode", xml_declaration=include_xml_declaration
-    )
-
-    # Normalize XML declaration:
-    if updated_content.startswith("<?xml"):
-        decl_end = updated_content.find("?>") + 2
-        xml_decl = updated_content[:decl_end]
-        rest = updated_content[decl_end:]
-        xml_decl = xml_decl.replace("'", '"')
-        xml_decl = xml_decl.replace("utf-8", "UTF-8")
-        updated_content = xml_decl + rest
-
-    # Remove whitespace before self-closing tags
-    updated_content = re.sub(r"\s+/>", "/>", updated_content)
-
-    # Add newline at the end if not present
-    if not updated_content.endswith("\n"):
-        updated_content += "\n"
-
-    return updated_content

@@ -5,7 +5,6 @@ Unify TKK Group IDs - Pure Python Script
 Made by Eli (lili041 --Github) with Google Gemini
 """
 
-import re
 import sys
 
 from utils.constants import TKK
@@ -14,61 +13,11 @@ from utils.file_utils import load_and_validate_inputs, create_svg_loader, save_r
 from utils.logger_utils import Logger
 from utils.models import Settings
 from utils.svg_utils import (
-    find_matching_svg_files_by_class,
+    build_id_to_file_index_by_class,
     find_relevant_svg_files,
     update_svg_id_by_class,
 )
 from utils.validation_utils import display_validation_report
-
-# Global regex patterns and constants
-G_TAG_RE = re.compile(r"<g\b[^>]*>", re.IGNORECASE | re.DOTALL)
-ATTR_RE = re.compile(r"([:\w-]+)\s*=\s*(\"[^\"]*\"|'[^']*')", re.DOTALL)
-
-
-def _extract_attrs(tag_text):
-    attrs = {}
-    for name, value in ATTR_RE.findall(tag_text):
-        attrs[name.lower()] = value[1:-1]
-    return attrs
-
-
-def _class_contains(class_attr, needle=TKK.css_class):
-    return (needle or "").strip().lower() in (class_attr or "").lower()
-
-
-def _build_tkk_id_index(relevant_svgs, get_svg_data):
-    """Build map: svgGroupId -> [svg filenames], scanning each SVG once."""
-    id_to_files = {}
-
-    for svg_filename in relevant_svgs:
-        svg_data = get_svg_data(svg_filename)
-        content = svg_data.get("content", "")
-        seen_ids_in_file = set()
-
-        for g_tag in G_TAG_RE.findall(content):
-            attrs = _extract_attrs(g_tag)
-            svg_id = attrs.get("id")
-            class_attr = attrs.get("class", "")
-
-            # class only needs to contain "tkk"
-            if (
-                svg_id
-                and _class_contains(class_attr, TKK.css_class)
-                and svg_id not in seen_ids_in_file
-            ):
-                id_to_files.setdefault(svg_id, []).append(svg_filename)
-                seen_ids_in_file.add(svg_id)
-
-    return id_to_files
-
-
-def _get_cached_matching_files(svg_group_id, relevant_svgs, get_svg_data, cache):
-    """Fallback cache using existing matching logic."""
-    if svg_group_id not in cache:
-        cache[svg_group_id] = find_matching_svg_files_by_class(
-            svg_group_id, relevant_svgs, get_svg_data, TKK.css_class
-        )
-    return cache[svg_group_id]
 
 
 def process_single_svg_group_id(
@@ -106,8 +55,8 @@ def process_single_svg_group_id(
     svg_filename = matching_files[0]
     svg_data = get_svg_data(svg_filename)
 
-    updated_content, update_error = update_svg_id_by_class(
-        svg_data["content"], svg_group_id, new_id, TKK.css_class
+    changed, update_error = update_svg_id_by_class(
+        svg_data, svg_group_id, new_id, TKK.css_class
     )
 
     if update_error is not None:
@@ -120,7 +69,7 @@ def process_single_svg_group_id(
         )
         return False
 
-    if updated_content == svg_data["content"]:
+    if not changed:
         logger.bump_stats("svg_unchanged")
         logger.log(
             "info",
@@ -141,9 +90,7 @@ def process_single_svg_group_id(
     if settings.dry_run:
         return True
 
-    # Keep old behavior for direct unit tests
     block_comment["svgGroupId"] = new_id
-    svg_data["content"] = updated_content
     return True
 
 
@@ -169,9 +116,9 @@ def process_textcritics_entry(
             print(" No svgGroupIds to process")
         return
 
-    current_main_number = extract_moldenhauer_number(textcritics_entry_id)
+    current_mnr_number = extract_moldenhauer_number(textcritics_entry_id)
     relevant_svgs = find_relevant_svg_files(
-        textcritics_entry_id, all_svg_files, current_main_number
+        textcritics_entry_id, all_svg_files, current_mnr_number
     )
 
     if settings.verbose:
@@ -181,13 +128,11 @@ def process_textcritics_entry(
             print(f" Standard anchor: {textcritics_entry_id}")
         print(f" Relevant SVGs ({len(relevant_svgs)}): {relevant_svgs}")
 
-    tkk_id_index = {}
-    fallback_cache = {}
-    try:
-        tkk_id_index = _build_tkk_id_index(relevant_svgs, get_svg_data)
-    except (TypeError, AttributeError, KeyError):
-        # Keep tests/mocked flows compatible
-        tkk_id_index = {}
+    id_to_file_index = build_id_to_file_index_by_class(
+        relevant_svgs,
+        get_svg_data,
+        target_class=TKK.css_class,
+    )
 
     counter = 1
     entry_id_formatted = textcritics_entry_id.lower()
@@ -195,11 +140,7 @@ def process_textcritics_entry(
     for svg_group_id, block_comment in zip(svg_group_ids, block_comments):
         logger.bump_stats("ids_seen")
 
-        matching_files = tkk_id_index.get(svg_group_id)
-        if matching_files is None:
-            matching_files = _get_cached_matching_files(
-                svg_group_id, relevant_svgs, get_svg_data, fallback_cache
-            )
+        matching_files = id_to_file_index.get(svg_group_id, [])
 
         new_id = f"{TKK.prefix}{entry_id_formatted}-{counter:03d}"
 

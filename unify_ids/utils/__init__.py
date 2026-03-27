@@ -18,7 +18,7 @@ from .file_utils import (
     load_and_validate_inputs, create_svg_loader, save_results
     )
 from .svg_utils import (
-    find_matching_svg_files_by_class, find_relevant_svg_files, update_svg_id_by_class
+    build_id_to_file_index_by_class, find_relevant_svg_files, update_svg_id_by_class
 )
 from .validation_utils import (
     display_validation_report, validate_json_entries, validate_svg_entries
@@ -34,7 +34,7 @@ __all__ = [
     'create_svg_loader',
     'save_results',
     # svg_utils
-    'find_matching_svg_files_by_class',
+    'build_id_to_file_index_by_class',
     'find_relevant_svg_files',
     'update_svg_id_by_class',
     # validation_utils

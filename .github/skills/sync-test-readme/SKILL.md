@@ -65,6 +65,8 @@ After running this skill, `tests/TEST_README.md` must:
 - Keep wording factual and implementation-aligned.
 - Prefer stable descriptions over brittle details.
 - Avoid hardcoded numeric claims (`50+ tests`, exact coverage percentages) unless freshly confirmed.
+- For `## Example Test Run Output` blocks, prefer illustrative placeholder output (random sample counts) and keep it clearly example-only.
+- Do not replace illustrative example output with live run numbers unless the user explicitly asks for real numbers.
 - Preserve existing README style and formatting.
 - Do **not** document private functions (names starting with `_`) in test section bullet lists; only document public API functions.
 - When documenting what a test class covers beyond function names (e.g. edge cases), verify those scenarios actually exist in the test file before writing them down. Remove or replace any inherited descriptions that no longer match the actual tests.

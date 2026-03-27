@@ -39,7 +39,7 @@ class TestBuildIdToFileIndexByClass(unittest.TestCase):
 
         index = build_id_to_file_index_by_class(
             ["a.svg", "b.svg"],
-            lambda filename: data.get(filename),
+            data.get,
             target_class=TKK.css_class,
         )
 
@@ -55,7 +55,7 @@ class TestBuildIdToFileIndexByClass(unittest.TestCase):
 
         index = build_id_to_file_index_by_class(
             ["missing.svg", "valid.svg"],
-            lambda filename: data.get(filename),
+            data.get,
             target_class=TKK.css_class,
         )
 
@@ -70,7 +70,7 @@ class TestBuildIdToFileIndexByClass(unittest.TestCase):
 
         index = build_id_to_file_index_by_class(
             ["dup.svg"],
-            lambda filename: data.get(filename),
+            data.get,
             target_class=TKK.css_class,
         )
 

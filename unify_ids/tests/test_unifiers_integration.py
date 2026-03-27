@@ -78,6 +78,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
     """Integration tests using minimal scenario fixtures in tests/data|img/scenarios."""
 
     def test_scenario_single_success_updates_json_and_svg(self):
+        """Test that a single textcritic's svgGroupId is updated in both JSON and SVG."""
         json_fixture = "tkk_single_success.json"
         svg_fixture = "M200_Textfassung1-1von1-tkk-single.svg"
 
@@ -101,6 +102,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertNotIn('id="old-id-1"', svg_content)
 
     def test_scenario_missing_svg_id_keeps_json_unchanged(self):
+        """Test that unmatched svgGroupId leaves JSON unchanged."""
         json_fixture = "tkk_missing_svg_id.json"
         svg_fixture = "M201_Sk1-1von1-tkk-no-match.svg"
 
@@ -119,6 +121,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertEqual(unchanged_id, expected_unchanged_id)
 
     def test_scenario_single_success_dry_run_keeps_files_unchanged(self):
+        """Test that dry-run mode does not modify JSON or SVG files."""
         json_fixture = "tkk_single_success.json"
         svg_fixture = "M200_Textfassung1-1von1-tkk-single.svg"
 
@@ -145,6 +148,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertEqual(svg_before_data, svg_after)
 
     def test_scenario_single_success_second_run_is_noop(self):
+        """Test that a second run after success is a no-op."""
         json_fixture = "tkk_single_success.json"
         svg_fixture = "M200_Textfassung1-1von1-tkk-single.svg"
 
@@ -171,6 +175,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertEqual(svg_after_first, svg_after_second)
 
     def test_scenario_no_svg_group_ids_prints_skip_message(self):
+        """Test that no svgGroupId values trigger skip message and no changes."""
         json_fixture = "tkk_no_svg_group_ids.json"
         svg_fixture = "M201_Sk1-1von1-tkk-no-match.svg"
 
@@ -187,10 +192,12 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertIn("No changes detected; skipping writes.", captured.getvalue())
 
     def test_unify_tkk_ids_missing_json_path_raises(self):
+        """Test that missing JSON path raises FileNotFoundError."""
         with self.assertRaises(FileNotFoundError):
             unify_tkk_ids("/nonexistent/path.json", self.svg_dir, Settings())
 
     def test_unify_tkk_ids_missing_svg_dir_raises(self):
+        """Test that missing SVG directory raises FileNotFoundError."""
         json_fixture = "tkk_single_success.json"
         svg_fixture = "M200_Textfassung1-1von1-tkk-single.svg"
 
@@ -203,6 +210,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
             unify_tkk_ids(self.json_path, "/nonexistent/dir", Settings())
 
     def test_scenario_todo_and_mixed_skips_todo_and_updates_valid_id(self):
+        """Test that mixed TODO and valid IDs update only valid entries."""
         json_fixture = "tkk_todo_and_mixed.json"
         svg_fixture = "M220_Sk1-1von1-tkk-todo-mixed.svg"
         expected_id = "awg-tkk-m220_sk1-001"
@@ -224,6 +232,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertNotIn('id="old-id-2"', svg_content)
 
     def test_scenario_skrt_updates_only_rowtable_svg(self):
+        """Test that SkRT updates only the Reihentabelle SVG, not normal Sk SVG."""
         json_fixture = "tkk_skrt_rowtable_only.json"
         rowtable_svg_fixture = "M230_Reihentabelle-1von1-tkk-skrt-rowtable.svg"
         control_svg_fixture = "M230_Sk1-1von1-tkk-skrt-control.svg"
@@ -254,6 +263,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertEqual(normal_svg, normal_svg_before)
 
     def test_scenario_multi_ids_single_file_success_updates_all_ids(self):
+        """Test that multiple IDs in one SVG are all updated in JSON and SVG."""
         json_fixture = "tkk_multi_ids_single_file_success.json"
         svg_fixture = "M240_Sk1-1von1-tkk-multi-ids.svg"
         expected_ids = [
@@ -282,6 +292,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertNotIn('id="old-id-c"', svg_content)
 
     def test_scenario_multi_file_success_updates_json_and_each_file(self):
+        """Test that multiple IDs across files update JSON and each matching SVG."""
         json_fixture = "tkk_multi_file_success.json"
         svg_fixture_a = "M241_Sk1-1von2-tkk-multi-file-a.svg"
         svg_fixture_b = "M241_Sk1-2von2-tkk-multi-file-b.svg"
@@ -312,58 +323,53 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self.assertNotIn('id="old-id-mf-2"', svg_two)
 
     def test_scenario_mixed_entry_types_success_updates_sk_and_skrt(self):
+        """Test that mixed Sk and SkRT entries update the correct IDs and SVGs."""
         json_fixture = "tkk_mixed_entry_types_success.json"
-        primary_sk_svg_fixture = "M242_Sk1-1von1-tkk-mixed-sk-primary.svg"
-        secondary_sk_svg_fixture = "M243_Sk2-1von1-tkk-mixed-sk.svg"
-        skrt_rowtable_svg_fixture = (
-            "M244_Reihentabelle-1von1-tkk-mixed-skrt-rowtable.svg"
-        )
-        skrt_control_svg_fixture = "M244_Sk1-1von1-tkk-mixed-skrt-control.svg"
-        expected_primary_sk_id = "awg-tkk-m242_sk1-001"
-        expected_secondary_sk_id = "awg-tkk-m243_sk2-001"
-        expected_skrt_id = "awg-tkk-m244_skrt-001"
+        svg_fixtures = [
+            "M242_Sk1-1von1-tkk-mixed-sk-primary.svg",
+            "M243_Sk2-1von1-tkk-mixed-sk.svg",
+            "M244_Reihentabelle-1von1-tkk-mixed-skrt-rowtable.svg",
+            "M244_Sk1-1von1-tkk-mixed-skrt-control.svg",
+        ]
+        expected_ids = [
+            "awg-tkk-m242_sk1-001",
+            "awg-tkk-m243_sk2-001",
+            "awg-tkk-m244_skrt-001",
+        ]
 
         self._prepare_scenario(
             json_fixture,
-            primary_sk_svg_fixture,
+            svg_fixtures[0],
         )
-        self._copy_svg_fixture(secondary_sk_svg_fixture)
-        self._copy_svg_fixture(skrt_rowtable_svg_fixture)
-        self._copy_svg_fixture(skrt_control_svg_fixture)
+        self._copy_svg_fixture(svg_fixtures[1])
+        self._copy_svg_fixture(svg_fixtures[2])
+        self._copy_svg_fixture(svg_fixtures[3])
 
         self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
 
         json_data = self._read_json()
 
-        primary_block_comments = self._block_comments(json_data, textcritic_index=0)
-        secondary_block_comments = self._block_comments(json_data, textcritic_index=1)
-        skrt_block_comments = self._block_comments(json_data, textcritic_index=2)
-
         self.assertEqual(
-            primary_block_comments[0]["svgGroupId"],
-            expected_primary_sk_id,
+            self._block_comments(json_data, textcritic_index=0)[0]["svgGroupId"],
+            expected_ids[0],
         )
         self.assertEqual(
-            secondary_block_comments[0]["svgGroupId"],
-            expected_secondary_sk_id,
+            self._block_comments(json_data, textcritic_index=1)[0]["svgGroupId"],
+            expected_ids[1],
         )
         self.assertEqual(
-            skrt_block_comments[0]["svgGroupId"],
-            expected_skrt_id,
+            self._block_comments(json_data, textcritic_index=2)[0]["svgGroupId"],
+            expected_ids[2],
         )
 
-        primary_sk_svg = self._read_svg(primary_sk_svg_fixture)
-        sk_svg = self._read_svg(secondary_sk_svg_fixture)
-        skrt_svg = self._read_svg(skrt_rowtable_svg_fixture)
-        skrt_normal_svg = self._read_svg(skrt_control_svg_fixture)
-
-        self.assertIn(f'id="{expected_primary_sk_id}"', primary_sk_svg)
-        self.assertIn(f'id="{expected_secondary_sk_id}"', sk_svg)
-        self.assertIn(f'id="{expected_skrt_id}"', skrt_svg)
-        self.assertIn('id="old-id-mix-skrt-normal"', skrt_normal_svg)
-        self.assertNotIn(f'id="{expected_skrt_id}"', skrt_normal_svg)
+        self.assertIn(f'id="{expected_ids[0]}"', self._read_svg(svg_fixtures[0]))
+        self.assertIn(f'id="{expected_ids[1]}"', self._read_svg(svg_fixtures[1]))
+        self.assertIn(f'id="{expected_ids[2]}"', self._read_svg(svg_fixtures[2]))
+        self.assertIn('id="old-id-mix-skrt-normal"', self._read_svg(svg_fixtures[3]))
+        self.assertNotIn(f'id="{expected_ids[2]}"', self._read_svg(svg_fixtures[3]))
 
     def test_scenario_mx_high_number_success_updates_json_and_svg(self):
+        """Test that high Moldenhauer numbers (for example Mx430) format IDs correctly."""
         json_fixture = "tkk_mx_high_number_success.json"
         svg_fixture = "Mx430_Sk1-1von1-tkk-mx-high-number.svg"
         expected_id = "awg-tkk-mx430_sk1-001"
@@ -388,6 +394,7 @@ class TestScenarioFixturesLinkBoxIntegration(ScenarioFixtureBase):
     """Integration tests using minimal scenario fixtures in tests/data|img/scenarios."""
 
     def test_scenario_single_success_updates_json_and_svg(self):
+        """Test that single linkBox svgGroupId is updated in both JSON and SVG."""
         json_fixture = "linkbox_single_success.json"
         svg_fixture_name = "M300_Sk1-1von1-linkbox-single.svg"
 
@@ -412,6 +419,7 @@ class TestScenarioFixturesLinkBoxIntegration(ScenarioFixtureBase):
         self.assertNotIn('id="lb-old-1"', svg_content)
 
     def test_scenario_multi_match_expands_json_and_updates_each_svg(self):
+        """Test that multi-match linkBoxes expand JSON and update each matching SVG."""
         json_fixture = "linkbox_multi_match_expand.json"
         svg_1 = "M310_Sk1-1von2-linkbox-multi-a.svg"
         svg_2 = "M310_Sk1-2von2-linkbox-multi-b.svg"
@@ -440,6 +448,7 @@ class TestScenarioFixturesLinkBoxIntegration(ScenarioFixtureBase):
         self.assertNotIn('id="lb-dup-1"', svg_2_content)
 
     def test_scenario_missing_sheetid_keeps_json_and_svg_unchanged(self):
+        """Test that missing linkTo.sheetId keeps JSON and SVG unchanged."""
         json_fixture = "linkbox_missing_sheetid.json"
         svg_fixture_name = "M320_Sk1-1von1-linkbox-missing-sheetid.svg"
 
@@ -462,6 +471,7 @@ class TestScenarioFixturesCombinedIntegration(ScenarioFixtureBase):
     """Integration tests that run both unifiers against one shared scenario."""
 
     def test_scenario_combined_tkk_and_linkbox_success(self):
+        """Test that combined scenario updates both TKK and link-box IDs correctly."""
         json_fixture = "combined_tkk_linkbox_success.json"
         svg_fixture = "M245_Sk1-1von1-combined-tkk-linkbox.svg"
         expected_tkk_id = "awg-tkk-m245_sk1-001"

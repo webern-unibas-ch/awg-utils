@@ -11,12 +11,7 @@ Tests for TKK Group ID unification functionality including:
 """
 
 import unittest
-import json
-import os
-import tempfile
-import shutil
 from unittest.mock import patch, MagicMock
-from io import StringIO
 import pytest
 
 import unify_tkk_ids as unify_tkk_ids_module
@@ -24,13 +19,11 @@ from unify_tkk_ids import (
     main,
     process_textcritics_entry,
     process_single_svg_group_id,
-    unify_tkk_ids,
 )
 from utils.constants import TKK
 from utils.logger_utils import Logger
 from utils.models import Settings
 from tests.test_fixtures import (
-    JSON_DATA_INTEGRATION,
     GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY,
 )
 
@@ -737,174 +730,6 @@ class TestIdGeneration(unittest.TestCase):
                 entry_id_formatted = entry_id.lower()
                 new_id = f"{prefix}{entry_id_formatted}-{counter:03d}"
                 self.assertEqual(new_id, expected)
-
-
-@pytest.mark.integration
-class TestUnifyTkkIds(unittest.TestCase):
-    """Integration tests for the unify_tkk_ids function"""
-
-    def setUp(self):
-        """Create temporary test environment"""
-        self.test_dir = tempfile.mkdtemp()
-        self.json_path = os.path.join(self.test_dir, "textcritics.json")
-        self.svg_dir = os.path.join(self.test_dir, "svgs")
-        os.makedirs(self.svg_dir)
-
-        # Create test JSON
-        self.test_json = {
-            "textcritics": [
-                {
-                    "id": "M143",
-                    "commentary": {
-                        "comments": [{"blockComments": [{"svgGroupId": "old-id-1"}]}]
-                    },
-                }
-            ]
-        }
-
-        with open(self.json_path, "w", encoding="utf-8") as f:
-            json.dump(self.test_json, f)
-
-        # Create test SVG
-        self.svg_path = os.path.join(self.svg_dir, "M143_test.svg")
-        with open(self.svg_path, "w", encoding="utf-8") as f:
-            f.write('<g class="tkk" id="old-id-1">content</g>')
-
-        self._stdout = StringIO()
-        self.stdout_patcher = patch("sys.stdout", self._stdout)
-        self.stdout_patcher.start()
-
-    def tearDown(self):
-        """Clean up test environment"""
-        self.stdout_patcher.stop()
-        shutil.rmtree(self.test_dir)
-
-    def test_unify_tkk_ids_success(self):
-        """Test successful processing of TKK IDs returns True"""
-        success = unify_tkk_ids(self.json_path, self.svg_dir, Settings())
-
-        self.assertTrue(success)
-
-    def test_unify_tkk_ids_missing_json(self):
-        """Test error handling for missing JSON file"""
-        with self.assertRaises(FileNotFoundError):
-            unify_tkk_ids("/nonexistent/path.json", self.svg_dir, Settings())
-
-    def test_unify_tkk_ids_missing_svg_dir(self):
-        """Test error handling for missing SVG directory"""
-        with self.assertRaises(FileNotFoundError):
-            unify_tkk_ids(self.json_path, "/nonexistent/dir", Settings())
-
-    def test_unify_tkk_ids_dry_run_does_not_persist_changes(self):
-        """Dry-run should not persist file changes."""
-        with open(self.json_path, "r", encoding="utf-8") as f:
-            json_before = f.read()
-        with open(self.svg_path, "r", encoding="utf-8") as f:
-            svg_before = f.read()
-
-        success = unify_tkk_ids(self.json_path, self.svg_dir, Settings(dry_run=True))
-        self.assertTrue(success)
-
-        with open(self.json_path, "r", encoding="utf-8") as f:
-            json_after = f.read()
-        with open(self.svg_path, "r", encoding="utf-8") as f:
-            svg_after = f.read()
-
-        self.assertEqual(json_before, json_after)
-        self.assertEqual(svg_before, svg_after)
-
-    def test_unify_tkk_ids_no_changes_prints_skip_message(self):
-        """When verbose and no IDs need changing, prints 'No changes detected' message."""
-        # An entry with no svgGroupIds → ids_changed stays 0 → message is printed
-        no_ids_json = {"textcritics": [{"id": "M999", "commentary": {}}]}
-        no_ids_path = os.path.join(self.test_dir, "no_ids.json")
-        with open(no_ids_path, "w", encoding="utf-8") as f:
-            json.dump(no_ids_json, f)
-
-        unify_tkk_ids(no_ids_path, self.svg_dir, Settings(verbose=True))
-
-        self.assertIn("No changes detected; skipping writes.", self._stdout.getvalue())
-
-    def test_unify_tkk_ids_second_run_is_noop(self):
-        """Second run should be idempotent."""
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
-
-        with open(self.json_path, "r", encoding="utf-8") as f:
-            json_after_first = f.read()
-        with open(self.svg_path, "r", encoding="utf-8") as f:
-            svg_after_first = f.read()
-
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
-
-        with open(self.json_path, "r", encoding="utf-8") as f:
-            json_after_second = f.read()
-        with open(self.svg_path, "r", encoding="utf-8") as f:
-            svg_after_second = f.read()
-
-        self.assertEqual(json_after_first, json_after_second)
-        self.assertEqual(svg_after_first, svg_after_second)
-
-
-@pytest.mark.integration
-class TestIntegration(unittest.TestCase):
-    """Integration tests with temporary files"""
-
-    def setUp(self):
-        """Create temporary directory and test files"""
-        self.test_dir = tempfile.mkdtemp()
-        self.json_path = os.path.join(self.test_dir, "textcritics.json")
-        self.svg_dir = os.path.join(self.test_dir, "svgs")
-        os.makedirs(self.svg_dir)
-
-        # Create test JSON data
-        self.test_json = JSON_DATA_INTEGRATION.copy()
-
-        # Write test JSON
-        with open(self.json_path, "w", encoding="utf-8") as f:
-            json.dump(self.test_json, f)
-
-        # Create test SVG files
-        self.svg_143 = os.path.join(self.svg_dir, "M143_test.svg")
-        with open(self.svg_143, "w", encoding="utf-8") as f:
-            f.write("""<svg>
-    <g class="tkk" id="old-id-1">content1</g>
-    <g id="old-id-2" class="tkk">content2</g>
-    <g class="other" id="other-id">other</g>
-</svg>""")
-
-        self.svg_144 = os.path.join(self.svg_dir, "M144_Reihentabelle.svg")
-        with open(self.svg_144, "w", encoding="utf-8") as f:
-            f.write("""<svg>
-    <g class="tkk" id="skrt-old-1">SkRT content</g>
-</svg>""")
-
-    def tearDown(self):
-        """Clean up temporary files"""
-        shutil.rmtree(self.test_dir)
-
-    def test_file_structure_creation(self):
-        """Test that test files are created correctly"""
-        self.assertTrue(os.path.exists(self.json_path))
-        self.assertTrue(os.path.exists(self.svg_dir))
-        self.assertTrue(os.path.exists(self.svg_143))
-        self.assertTrue(os.path.exists(self.svg_144))
-
-    def test_json_loading(self):
-        """Test loading the test JSON file"""
-        with open(self.json_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        self.assertIn("textcritics", data)
-        self.assertEqual(len(data["textcritics"]), 2)
-        self.assertEqual(data["textcritics"][0]["id"], "M143")
-        self.assertEqual(data["textcritics"][1]["id"], "M144_SkRT")
-
-    def test_svg_file_detection(self):
-        """Test SVG file detection and filtering"""
-        svg_files = [f for f in os.listdir(self.svg_dir) if f.endswith(".svg")]
-        self.assertEqual(len(svg_files), 2)
-        self.assertIn("M143_test.svg", svg_files)
-        self.assertIn("M144_Reihentabelle.svg", svg_files)
 
 
 @pytest.mark.unit

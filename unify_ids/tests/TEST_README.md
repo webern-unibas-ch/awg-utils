@@ -19,10 +19,13 @@ unify_ids/
 │   ├── svg_utils.py          # SVG processing functions
 │   └── validation_utils.py   # Validation and reporting
 ├── tests/
+│   ├── data/scenarios/       # Minimal JSON scenario fixtures for integration tests
+│   ├── img/scenarios/        # Minimal SVG scenario fixtures for integration tests
 │   ├── test_fixtures.py      # Shared test data and fixtures
 │   ├── test_unify_tkk_ids.py # Main script tests
 │   ├── test_unify_link_box_ids.py
 │   ├── test_unifier_main_contracts.py
+│   ├── test_unifiers_integration.py
 │   ├── test_extraction_utils.py
 │   ├── test_file_utils.py
 │   ├── test_logger_utils.py
@@ -57,14 +60,20 @@ pytest tests/test_validation_utils.py -v
 
 Run with coverage to see which parts of the code are tested:
 ```bash
-# Generate HTML and terminal coverage report
+# Default run (coverage is configured in pytest.ini addopts)
+pytest tests/
+
+# Explicit full-coverage run (equivalent to default)
 pytest tests/ --cov=utils --cov=unify_link_box_ids --cov=unify_tkk_ids --cov-report=html --cov-report=term
+
+# Generate coverage for integration scenarios only (uses default coverage flags from pytest.ini)
+pytest tests/ -m integration
 
 # Coverage for specific module
 pytest tests/test_validation_utils.py --cov=utils.validation_utils --cov-report=term
 ```
 
-Coverage reports are generated in the `htmlcov/` directory and show line-by-line coverage for all utility modules.
+Coverage reports are generated in the `htmlcov/` directory and show line-by-line coverage for `unify_tkk_ids.py`, `unify_link_box_ids.py`, and all utility modules.
 
 ### Test Categories
 
@@ -90,11 +99,8 @@ pytest tests/test_validation_utils.py -v
 #### Integration Tests  
 Test the complete workflow:
 ```bash
-# Integration tests for TKK unifier
-pytest tests/test_unify_tkk_ids.py -v
-
-# Integration tests for link-box unifier
-pytest tests/test_unify_link_box_ids.py -v
+# Integration tests for all unifiers
+pytest tests/test_unifiers_integration.py -v
 ```
 
 
@@ -142,15 +148,23 @@ Contract tests for script entry points:
 - CLI and main-function behavior consistency
 - Common execution contracts across unifier scripts
 
+### Unifiers Integration Tests (`test_unifiers_integration.py`)
+Integration tests for both unifier scripts:
+- Scenario-based integration checks using minimal fixtures in `tests/data/scenarios` and `tests/img/scenarios`
+- TKK scenarios: sketch-default single success, multi-ID single-file success, multi-file success, mixed Sk/SkRT success routing, Mx high-number success, missing SVG ID, dry-run persistence check, idempotency, TODO+mixed handling, SkRT rowtable-only behavior, and no-svgGroupIds no-op reporting; plus one dedicated Textfassung edge-case scenario
+- Link-box scenarios: single success, multi-match JSON expansion, and missing `sheetId` no-op behavior
+- Combined scenario: shared fixture with both TKK + link-box IDs updated in one sequential integration flow
+- Input-path guard checks: missing JSON and missing SVG directory
+
 ### Link Box Script Tests (`test_unify_link_box_ids.py`)
-Tests for `unify_link_box_ids.py`:
+Unit tests for `unify_link_box_ids.py`:
 - **`process_single_link_box()`**: Single link-box processing including SVG and JSON update
 - **`process_textcritics_entry()`**: Entry-level link-box processing and iteration
 - **`unify_link_box_ids()`**: Complete link-box unification workflow
 - **`main()`**: CLI entry point behavior and error handling
 
 ### Tkk Script Tests (`test_unify_tkk_ids.py`)
-Unit and integration tests for `unify_tkk_ids.py`:
+Unit tests for `unify_tkk_ids.py`:
 - **`process_single_svg_group_id()`**: Single ID processing workflow
 - **`process_textcritics_entry()`**: Entry-level processing and counter management
 - **`unify_tkk_ids()`**: Complete unification workflow including dry-run and idempotency
@@ -204,7 +218,7 @@ When adding new functionality:
 
 1. **Add fixtures** to `test_fixtures.py` if creating shared test data
 2. **Create unit tests** in the appropriate `test_<module>.py` file
-3. **Add integration tests** to `test_unify_tkk_ids.py` for end-to-end workflows  
+3. **Add integration tests** to `test_unifiers_integration.py` for end-to-end workflows  
 4. **Include edge cases** and error conditions
 5. **Update this README** with new test descriptions
 6. **Use helper functions** from fixtures for consistent data generation

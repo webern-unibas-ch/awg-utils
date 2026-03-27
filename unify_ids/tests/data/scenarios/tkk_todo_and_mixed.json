@@ -1,0 +1,21 @@
+{
+    "textcritics": [
+        {
+            "id": "M220_Sk1",
+            "commentary": {
+                "comments": [
+                    {
+                        "blockComments": [
+                            {
+                                "svgGroupId": "TODO"
+                            },
+                            {
+                                "svgGroupId": "old-id-2"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

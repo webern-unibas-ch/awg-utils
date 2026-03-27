@@ -14,7 +14,7 @@ import pytest
 
 from unify_link_box_ids import unify_link_box_ids
 from unify_tkk_ids import unify_tkk_ids
-from utils.models import Settings
+from utils.logger_utils import Logger
 
 
 class ScenarioFixtureBase(unittest.TestCase):
@@ -72,6 +72,10 @@ class ScenarioFixtureBase(unittest.TestCase):
     def _link_boxes(self, json_data, textcritic_index=0):
         return json_data["textcritics"][textcritic_index]["linkBoxes"]
 
+    @staticmethod
+    def _logger(verbose=True, dry_run=False):
+        return Logger(verbose=verbose, dry_run=dry_run)
+
 
 @pytest.mark.integration
 class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
@@ -87,7 +91,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
             svg_fixture,
         )
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
 
@@ -114,7 +118,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         before_json_data = self._read_json()
         expected_unchanged_id = self._block_comments(before_json_data)[0]["svgGroupId"]
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         after_json_data = self._read_json()
         unchanged_id = self._block_comments(after_json_data)[0]["svgGroupId"]
@@ -138,7 +142,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         svg_before_data = self._read_file_text(svg_path)
 
         self.assertTrue(
-            unify_tkk_ids(self.json_path, self.svg_dir, Settings(dry_run=True))
+            unify_tkk_ids(self.json_path, self.svg_dir, self._logger(dry_run=True))
         )
 
         json_after = self._read_file_text(self.json_path)
@@ -157,7 +161,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
             svg_fixture,
         )
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_after_data_first = self._read_file_text(self.json_path)
         svg_path = os.path.join(
@@ -166,7 +170,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         )
         svg_after_first = self._read_file_text(svg_path)
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_after_second = self._read_file_text(self.json_path)
         svg_after_second = self._read_file_text(svg_path)
@@ -186,7 +190,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
 
         with patch("sys.stdout", new_callable=StringIO) as captured:
             self.assertTrue(
-                unify_tkk_ids(self.json_path, self.svg_dir, Settings(verbose=True))
+                unify_tkk_ids(self.json_path, self.svg_dir, self._logger(verbose=True))
             )
 
         self.assertIn("No changes detected; skipping writes.", captured.getvalue())
@@ -194,7 +198,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
     def test_unify_tkk_ids_missing_json_path_raises(self):
         """Test that missing JSON path raises FileNotFoundError."""
         with self.assertRaises(FileNotFoundError):
-            unify_tkk_ids("/nonexistent/path.json", self.svg_dir, Settings())
+            unify_tkk_ids("/nonexistent/path.json", self.svg_dir, self._logger())
 
     def test_unify_tkk_ids_missing_svg_dir_raises(self):
         """Test that missing SVG directory raises FileNotFoundError."""
@@ -207,7 +211,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         )
 
         with self.assertRaises(FileNotFoundError):
-            unify_tkk_ids(self.json_path, "/nonexistent/dir", Settings())
+            unify_tkk_ids(self.json_path, "/nonexistent/dir", self._logger())
 
     def test_scenario_todo_and_mixed_skips_todo_and_updates_valid_id(self):
         """Test that mixed TODO and valid IDs update only valid entries."""
@@ -220,7 +224,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
             svg_fixture,
         )
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
         block_comments = self._block_comments(json_data)
@@ -250,7 +254,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         )
         normal_svg_before = self._read_file_text(normal_svg_path)
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
         self.assertEqual(self._block_comments(json_data)[0]["svgGroupId"], expected_id)
@@ -276,7 +280,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
             svg_fixture,
         )
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
 
@@ -304,7 +308,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         )
         self._copy_svg_fixture(svg_fixture_b)
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
 
@@ -345,7 +349,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
         self._copy_svg_fixture(svg_fixtures[2])
         self._copy_svg_fixture(svg_fixtures[3])
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
 
@@ -379,7 +383,7 @@ class TestScenarioFixturesTkkIntegration(ScenarioFixtureBase):
             svg_fixture,
         )
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
         self.assertEqual(self._block_comments(json_data)[0]["svgGroupId"], expected_id)
@@ -407,7 +411,7 @@ class TestScenarioFixturesLinkBoxIntegration(ScenarioFixtureBase):
         ].lower()
         expected_id = f"awg-lb-{entry_id}-to-{target_sheet_id}"
 
-        self.assertTrue(unify_link_box_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_link_box_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
         link_boxes = self._link_boxes(json_data)
@@ -432,7 +436,7 @@ class TestScenarioFixturesLinkBoxIntegration(ScenarioFixtureBase):
 
         self._prepare_scenario(json_fixture, svg_1, svg_2)
 
-        self.assertTrue(unify_link_box_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_link_box_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
 
@@ -457,7 +461,7 @@ class TestScenarioFixturesLinkBoxIntegration(ScenarioFixtureBase):
         json_before = self._read_file_text(self.json_path)
         svg_before = self._read_svg(svg_fixture_name)
 
-        self.assertTrue(unify_link_box_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_link_box_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_after = self._read_file_text(self.json_path)
         svg_after = self._read_svg(svg_fixture_name)
@@ -482,8 +486,8 @@ class TestScenarioFixturesCombinedIntegration(ScenarioFixtureBase):
             svg_fixture,
         )
 
-        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, Settings()))
-        self.assertTrue(unify_link_box_ids(self.json_path, self.svg_dir, Settings()))
+        self.assertTrue(unify_tkk_ids(self.json_path, self.svg_dir, self._logger()))
+        self.assertTrue(unify_link_box_ids(self.json_path, self.svg_dir, self._logger()))
 
         json_data = self._read_json()
         block_comments = self._block_comments(json_data)

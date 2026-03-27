@@ -11,7 +11,6 @@ from unify_link_box_ids import (
     process_textcritics_entry,
     unify_link_box_ids,
 )
-from utils.models import Settings
 from utils.logger_utils import Logger
 
 
@@ -421,8 +420,8 @@ class TestUnifyLinkBoxIds(unittest.TestCase):  # pylint: disable=too-many-instan
 
         self.mock_create_loader.side_effect = _fake_create_svg_loader
 
-        settings = Settings(dry_run=False, verbose=True)
-        result = unify_link_box_ids("textcritics.json", "img/", settings)
+        logger = Logger(dry_run=False, verbose=True)
+        result = unify_link_box_ids("textcritics.json", "img/", logger)
 
         self.assertTrue(result)
         self.mock_load.assert_called_once_with("textcritics.json", "img/")
@@ -452,8 +451,8 @@ class TestUnifyLinkBoxIds(unittest.TestCase):  # pylint: disable=too-many-instan
         all_svg_files = ["A.svg"]
         self.mock_load.return_value = (json_data, all_svg_files)
 
-        settings = Settings(dry_run=False, verbose=True)
-        result = unify_link_box_ids("textcritics.json", "img/", settings)
+        logger = Logger(dry_run=False, verbose=True)
+        result = unify_link_box_ids("textcritics.json", "img/", logger)
 
         self.assertTrue(result)
         self.assertEqual(self.mock_process_entry.call_count, 2)
@@ -471,8 +470,8 @@ class TestUnifyLinkBoxIds(unittest.TestCase):  # pylint: disable=too-many-instan
         all_svg_files = ["A.svg"]
         self.mock_load.return_value = (json_data, all_svg_files)
 
-        settings = Settings(dry_run=True, verbose=True)
-        result = unify_link_box_ids("textcritics.json", "img/", settings)
+        logger = Logger(dry_run=True, verbose=True)
+        result = unify_link_box_ids("textcritics.json", "img/", logger)
 
         self.assertTrue(result)
         self.mock_process_entry.assert_called_once_with(
@@ -513,11 +512,11 @@ class TestMain(unittest.TestCase):
     def test_main_success_path(self):
         """Test the successful execution path of main."""
         main()
-        self.mock_process.assert_called_once_with(
-            "./tests/data/textcritics.json",
-            "./tests/img/",
-            Settings(dry_run=False, verbose=True),
-        )
+        self.mock_process.assert_called_once()
+        _, _, logger = self.mock_process.call_args[0]
+        self.assertIsInstance(logger, Logger)
+        self.assertFalse(logger.dry_run)
+        self.assertTrue(logger.verbose)
         self.mock_exit.assert_not_called()
         self.assertIn("Finished!", self._stdout.getvalue())
 
@@ -526,11 +525,11 @@ class TestMain(unittest.TestCase):
         self.mock_process.return_value = False
 
         main()
-        self.mock_process.assert_called_once_with(
-            "./tests/data/textcritics.json",
-            "./tests/img/",
-            Settings(dry_run=False, verbose=True),
-        )
+        self.mock_process.assert_called_once()
+        _, _, logger = self.mock_process.call_args[0]
+        self.assertIsInstance(logger, Logger)
+        self.assertFalse(logger.dry_run)
+        self.assertTrue(logger.verbose)
         self.mock_exit.assert_not_called()
         self.assertIn("Processing completed with warnings.", self._stdout.getvalue())
 

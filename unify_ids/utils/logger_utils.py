@@ -8,8 +8,9 @@ Shared processing statistics and logging for ID unification scripts.
 class Logger:
     """Centralized logger for reporting and statistics in ID unification scripts."""
 
-    def __init__(self, verbose=True):
+    def __init__(self, verbose=True, dry_run=False):
         self.messages = []
+        self.dry_run = dry_run
         self.verbose = verbose
         # Stats counters as a dictionary
         self.stats = {
@@ -37,6 +38,86 @@ class Logger:
         self.messages.append(msg)
         if self.verbose:
             print(msg)
+
+    def log_entry_context(self, entry_id, relevant_svgs):
+        """Log anchor type and relevant SVG list for an entry in verbose mode."""
+        if not self.verbose:
+            return
+
+        if "SkRT" in entry_id:
+            print(f" SkRT anchor detected: {entry_id}")
+        else:
+            print(f" Standard anchor: {entry_id}")
+        print(f" Relevant SVGs ({len(relevant_svgs)}): {relevant_svgs}")
+
+    def log_id_change(self, old_id, new_id, svg_filename):
+        """Record a successful ID change and print JSON/SVG updates in verbose mode."""
+        self.bump_stats("ids_changed")
+
+        if not self.verbose:
+            return
+
+        self.log_id_change_json(old_id, new_id)
+        self.log_id_change_svg(old_id, new_id, svg_filename)
+
+    def log_id_change_json(self, old_id, new_id):
+        """Print a JSON-only ID change line in verbose mode."""
+        if not self.verbose:
+            return
+
+        dry_marker = " [DRY-RUN]" if self.dry_run else ""
+        print(f"{dry_marker} [JSON] Changing '{old_id}' -> '{new_id}'")
+
+    def log_id_change_svg(self, old_id, new_id, svg_filename):
+        """Print an SVG-only ID change line in verbose mode."""
+        if not self.verbose:
+            return
+
+        dry_marker = " [DRY-RUN]" if self.dry_run else ""
+        print(
+            f"{dry_marker} [SVG]  Changing '{old_id}' -> '{new_id}' in {svg_filename}"
+        )
+
+    def log_ids_missing(self, entry_id, svg_group_id, css_class):
+        """Bump ids_missing stat and log that the ID was not found in any SVG file."""
+        self.bump_stats("ids_missing")
+        self.log(
+            "error",
+            "ids_missing",
+            entry_id,
+            f"'{svg_group_id}' with class '{css_class}' not found in any relevant SVG files",
+        )
+
+    def log_ids_multiple(self, entry_id, svg_group_id, matching_files):
+        """Bump ids_multiple stat and log that the ID was found in multiple SVG files."""
+        self.bump_stats("ids_multiple")
+        self.log(
+            "warning",
+            "ids_multiple",
+            entry_id,
+            f"'{svg_group_id}' found in {len(matching_files)} files: {matching_files};"
+            " skipping — manual review required",
+        )
+
+    def log_svg_error(self, entry_id, svg_group_id, svg_filename, update_error):
+        """Bump svg_errors stat and log the SVG update failure."""
+        self.bump_stats("svg_errors")
+        self.log(
+            "warning",
+            "svg_errors",
+            entry_id,
+            f"Could not update '{svg_group_id}' in {svg_filename}; JSON unchanged ({update_error})",
+        )
+
+    def log_svg_unchanged(self, entry_id, new_id, svg_filename):
+        """Bump svg_unchanged stat and log that the SVG already had the target ID."""
+        self.bump_stats("svg_unchanged")
+        self.log(
+            "info",
+            "svg_unchanged",
+            entry_id,
+            f"SVG already had '{new_id}' in {svg_filename}; updating JSON only",
+        )
 
     def print_report(self):
         """Print a structured report from collected messages."""

@@ -27,7 +27,6 @@ from utils.extraction_utils import (
 )
 from utils.file_utils import load_and_validate_inputs, create_svg_loader, save_results
 from utils.logger_utils import Logger
-from utils.models import Settings
 from utils.svg_utils import (
     build_id_to_file_index_by_class,
     find_relevant_svg_files,
@@ -138,8 +137,7 @@ def process_single_link_box(
                     f"for original '{svg_group_id}'"
                 ),
             )
-        if logger.verbose:
-            print(f" [JSON] Changing '{svg_group_id}' -> '{new_group_id}'")
+        logger.log_id_change_json(svg_group_id, new_group_id)
 
         # Update SVG file
         svg_data = get_svg_data(svg_filename)
@@ -151,10 +149,7 @@ def process_single_link_box(
                 print(f" [!] WARNING: {error} in {svg_filename}")
             success = False
         else:
-            if logger.verbose:
-                print(
-                    f" [SVG]  Changing '{svg_group_id}' -> '{new_group_id}' in {svg_filename}"
-                )
+            logger.log_id_change_svg(svg_group_id, new_group_id, svg_filename)
 
     return success
 
@@ -195,12 +190,7 @@ def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, lo
         textcritics_entry_id, all_svg_files, current_mnr_number
     )
 
-    if "SkRT" in textcritics_entry_id:
-        print(f" SkRT anchor detected: {textcritics_entry_id}")
-    else:
-        print(f" Standard anchor: {textcritics_entry_id}")
-
-    print(f" Relevant SVGs ({len(relevant_svgs)}): {relevant_svgs}")
+    logger.log_entry_context(textcritics_entry_id, relevant_svgs)
 
     id_to_file_index = build_id_to_file_index_by_class(
         relevant_svgs,
@@ -236,7 +226,7 @@ def process_textcritics_entry(textcritics_entry, all_svg_files, get_svg_data, lo
         link_boxes.sort(key=lambda lb: lb.get("svgGroupId", ""))
 
 
-def unify_link_box_ids(json_path, svg_folder, settings):
+def unify_link_box_ids(json_path, svg_folder, logger):
     """Unify link box IDs in JSON and SVG files.
 
     For each JSON entry:
@@ -247,16 +237,15 @@ def unify_link_box_ids(json_path, svg_folder, settings):
     Args:
         json_path (str): Path to the JSON textcritics file
         svg_folder (str): Path to the folder containing SVG files
-        settings (Settings): Configuration settings for processing
+        logger (Logger): Logger instance for reporting
 
     Returns:
         bool: True if processing completed successfully
     """
-    logger = Logger(verbose=settings.verbose)
 
-    if settings.verbose:
+    if logger.verbose:
         print("--- Starting Link Box ID processing ---")
-        if settings.dry_run:
+        if logger.dry_run:
             print(" [DRY-RUN] No files will be written.")
 
     json_data, all_svg_files = load_and_validate_inputs(json_path, svg_folder)
@@ -275,7 +264,7 @@ def unify_link_box_ids(json_path, svg_folder, settings):
             textcritics_entry, all_svg_files, get_svg_data, logger=logger
         )
 
-    if not settings.dry_run:
+    if not logger.dry_run:
         save_results(json_data, svg_file_cache, json_path)
 
         print("\n--- Link Box ID processing completed ---")
@@ -284,7 +273,7 @@ def unify_link_box_ids(json_path, svg_folder, settings):
         # later TODO: Validation that there is no link-box class in relevant svgs
         # that do not have a corresponding entry in textcritics.json
 
-    elif settings.verbose:
+    elif logger.verbose:
         print(" [DRY-RUN] Skipping write + validation report.")
         logger.print_report()
 
@@ -303,8 +292,8 @@ def main():
     svg_folder = "./tests/img/"
 
     try:
-        settings = Settings(dry_run=False, verbose=True)
-        success = unify_link_box_ids(json_path, svg_folder, settings)
+        logger = Logger(dry_run=False, verbose=True)
+        success = unify_link_box_ids(json_path, svg_folder, logger)
         if success:
             print("\n Finished!")
         else:

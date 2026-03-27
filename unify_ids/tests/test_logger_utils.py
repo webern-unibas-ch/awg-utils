@@ -4,10 +4,19 @@
 Unit tests for logger_utils.py
 
 Tests for:
-- log_report_message: message formatting, list appending, and printing
-- Stats initialization tests (all counters start at 0)
-- bump() method tests (incrementing counters with various amounts)
-- summary() method tests (formatted string output)
+- Logger.__init__: initial stats counters
+- bump_stats: incrementing counters and invalid key handling
+- log: message formatting, list appending, and verbose printing
+- log_entry_context: standard/SkRT branches and verbose guard
+- log_id_change: bump_changed flag, verbose guard, JSON/SVG output, dry-run marker
+- log_id_change_json: JSON-only output line
+- log_id_change_svg: SVG-only output line
+- log_ids_missing: stat bump and error message
+- log_ids_multiple: stat bump and warning message
+- log_svg_error: stat bump and warning message
+- log_svg_unchanged: stat bump and info message
+- print_report: success message and error/info categorisation
+- print_stats_summary: formatted summary output
 """
 
 import unittest
@@ -45,10 +54,150 @@ class TestLogger(unittest.TestCase):
             self.assertIn(expected, self.logger.messages)
             mock_print.assert_called_with(expected)
 
+    def test_log_entry_context_standard(self):
+        """Test log_entry_context() prints standard anchor and SVG list when verbose."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_entry_context("M143_TF1", ["a.svg", "b.svg"])
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertIn(" Standard anchor: M143_TF1", calls)
+            self.assertIn(" Relevant SVGs (2): ['a.svg', 'b.svg']", calls)
+
+    def test_log_entry_context_skrt(self):
+        """Test log_entry_context() prints SkRT anchor label when entry_id contains 'SkRT'."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_entry_context("M143_SkRT1", ["x.svg"])
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertIn(" SkRT anchor detected: M143_SkRT1", calls)
+
+    def test_log_entry_context_silent_when_not_verbose(self):
+        """Test log_entry_context() prints nothing when verbose is False."""
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_entry_context("M143_TF1", ["a.svg"])
+            mock_print.assert_not_called()
+
     def test_log_without_entry_id_and_code(self):
         """Test log() behavior when entry_id and code are empty."""
         self.logger.log("warning", "", "", "something happened")
         expected = " [WARNING] something happened"
+        self.assertIn(expected, self.logger.messages)
+
+    def test_log_id_change_bumps_stat(self):
+        """Test that log_id_change() increments ids_changed when bump_changed=True."""
+        self.logger.log_id_change("old-id", "new-id", "file.svg")
+        self.assertEqual(self.logger.stats["ids_changed"], 1)
+
+    def test_log_id_change_silent_when_not_verbose(self):
+        """Test that log_id_change() prints nothing when verbose is False."""
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change("old-id", "new-id", "file.svg")
+            mock_print.assert_not_called()
+
+    def test_log_id_change_prints_json_and_svg(self):
+        """Test that log_id_change() prints JSON and SVG lines when verbose."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change("old-id", "new-id", "file.svg")
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertIn(" [JSON] Changing 'old-id' -> 'new-id'", calls)
+            self.assertIn(" [SVG]  Changing 'old-id' -> 'new-id' in file.svg", calls)
+
+    def test_log_id_change_dry_run_marker(self):
+        """Test that log_id_change() prefixes lines with [DRY-RUN] when dry_run=True."""
+        self.logger.verbose = True
+        self.logger.dry_run = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change("old-id", "new-id", "file.svg")
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertTrue(any("[DRY-RUN]" in c for c in calls))
+
+    def test_log_id_change_json_prints_json_only(self):
+        """Test that log_id_change_json() prints only the JSON line when verbose."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change_json("old-id", "new-id")
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertIn(" [JSON] Changing 'old-id' -> 'new-id'", calls)
+            self.assertFalse(any("[SVG]" in c for c in calls))
+
+    def test_log_id_change_json_silent_when_not_verbose(self):
+        """Test that log_id_change_json() prints nothing when verbose is False."""
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change_json("old-id", "new-id")
+            mock_print.assert_not_called()
+
+    def test_log_id_change_json_dry_run_marker(self):
+        """Test that log_id_change_json() prefixes output with [DRY-RUN] when dry_run=True."""
+        self.logger.verbose = True
+        self.logger.dry_run = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change_json("old-id", "new-id")
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertTrue(any("[DRY-RUN]" in c for c in calls))
+
+    def test_log_id_change_svg_prints_svg_only(self):
+        """Test that log_id_change_svg() prints only the SVG line when verbose."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change_svg("old-id", "new-id", "file.svg")
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertIn(" [SVG]  Changing 'old-id' -> 'new-id' in file.svg", calls)
+            self.assertFalse(any("[JSON]" in c for c in calls))
+
+    def test_log_id_change_svg_silent_when_not_verbose(self):
+        """Test that log_id_change_svg() prints nothing when verbose is False."""
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change_svg("old-id", "new-id", "file.svg")
+            mock_print.assert_not_called()
+
+    def test_log_id_change_svg_dry_run_marker(self):
+        """Test that log_id_change_svg() prefixes output with [DRY-RUN] when dry_run=True."""
+        self.logger.verbose = True
+        self.logger.dry_run = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_id_change_svg("old-id", "new-id", "file.svg")
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertTrue(any("[DRY-RUN]" in c for c in calls))
+
+    def test_log_ids_missing(self):
+        """Test that log_ids_missing() bumps ids_missing stat and logs an error."""
+        self.logger.log_ids_missing("M143_TF1", "old-id", "awg-tkk")
+        self.assertEqual(self.logger.stats["ids_missing"], 1)
+        expected = (
+            " [ERROR] M143_TF1: 'old-id' with class 'awg-tkk'"
+            " not found in any relevant SVG files [ids_missing]"
+        )
+        self.assertIn(expected, self.logger.messages)
+
+    def test_log_ids_multiple(self):
+        """Test that log_ids_multiple() bumps ids_multiple stat and logs a warning."""
+        self.logger.log_ids_multiple("M143_TF1", "old-id", ["a.svg", "b.svg"])
+        self.assertEqual(self.logger.stats["ids_multiple"], 1)
+        expected = (
+            " [WARNING] M143_TF1: 'old-id' found in 2 files: ['a.svg', 'b.svg'];"
+            " skipping — manual review required [ids_multiple]"
+        )
+        self.assertIn(expected, self.logger.messages)
+
+    def test_log_svg_error(self):
+        """Test that log_svg_error() bumps svg_errors stat and logs a warning."""
+        self.logger.log_svg_error("M143_TF1", "old-id", "file.svg", "some error")
+        self.assertEqual(self.logger.stats["svg_errors"], 1)
+        expected = (
+            " [WARNING] M143_TF1: Could not update 'old-id' in file.svg;"
+            " JSON unchanged (some error) [svg_errors]"
+        )
+        self.assertIn(expected, self.logger.messages)
+
+    def test_log_svg_unchanged(self):
+        """Test that log_svg_unchanged() bumps svg_unchanged stat and logs an info message."""
+        self.logger.log_svg_unchanged("M143_TF1", "new-id", "file.svg")
+        self.assertEqual(self.logger.stats["svg_unchanged"], 1)
+        expected = (
+            " [INFO] M143_TF1: SVG already had 'new-id' in file.svg;"
+            " updating JSON only [svg_unchanged]"
+        )
         self.assertIn(expected, self.logger.messages)
 
     def test_print_report_success(self):

@@ -32,18 +32,21 @@ def build_id_to_file_index_by_class(relevant_svg_files, get_svg_data, target_cla
         if svg_root is None:
             continue
 
-        seen_ids_in_file = set()
-        for elem in svg_root.iter():
-            svg_id = elem.get("id")
-            class_attr = elem.get("class", "")
+        # Collect unique IDs first, then use shared matching helper for consistency.
+        ids_in_file = {
+            elem.get("id")
+            for elem in svg_root.iter()
+            if elem.get("id")
+        }
 
-            if (
-                svg_id
-                and target_class in class_attr.split()
-                and svg_id not in seen_ids_in_file
-            ):
-                id_to_files.setdefault(svg_id, []).append(svg_filename)
-                seen_ids_in_file.add(svg_id)
+        seen_ids_in_file = set()
+        for svg_id in ids_in_file:
+            matches = _find_elements_by_id_and_class(svg_root, svg_id, target_class)
+            if not matches or svg_id in seen_ids_in_file:
+                continue
+
+            id_to_files.setdefault(svg_id, []).append(svg_filename)
+            seen_ids_in_file.add(svg_id)
 
     return id_to_files
 

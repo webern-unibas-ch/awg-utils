@@ -7,6 +7,7 @@ This module provides utility functions for extracting and parsing various
 identifiers and data structures used in TKK ID processing workflows.
 
 Functions:
+    - extract_file_info_list: Extracts file info (MNR number and rowtable status) from SVG filenames
     - extract_id_suffix: Extracts suffix for linkBox IDs from SVG filenames
     - extract_link_boxes: Extracts linkBox objects from JSON entry structures
     - extract_moldenhauer_number: Extracts catalog numbers from entry ID strings
@@ -15,6 +16,7 @@ Functions:
 
 Usage:
     from utils.extraction_utils import (
+        extract_file_info_list,
         extract_id_suffix,
         extract_link_boxes,
         extract_moldenhauer_number,
@@ -23,6 +25,8 @@ Usage:
     )
 
 
+Example:
+    file_info = extract_file_info_list(["M143_Sk1-1von1-final.svg"])
     suffix = extract_id_suffix("M35_42_Sk1-3von6-final.svg")
     number = extract_moldenhauer_number("M_143_TF1")
     ids, comments = extract_svg_group_ids(entry_data)
@@ -31,6 +35,24 @@ Usage:
 """
 
 import re
+
+
+def extract_file_info_list(svg_file_names):
+    """Extract file info (MNR number and rowtable status) for a list of SVG filenames.
+
+    Args:
+        svg_file_names (list): List of SVG filenames
+    Returns:
+        list: List of dictionaries with keys 'file_name', 'mnr', and 'is_rowtable'
+    """
+    return [
+        {
+            "file_name": file_name,
+            "mnr": extract_moldenhauer_number(file_name),
+            "is_rowtable": "Reihentabelle" in file_name,
+        }
+        for file_name in svg_file_names
+    ]
 
 
 def extract_id_suffix(svg_filename):
@@ -89,6 +111,20 @@ def extract_moldenhauer_number(text):
     """
     match = re.search(r"Mx?_?(\d+)", str(text))
     return match.group(1) if match else ""
+
+
+def extract_textcritics_entry_id(textcritics_entry):
+    """Extract and validate the entry ID from a textcritics entry dict.
+
+    Args:
+        textcritics_entry (dict): The textcritics entry to extract the ID from.
+
+    Returns:
+        str or None: The extracted entry ID, or None if invalid.
+    """
+    if not isinstance(textcritics_entry, dict):
+        return None
+    return textcritics_entry.get("id") or None
 
 
 def extract_svg_group_ids(entry):

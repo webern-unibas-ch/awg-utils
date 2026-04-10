@@ -8,6 +8,7 @@ used in TKK ID processing. The extraction_utils module handles extraction
 and parsing of various identifiers and data structures.
 
 Test Categories:
+- extract_file_info_list function tests (file info pre-computation from SVG filenames)
 - extract_id_suffix function tests (linkBox ID suffix extraction from SVG filenames)
 - extract_link_boxes function tests (linkBox extraction from entries)
 - extract_moldenhauer_number function tests (catalog number extraction)
@@ -16,6 +17,7 @@ Test Categories:
 
 Usage:
     pytest tests/test_extraction_utils.py -v
+    pytest tests/test_extraction_utils.py::TestExtractFileInfoList -v
     pytest tests/test_extraction_utils.py::TestExtractIdSuffix -v
     pytest tests/test_extraction_utils.py::TestExtractLinkBoxes -v
     pytest tests/test_extraction_utils.py::TestExtractMoldenhauerNumber -v
@@ -27,9 +29,11 @@ import pytest
 
 # Import extraction functions from extraction_utils
 from utils.extraction_utils import (
+    extract_file_info_list,
     extract_id_suffix,
     extract_link_boxes,
     extract_moldenhauer_number,
+    extract_textcritics_entry_id,
     extract_svg_group_ids,
     has_class_token,
 )
@@ -39,6 +43,51 @@ from tests.test_fixtures import (
     GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY,
     GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY_MULTIPLE,
 )
+
+
+@pytest.mark.unit
+class TestExtractFileInfoList(unittest.TestCase):
+    """Test cases for the extract_file_info_list function"""
+
+    def test_extract_file_info_list_returns_one_entry_per_file(self):
+        """Test that each filename produces exactly one dict in the result"""
+        files = ["M143_Sk1-1von1-final.svg", "M143_Sk2-1von3-final.svg"]
+        result = extract_file_info_list(files)
+        self.assertEqual(len(result), 2)
+
+    def test_extract_file_info_list_preserves_file_name(self):
+        """Test that the original filename is stored under 'file_name'"""
+        files = ["M143_Sk1-1von1-final.svg"]
+        result = extract_file_info_list(files)
+        self.assertEqual(result[0]["file_name"], "M143_Sk1-1von1-final.svg")
+
+    def test_extract_file_info_list_extracts_mnr(self):
+        """Test that the Moldenhauer number is extracted into 'mnr'"""
+        files = ["M143_Sk1-1von1-final.svg", "M317_Sk2-1von1-final.svg"]
+        result = extract_file_info_list(files)
+        self.assertEqual(result[0]["mnr"], "143")
+        self.assertEqual(result[1]["mnr"], "317")
+
+    def test_extract_file_info_list_detects_rowtable(self):
+        """Test that files containing 'Reihentabelle' are marked as rowtable"""
+        files = [
+            "op25_C_Reihentabelle-1von1-final.svg",
+            "M143_Sk1-1von1-final.svg",
+        ]
+        result = extract_file_info_list(files)
+        self.assertTrue(result[0]["is_rowtable"])
+        self.assertFalse(result[1]["is_rowtable"])
+
+    def test_extract_file_info_list_with_empty_input(self):
+        """Test that an empty list returns an empty list"""
+        result = extract_file_info_list([])
+        self.assertEqual(result, [])
+
+    def test_extract_file_info_list_result_has_required_keys(self):
+        """Test that every entry contains exactly the keys 'file_name', 'mnr', and 'is_rowtable'"""
+        files = ["M143_Sk1-1von1-final.svg"]
+        result = extract_file_info_list(files)
+        self.assertEqual(set(result[0].keys()), {"file_name", "mnr", "is_rowtable"})
 
 
 @pytest.mark.unit
@@ -159,6 +208,32 @@ class TestExtractMoldenhauerNumber(unittest.TestCase):
         self.assertEqual(extract_moldenhauer_number("M_143-op5.2"), "143")
         self.assertEqual(extract_moldenhauer_number("Mx_123#test456$"), "123")
         self.assertEqual(extract_moldenhauer_number("M_789_测试_123"), "789")
+
+
+@pytest.mark.unit
+class TestExtractTextcriticsEntryId(unittest.TestCase):
+    """Test cases for the extract_textcritics_entry_id function"""
+
+    def test_extract_textcritics_entry_id_valid(self):
+        """Test extracting a valid entry ID from a dict."""
+        entry = {"id": "M143_TF1", "commentary": {}}
+        self.assertEqual(extract_textcritics_entry_id(entry), "M143_TF1")
+
+    def test_extract_textcritics_entry_id_missing_id(self):
+        """Test that missing id key returns None."""
+        entry = {"commentary": {}}
+        self.assertIsNone(extract_textcritics_entry_id(entry))
+
+    def test_extract_textcritics_entry_id_empty_id(self):
+        """Test that empty id values return None."""
+        self.assertIsNone(extract_textcritics_entry_id({"id": ""}))
+        self.assertIsNone(extract_textcritics_entry_id({"id": None}))
+
+    def test_extract_textcritics_entry_id_non_dict(self):
+        """Test that non-dict inputs return None."""
+        self.assertIsNone(extract_textcritics_entry_id(None))
+        self.assertIsNone(extract_textcritics_entry_id("M143_TF1"))
+        self.assertIsNone(extract_textcritics_entry_id([{"id": "M143_TF1"}]))
 
 
 @pytest.mark.unit

@@ -23,6 +23,7 @@ from unify_tkk_ids import (
     process_single_svg_group_id,
 )
 from utils.constants import TKK
+from utils.extraction_utils import extract_file_info_list
 from utils.logger_utils import Logger
 from tests.test_fixtures import (
     GENERIC_COMMENTARY_BLOCKCOMMENTS_ENTRY,
@@ -295,30 +296,20 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
     def setUp(self):
         """Set up test fixtures and mocks"""
         # Mock all the helper functions that process_textcritics_entry uses
-        self.extract_moldenhauer_patcher = patch(
-            "unify_tkk_ids.extract_moldenhauer_number"
-        )
-        self.find_relevant_svgs_patcher = patch("unify_tkk_ids.find_relevant_svg_files")
         self.extract_svg_ids_patcher = patch("unify_tkk_ids.extract_svg_group_ids")
-        self.build_index_patcher = patch(
-            "unify_tkk_ids.build_id_to_file_index_by_class"
-        )
+        self.build_entry_id_index_patcher = patch("unify_tkk_ids.build_entry_id_index")
         self.process_single_patcher = patch("unify_tkk_ids.process_single_svg_group_id")
 
-        self.mock_extract_moldenhauer = self.extract_moldenhauer_patcher.start()
-        self.mock_find_relevant_svgs = self.find_relevant_svgs_patcher.start()
         self.mock_extract_svg_ids = self.extract_svg_ids_patcher.start()
-        self.mock_build_index = self.build_index_patcher.start()
+        self.mock_build_entry_id_index = self.build_entry_id_index_patcher.start()
         self.mock_process_single = self.process_single_patcher.start()
 
         # Set up default mock return values
-        self.mock_extract_moldenhauer.return_value = "143"
-        self.mock_find_relevant_svgs.return_value = ["test1.svg", "test2.svg"]
         self.mock_extract_svg_ids.return_value = (
             ["id-1", "id-2"],
             [{"svgGroupId": "id-1"}, {"svgGroupId": "id-2"}],
         )
-        self.mock_build_index.return_value = {
+        self.mock_build_entry_id_index.return_value = {
             "id-1": ["test1.svg"],
             "id-2": ["test1.svg"],
         }
@@ -334,17 +325,17 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
             "text"
         ] = "Comment 2"
 
-        self.all_svg_files = ["test1.svg", "test2.svg", "test3.svg"]
+        self.file_info_list = extract_file_info_list(
+            ["test1.svg", "test2.svg", "test3.svg"]
+        )
         self.mock_svg_loader = MagicMock()
         self.loaded_svg_texts = {}
         self.logger = Logger(verbose=True)
 
     def tearDown(self):
         """Clean up patches"""
-        self.extract_moldenhauer_patcher.stop()
-        self.find_relevant_svgs_patcher.stop()
         self.extract_svg_ids_patcher.stop()
-        self.build_index_patcher.stop()
+        self.build_entry_id_index_patcher.stop()
         self.process_single_patcher.stop()
 
     def test_process_textcritics_entry_success_basic(self):
@@ -352,28 +343,22 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         with patch("builtins.print") as mock_print:
             process_textcritics_entry(
                 self.test_textcritics_entry,
-                self.all_svg_files,
+                self.file_info_list,
                 self.mock_svg_loader,
                 self.logger,
             )
 
-        # Should call extract_moldenhauer_number with entry ID
-        self.mock_extract_moldenhauer.assert_called_once_with("M143_TF1")
-
-        # Should call find_relevant_svg_files with correct parameters
-        self.mock_find_relevant_svgs.assert_called_once_with(
-            "M143_TF1", self.all_svg_files, "143"
+        # Should call build_entry_id_index with correct parameters
+        self.mock_build_entry_id_index.assert_called_once_with(
+            "M143_TF1",
+            self.file_info_list,
+            self.mock_svg_loader,
+            self.logger,
+            TKK.css_class,
         )
 
         # Should extract svg group IDs from entry
         self.mock_extract_svg_ids.assert_called_once_with(self.test_textcritics_entry)
-
-        # Should build index once for relevant SVGs
-        self.mock_build_index.assert_called_once_with(
-            ["test1.svg", "test2.svg"],
-            self.mock_svg_loader,
-            target_class=TKK.css_class,
-        )
 
         # Should process each ID with correct counter values
         self.assertEqual(self.mock_process_single.call_count, 2)
@@ -384,24 +369,24 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         # Second call with new_id="awg-tkk-m143_tf1-002"
         self.assertEqual(call_args[1][0][1].new_id, "awg-tkk-m143_tf1-002")
 
-        # Should print processing messages
+        # Should print processing message
         mock_print.assert_any_call("\nProcessing textcritics entry ID: M143_TF1")
-        mock_print.assert_any_call(" Standard anchor: M143_TF1")
 
     def test_process_textcritics_entry_with_skrt_detection(self):
-        """Test SkRT entry detection"""
+        """Test SkRT entry returns early when no svgGroupIds present."""
         skrt_entry = {"id": "M144_SkRT", "commentary": {"comments": []}}
+        self.mock_extract_svg_ids.return_value = ([], [])
 
         with patch("builtins.print") as mock_print:
             process_textcritics_entry(
                 skrt_entry,
-                self.all_svg_files,
+                self.file_info_list,
                 self.mock_svg_loader,
                 self.logger,
             )
 
-        # Should detect SkRT and print appropriate message
-        mock_print.assert_any_call(" SkRT anchor detected: M144_SkRT")
+        self.mock_process_single.assert_not_called()
+        mock_print.assert_any_call(" No svgGroupIds to process")
 
     def test_process_textcritics_entry_with_no_svg_group_ids(self):
         """Test textcritics entry with no svgGroupIds to process"""
@@ -411,7 +396,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         with patch("builtins.print") as mock_print:
             process_textcritics_entry(
                 self.test_textcritics_entry,
-                self.all_svg_files,
+                self.file_info_list,
                 self.mock_svg_loader,
                 self.logger,
             )
@@ -427,13 +412,12 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         with patch("builtins.print") as mock_print:
             process_textcritics_entry(
                 "not_a_dict",
-                self.all_svg_files,
+                self.file_info_list,
                 self.mock_svg_loader,
                 self.logger,
             )
 
         # Should return early without calling any helper functions
-        self.mock_extract_moldenhauer.assert_not_called()
         self.mock_extract_svg_ids.assert_not_called()
         mock_print.assert_not_called()
 
@@ -444,13 +428,12 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         with patch("builtins.print") as mock_print:
             process_textcritics_entry(
                 empty_id_entry,
-                self.all_svg_files,
+                self.file_info_list,
                 self.mock_svg_loader,
                 self.logger,
             )
 
         # Should return early without processing
-        self.mock_extract_moldenhauer.assert_not_called()
         mock_print.assert_not_called()
 
         # Test with missing ID field
@@ -458,13 +441,10 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
 
         process_textcritics_entry(
             no_id_entry,
-            self.all_svg_files,
+            self.file_info_list,
             self.mock_svg_loader,
             self.logger,
         )
-
-        # Still should not call helper functions
-        self.mock_extract_moldenhauer.assert_not_called()
 
     def test_process_textcritics_entry_counter_management(self):
         """Test counter increment logic with mixed success/failure"""
@@ -479,7 +459,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
 
         process_textcritics_entry(
             self.test_textcritics_entry,
-            self.all_svg_files,
+            self.file_info_list,
             self.mock_svg_loader,
             self.logger,
         )
@@ -500,52 +480,30 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
             call_args[2][0][1].new_id, "awg-tkk-m143_tf1-002"
         )  # Third call: no increment after failure
 
-    def test_process_textcritics_entry_prints_relevant_svgs(self):
-        """Test that relevant SVG information is printed"""
-        relevant_svgs = ["M143_TF1_sheet1.svg", "M143_TF1_sheet2.svg"]
-        self.mock_find_relevant_svgs.return_value = relevant_svgs
-
-        with patch("builtins.print") as mock_print:
-            process_textcritics_entry(
-                self.test_textcritics_entry,
-                self.all_svg_files,
-                self.mock_svg_loader,
-                self.logger,
-            )
-
-        # Should print relevant SVGs information
-        expected_message = f" Relevant SVGs ({len(relevant_svgs)}): {relevant_svgs}"
-        mock_print.assert_any_call(expected_message)
-
     def test_process_textcritics_entry_calls_helper_functions_correctly(self):
         """Test that all helper functions are called with correct parameters"""
         process_textcritics_entry(
             self.test_textcritics_entry,
-            self.all_svg_files,
+            self.file_info_list,
             self.mock_svg_loader,
             self.logger,
         )
 
-        # Verify each helper function call
-        self.mock_extract_moldenhauer.assert_called_once_with("M143_TF1")
-
-        self.mock_find_relevant_svgs.assert_called_once_with(
-            "M143_TF1", self.all_svg_files, "143"
-        )
-
         self.mock_extract_svg_ids.assert_called_once_with(self.test_textcritics_entry)
 
-        self.mock_build_index.assert_called_once_with(
-            ["test1.svg", "test2.svg"],
+        self.mock_build_entry_id_index.assert_called_once_with(
+            "M143_TF1",
+            self.file_info_list,
             self.mock_svg_loader,
-            target_class=TKK.css_class,
+            self.logger,
+            TKK.css_class,
         )
 
     def test_process_textcritics_entry_uses_tkk_prefix(self):
         """Test that new IDs always use TKK.prefix (not configurable)"""
         process_textcritics_entry(
             self.test_textcritics_entry,
-            self.all_svg_files,
+            self.file_info_list,
             self.mock_svg_loader,
             self.logger,
         )
@@ -559,7 +517,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         """Test that the entry is modified in place (via process_single_svg_group_id)"""
         process_textcritics_entry(
             self.test_textcritics_entry,
-            self.all_svg_files,
+            self.file_info_list,
             self.mock_svg_loader,
             self.logger,
         )

@@ -7,7 +7,9 @@ Tests for:
 - Logger.__init__: initial stats counters
 - bump_stats: incrementing counters and invalid key handling
 - log: message formatting, list appending, and verbose printing
-- log_entry_context: standard/SkRT branches and verbose guard
+- log_processing_start: startup banner and dry-run write notice
+- log_processing_entry_start: entry ID print and verbose guard
+- log_processing_entry_context: standard/SkRT branches and verbose guard
 - log_id_change: bump_changed flag, verbose guard, JSON/SVG output, dry-run marker
 - log_id_change_json: JSON-only output line
 - log_id_change_svg: SVG-only output line
@@ -54,27 +56,104 @@ class TestLogger(unittest.TestCase):
             self.assertIn(expected, self.logger.messages)
             mock_print.assert_called_with(expected)
 
-    def test_log_entry_context_standard(self):
-        """Test log_entry_context() prints standard anchor and SVG list when verbose."""
+    def test_log_items_found_count_svg_group_ids(self):
+        """Test that log_items_found() prints count when svgGroupIds are present."""
         self.logger.verbose = True
         with unittest.mock.patch("builtins.print") as mock_print:
-            self.logger.log_entry_context("M143_TF1", ["a.svg", "b.svg"])
+            self.logger.log_items_found(["a", "b"], "svgGroupIds")
+            mock_print.assert_called_once_with(" Found 2 svgGroupIds to process")
+
+    def test_log_items_found_count_link_boxes(self):
+        """Test that log_items_found() prints count when linkBoxes are present."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_items_found(
+                [{"svgGroupId": "g1"}, {"svgGroupId": "g2"}], "linkBoxes"
+            )
+            mock_print.assert_called_once_with(" Found 2 linkBoxes to process")
+
+    def test_log_items_found_absent_svg_group_ids(self):
+        """Test that log_items_found() prints absence message when svgGroupIds is empty."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_items_found([], "svgGroupIds")
+            mock_print.assert_called_once_with(" No svgGroupIds to process")
+
+    def test_log_items_found_absent_link_boxes(self):
+        """Test that log_items_found() prints absence message when linkBoxes is empty."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_items_found([], "linkBoxes")
+            mock_print.assert_called_once_with(" No linkBoxes to process")
+
+    def test_log_items_found_silent_when_not_verbose(self):
+        """Test that log_items_found() prints nothing when verbose is False."""
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_items_found(["x"], "svgGroupIds")
+            mock_print.assert_not_called()
+
+    def test_log_processing_entry_start_prints_when_verbose(self):
+        """Test that log_processing_entry_start() prints the entry ID when verbose."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_processing_entry_start("M143_TF1")
+            mock_print.assert_called_once_with(
+                "\nProcessing textcritics entry ID: M143_TF1"
+            )
+
+    def test_log_processing_entry_start_silent_when_not_verbose(self):
+        """Test that log_processing_entry_start() prints nothing when verbose is False."""
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_processing_entry_start("M143_TF1")
+            mock_print.assert_not_called()
+
+    def test_log_processing_start_prints_banner_only_when_not_dry_run(self):
+        """Test that log_processing_start() prints only the start banner when dry_run is False."""
+        self.logger.verbose = True
+        self.logger.dry_run = False
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_processing_start("TKK ID")
+            mock_print.assert_called_once_with("--- Starting TKK ID processing ---")
+
+    def test_log_processing_start_prints_banner_and_dry_run_notice(self):
+        """Test that log_processing_start() also prints dry-run write notice when dry_run is True."""
+        self.logger.verbose = True
+        self.logger.dry_run = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_processing_start("Link Box ID")
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertIn("--- Starting Link Box ID processing ---", calls)
+            self.assertIn(" [DRY-RUN] No files will be written.", calls)
+
+    def test_log_processing_start_silent_when_not_verbose(self):
+        """Test that log_processing_start() prints nothing when verbose is False."""
+        self.logger.verbose = False
+        self.logger.dry_run = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_processing_start("TKK ID")
+            mock_print.assert_not_called()
+
+    def test_log_processing_entry_context_standard(self):
+        """Test log_processing_entry_context() prints standard anchor and SVG list when verbose."""
+        self.logger.verbose = True
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.log_processing_entry_context("M143_TF1", ["a.svg", "b.svg"])
             calls = [c[0][0] for c in mock_print.call_args_list]
             self.assertIn(" Standard anchor: M143_TF1", calls)
             self.assertIn(" Relevant SVGs (2): ['a.svg', 'b.svg']", calls)
 
-    def test_log_entry_context_skrt(self):
-        """Test log_entry_context() prints SkRT anchor label when entry_id contains 'SkRT'."""
+    def test_log_processing_entry_context_skrt(self):
+        """Test log_processing_entry_context() prints SkRT anchor label when entry_id contains 'SkRT'."""
         self.logger.verbose = True
         with unittest.mock.patch("builtins.print") as mock_print:
-            self.logger.log_entry_context("M143_SkRT1", ["x.svg"])
+            self.logger.log_processing_entry_context("M143_SkRT1", ["x.svg"])
             calls = [c[0][0] for c in mock_print.call_args_list]
             self.assertIn(" SkRT anchor detected: M143_SkRT1", calls)
 
-    def test_log_entry_context_silent_when_not_verbose(self):
-        """Test log_entry_context() prints nothing when verbose is False."""
+    def test_log_processing_entry_context_silent_when_not_verbose(self):
+        """Test log_processing_entry_context() prints nothing when verbose is False."""
         with unittest.mock.patch("builtins.print") as mock_print:
-            self.logger.log_entry_context("M143_TF1", ["a.svg"])
+            self.logger.log_processing_entry_context("M143_TF1", ["a.svg"])
             mock_print.assert_not_called()
 
     def test_log_without_entry_id_and_code(self):

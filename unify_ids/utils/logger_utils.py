@@ -39,7 +39,21 @@ class Logger:
         if self.verbose:
             print(msg)
 
-    def log_entry_context(self, entry_id, relevant_svgs):
+    def log_processing_entry_start(self, entry_id):
+        """Log the start of processing for a textcritics entry in verbose mode."""
+        if self.verbose:
+            print(f"\nProcessing textcritics entry ID: {entry_id}")
+
+    def log_processing_start(self, process_label):
+        """Log the process start banner and dry-run write notice in verbose mode."""
+        if not self.verbose:
+            return
+
+        print(f"--- Starting {process_label} processing ---")
+        if self.dry_run:
+            print(" [DRY-RUN] No files will be written.")
+
+    def log_processing_entry_context(self, entry_id, relevant_svgs):
         """Log anchor type and relevant SVG list for an entry in verbose mode."""
         if not self.verbose:
             return
@@ -98,6 +112,15 @@ class Logger:
             f"'{svg_group_id}' found in {len(matching_files)} files: {matching_files};"
             " skipping — manual review required",
         )
+
+    def log_items_found(self, items, label):
+        """Log item count or absence in verbose mode."""
+        if not self.verbose:
+            return
+        if not items:
+            print(f" No {label} to process")
+        else:
+            print(f" Found {len(items)} {label} to process")
 
     def log_svg_error(self, entry_id, svg_group_id, svg_filename, update_error):
         """Bump svg_errors stat and log the SVG update failure."""

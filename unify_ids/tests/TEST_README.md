@@ -114,6 +114,7 @@ Centralized test data and helper functions used across all test modules:
 
 ### Extraction Utils Tests (`test_extraction_utils.py`)
 Tests for `utils/extraction_utils.py`:
+- **`extract_file_info_list()`**: File info pre-computation (filename, MNR number, rowtable flag) from a list of SVG filenames
 - **`extract_id_suffix()`**: Suffix letter derivation from `NvonM` filename patterns
 - **`extract_link_boxes()`**: linkBox extraction from entry structures
 - **`extract_moldenhauer_number()`**: Catalog number extraction from various ID formats

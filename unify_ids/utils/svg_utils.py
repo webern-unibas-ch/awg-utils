@@ -33,11 +33,7 @@ def build_id_to_file_index_by_class(relevant_svg_files, get_svg_data, target_cla
             continue
 
         # Collect unique IDs first, then use shared matching helper for consistency.
-        ids_in_file = {
-            elem.get("id")
-            for elem in svg_root.iter()
-            if elem.get("id")
-        }
+        ids_in_file = {elem.get("id") for elem in svg_root.iter() if elem.get("id")}
 
         seen_ids_in_file = set()
         for svg_id in ids_in_file:
@@ -51,29 +47,44 @@ def build_id_to_file_index_by_class(relevant_svg_files, get_svg_data, target_cla
     return id_to_files
 
 
-def find_relevant_svg_files(new_id, all_svg_files, current_mnr_number):
+def build_entry_id_index(entry_id, file_info_list, svg_loader, logger, css_class):
+    """Find relevant SVGs for entry_id and build the svg_id → files index.
+
+    Args:
+        entry_id (str): The textcritics entry ID.
+        file_info_list (list): List of file info dicts from extract_file_info_list.
+        svg_loader (function): Function to load SVG data by filename.
+        logger: Logger instance with bump_stats, verbose, and log_processing_entry_context.
+        css_class (str): The CSS class to filter elements by.
+
+    Returns:
+        dict: Mapping of svg ID to list of filenames containing that ID with css_class.
+    """
+    relevant_svgs = find_relevant_svg_files(entry_id, file_info_list)
+
+    logger.bump_stats("entries_seen")
+    if logger.verbose:
+        logger.log_processing_entry_context(entry_id, relevant_svgs)
+
+    return build_id_to_file_index_by_class(
+        relevant_svgs, svg_loader, target_class=css_class
+    )
+
+
+def find_relevant_svg_files(entry_id, file_info):
     """Find relevant SVG files for a given entry ID.
 
     Args:
-        new_id (str): The entry ID
-        all_svg_files (list): List of all SVG files
-        current_mnr_number (str): Extracted mnr number from the ID
+        entry_id (str): The entry ID
+        file_info (list): List of dictionaries containing file information
 
     Returns:
         list: List of relevant SVG filenames
     """
-    # Pre-extract file info to avoid redundant parsing
-    file_info = [
-        {
-            "file_name": filename,
-            "mnr": extract_moldenhauer_number(filename),
-            "is_rowtable": "Reihentabelle" in filename,
-        }
-        for filename in all_svg_files
-    ]
+    current_mnr_number = extract_moldenhauer_number(entry_id)
 
     # SkRT entries: only row table files
-    if "SkRT" in new_id:
+    if "SkRT" in entry_id:
         return [
             info["file_name"]
             for info in file_info
@@ -88,8 +99,8 @@ def find_relevant_svg_files(new_id, all_svg_files, current_mnr_number):
     ]
 
     # Look for specific patterns in the filename for TF and Sk entries
-    tf_match = re.search(r"TF(\d+)", new_id)
-    sk_match = re.search(r"(Sk\d+(?:_\d+)*)", new_id)
+    tf_match = re.search(r"TF(\d+)", entry_id)
+    sk_match = re.search(r"(Sk\d+(?:_\d+)*)", entry_id)
 
     if tf_match:
         tf_number = tf_match.group(1)

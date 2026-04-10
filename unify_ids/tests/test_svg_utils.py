@@ -13,9 +13,11 @@ import unittest
 import pytest
 
 from utils.constants import LINKBOX, TKK
+from utils.extraction_utils import extract_file_info_list
 from utils.file_utils import _parse_svg_xml
 from utils.svg_utils import (
     _find_elements_by_id_and_class,
+    build_entry_id_index,
     build_id_to_file_index_by_class,
     find_relevant_svg_files,
     update_svg_id_by_class,
@@ -78,12 +80,74 @@ class TestBuildIdToFileIndexByClass(unittest.TestCase):
 
 
 @pytest.mark.unit
+class TestBuildEntryIdIndex(unittest.TestCase):
+    """Test cases for build_entry_id_index."""
+
+    def test_build_entry_id_index_logs_context_when_verbose(self):
+        """Verbose mode should log entry context and always bump entries_seen."""
+        entry_id = "M_143_TF1"
+        file_info_list = [{"file_name": "a.svg", "mnr": "143", "is_rowtable": False}]
+        svg_loader = unittest.mock.MagicMock(name="svg_loader")
+        logger = unittest.mock.MagicMock(name="logger")
+        logger.verbose = True
+
+        with unittest.mock.patch(
+            "utils.svg_utils.find_relevant_svg_files", return_value=["a.svg"]
+        ) as mock_find_relevant, unittest.mock.patch(
+            "utils.svg_utils.build_id_to_file_index_by_class",
+            return_value={"id-1": ["a.svg"]},
+        ) as mock_build_index:
+            result = build_entry_id_index(
+                entry_id,
+                file_info_list,
+                svg_loader,
+                logger,
+                TKK.css_class,
+            )
+
+        self.assertEqual(result, {"id-1": ["a.svg"]})
+        mock_find_relevant.assert_called_once_with(entry_id, file_info_list)
+        logger.bump_stats.assert_called_once_with("entries_seen")
+        logger.log_processing_entry_context.assert_called_once_with(
+            entry_id, ["a.svg"]
+        )
+        mock_build_index.assert_called_once_with(
+            ["a.svg"], svg_loader, target_class=TKK.css_class
+        )
+
+    def test_build_entry_id_index_skips_context_log_when_not_verbose(self):
+        """Non-verbose mode should skip entry-context logging but still build index."""
+        entry_id = "M_143_TF1"
+        file_info_list = [{"file_name": "a.svg", "mnr": "143", "is_rowtable": False}]
+        svg_loader = unittest.mock.MagicMock(name="svg_loader")
+        logger = unittest.mock.MagicMock(name="logger")
+        logger.verbose = False
+
+        with unittest.mock.patch(
+            "utils.svg_utils.find_relevant_svg_files", return_value=["a.svg"]
+        ), unittest.mock.patch(
+            "utils.svg_utils.build_id_to_file_index_by_class",
+            return_value={"id-1": ["a.svg"]},
+        ):
+            build_entry_id_index(
+                entry_id,
+                file_info_list,
+                svg_loader,
+                logger,
+                TKK.css_class,
+            )
+
+        logger.bump_stats.assert_called_once_with("entries_seen")
+        logger.log_processing_entry_context.assert_not_called()
+
+
+@pytest.mark.unit
 class TestFindRelevantSvgs(unittest.TestCase):
     """Test cases for the find_relevant_svg_files function"""
 
     def setUp(self):
         """Set up test fixtures"""
-        self.all_svg_files = [
+        all_svg_files = [
             "M143_Textfassung1-1von2-final.svg",
             "M143_Textfassung1-2von2-final.svg",
             "M143_Textfassung2-1von1-final.svg",
@@ -104,10 +168,11 @@ class TestFindRelevantSvgs(unittest.TestCase):
             "M144_sheet1.svg",
             "M145_other.svg",
         ]
+        self.file_info_list = extract_file_info_list(all_svg_files)
 
     def test_find_relevant_svg_files_for_tf1(self):
         """Test getting SVGs for for TF1 entries"""
-        result = find_relevant_svg_files("M_143_TF1", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_TF1", self.file_info_list)
         # Should only get Textfassung1 files, not Textfassung2
         expected = [
             "M143_Textfassung1-1von2-final.svg",
@@ -117,14 +182,14 @@ class TestFindRelevantSvgs(unittest.TestCase):
 
     def test_find_relevant_svg_files_standard_for_tf2(self):
         """Test getting SVGs for TF2 entries"""
-        result = find_relevant_svg_files("M_143_TF2", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_TF2", self.file_info_list)
         # Should only get Textfassung2 files
         expected = ["M143_Textfassung2-1von1-final.svg"]
         self.assertEqual(result, expected)
 
     def test_find_relevant_svg_files_for_sk2(self):
         """Test getting SVGs for Sk2 entries"""
-        result = find_relevant_svg_files("M_143_Sk2", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_Sk2", self.file_info_list)
         # Should only get Sk2 files (not Sk2_1, Sk2_2, etc.)
         expected = [
             "M143_Sk2-1von3-final.svg",
@@ -135,35 +200,35 @@ class TestFindRelevantSvgs(unittest.TestCase):
 
     def test_find_relevant_svg_files_for_sk2_1(self):
         """Test getting SVGs for Sk2_1 entries (sub-numbered sketches)"""
-        result = find_relevant_svg_files("M_143_Sk2_1", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_Sk2_1", self.file_info_list)
         # Should only get Sk2_1 files
         expected = ["M143_Sk2_1-1von1-final.svg"]
         self.assertEqual(result, expected)
 
     def test_find_relevant_svg_files_for_sk2_2(self):
         """Test getting SVGs for Sk2_2 entries"""
-        result = find_relevant_svg_files("M_143_Sk2_2", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_Sk2_2", self.file_info_list)
         # Should only get Sk2_2 files
         expected = ["M143_Sk2_2-1von1-final.svg"]
         self.assertEqual(result, expected)
 
     def test_find_relevant_svg_files_for_sk2_1_1_1(self):
         """Test getting SVGs for Sk2_1_1_1 entries (sub-numbered sketches)"""
-        result = find_relevant_svg_files("M_143_Sk2_1_1_1", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_Sk2_1_1_1", self.file_info_list)
         # Should only get Sk2_1_1_1 files
         expected = ["M143_Sk2_1_1_1-1von1-final.svg"]
         self.assertEqual(result, expected)
 
     def test_find_relevant_svg_files_for_sk1_exact_match(self):
         """Test that Sk1 only matches Sk1 files, not Sk10, Sk11, etc."""
-        result = find_relevant_svg_files("M_143_Sk1", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_Sk1", self.file_info_list)
         # Should only get Sk1 files, not Sk10, Sk11, Sk12
         expected = ["M143_Sk1-1von1-final.svg"]
         self.assertEqual(result, expected)
 
     def test_find_relevant_svg_files_for_sk10_exact_match(self):
         """Test that Sk10 only matches Sk10 files, not Sk1 or other Sk1x files"""
-        result = find_relevant_svg_files("M_143_Sk10", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_Sk10", self.file_info_list)
         # Should only get Sk10 files
         expected = [
             "M143_Sk10-1von9-final.svg",
@@ -174,14 +239,14 @@ class TestFindRelevantSvgs(unittest.TestCase):
 
     def test_find_relevant_svg_files_for_sk11_exact_match(self):
         """Test that Sk11 only matches Sk11 files, not Sk1 or Sk1x files"""
-        result = find_relevant_svg_files("M_143_Sk11", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_Sk11", self.file_info_list)
         # Should only get Sk11 files
         expected = ["M143_Sk11-1von4-final.svg", "M143_Sk11-2von4-final.svg"]
         self.assertEqual(result, expected)
 
     def test_find_relevant_svg_files_for_sk12_exact_match(self):
         """Test that Sk12 only matches Sk12 files"""
-        result = find_relevant_svg_files("M_143_Sk12", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143_Sk12", self.file_info_list)
         # Should only get Sk12 files
         expected = ["M143_Sk12-1von2-final.svg"]
         self.assertEqual(result, expected)
@@ -190,7 +255,7 @@ class TestFindRelevantSvgs(unittest.TestCase):
         """Test getting SVGs when no TF or Sk is specified.
         Should get all non-rowtable files.
         """
-        result = find_relevant_svg_files("M_143", self.all_svg_files, "143")
+        result = find_relevant_svg_files("M_143", self.file_info_list)
         # Should get all Textfassung files when no specific TF is mentioned
         expected = [
             "M143_Textfassung1-1von2-final.svg",
@@ -214,18 +279,18 @@ class TestFindRelevantSvgs(unittest.TestCase):
 
     def test_find_relevant_svg_files_with_skrt(self):
         """Test getting SVGs for SkRT entries"""
-        result = find_relevant_svg_files("SkRT", self.all_svg_files, "")
+        result = find_relevant_svg_files("SkRT", self.file_info_list)
         expected = ["op25_C_Reihentabelle-1von1-final.svg"]
         self.assertEqual(result, expected)
 
     def test_find_relevant_svg_files_with_no_matches(self):
         """Test getting SVGs when no matches exist"""
-        result = find_relevant_svg_files("M_999", self.all_svg_files, "999")
+        result = find_relevant_svg_files("M_999", self.file_info_list)
         self.assertEqual(result, [])
 
     def test_find_relevant_svg_files_with_empty_file_list(self):
         """Test with empty SVG file list"""
-        result = find_relevant_svg_files("M_143", [], "143")
+        result = find_relevant_svg_files("M_143", [])
         self.assertEqual(result, [])
 
 

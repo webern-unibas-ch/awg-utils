@@ -30,13 +30,11 @@ class ContextHelpers:
 
 
 @dataclass
-class TextcriticsEntryContext:
+class TextcriticalComments:
     """Data shared while processing a single textcritics entry."""
 
-    textcritics_entry_id: str
     svg_group_ids: list
     block_comments: list
-    relevant_svgs: list
 
 
 @dataclass

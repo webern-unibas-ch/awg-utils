@@ -8,48 +8,23 @@ Made by Eli (lili041 --Github) with Google Gemini
 import sys
 
 from utils.constants import TKK
-from utils.extraction_utils import extract_moldenhauer_number, extract_svg_group_ids
+from utils.extraction_utils import (
+    extract_file_info_list,
+    extract_svg_group_ids,
+    extract_textcritics_entry_id,
+)
 from utils.file_utils import load_and_validate_inputs, create_svg_loader, save_results
 from utils.logger_utils import Logger
 from utils.models import (
     ContextHelpers,
     SvgGroupIdContext,
-    TextcriticsEntryContext,
+    TextcriticalComments,
 )
 from utils.svg_utils import (
-    build_id_to_file_index_by_class,
-    find_relevant_svg_files,
+    build_entry_id_index,
     update_svg_id_by_class,
 )
 from utils.validation_utils import display_validation_report
-
-
-def get_textcritics_entry_context(textcritics_entry, all_svg_files, logger):
-    """Resolve extracted IDs and relevant SVG scope for one textcritics entry."""
-    textcritics_entry_id = textcritics_entry.get("id", "")
-    if not textcritics_entry_id:
-        return None
-
-    svg_group_ids, block_comments = extract_svg_group_ids(textcritics_entry)
-    if not svg_group_ids:
-        if logger.verbose:
-            print(" No svgGroupIds to process")
-        return None
-
-    current_mnr_number = extract_moldenhauer_number(textcritics_entry_id)
-    relevant_svgs = find_relevant_svg_files(
-        textcritics_entry_id, all_svg_files, current_mnr_number
-    )
-
-    if logger.verbose:
-        logger.log_entry_context(textcritics_entry_id, relevant_svgs)
-
-    return TextcriticsEntryContext(
-        textcritics_entry_id=textcritics_entry_id,
-        svg_group_ids=svg_group_ids,
-        block_comments=block_comments,
-        relevant_svgs=relevant_svgs,
-    )
 
 
 def get_single_matching_svg_file(textcritics_entry_id, svg_group_id_context, helpers):
@@ -103,35 +78,6 @@ def _update_svg_target_id(
     return True
 
 
-def process_entry_svg_group_ids(textcritics_entry_context, id_to_file_index, helpers):
-    """Process all svgGroupIds for a single textcritics entry."""
-    counter = 1
-    entry_id_formatted = textcritics_entry_context.textcritics_entry_id.lower()
-
-    for svg_group_id, block_comment in zip(
-        textcritics_entry_context.svg_group_ids,
-        textcritics_entry_context.block_comments,
-    ):
-        helpers.logger.bump_stats("ids_seen")
-        matching_files = id_to_file_index.get(svg_group_id, [])
-        new_id = f"{TKK.prefix}{entry_id_formatted}-{counter:03d}"
-        svg_group_id_context = SvgGroupIdContext(
-            svg_group_id=svg_group_id,
-            block_comment=block_comment,
-            matching_files=matching_files,
-            new_id=new_id,
-        )
-
-        updated = process_single_svg_group_id(
-            textcritics_entry_context.textcritics_entry_id,
-            svg_group_id_context,
-            helpers,
-        )
-
-        if updated:
-            counter += 1
-
-
 def process_single_svg_group_id(textcritics_entry_id, svg_group_id_context, helpers):
     """Process a single svgGroupId through the complete update workflow."""
     svg_filename = get_single_matching_svg_file(
@@ -163,33 +109,68 @@ def process_single_svg_group_id(textcritics_entry_id, svg_group_id_context, help
     return True
 
 
-def process_textcritics_entry(textcritics_entry, all_svg_files, svg_loader, logger):
+def process_tkk_ids_per_entry(
+    textcritics_entry_id, tkk_comments, id_to_file_index, helpers
+):
+    """Process all svgGroupIds for a single textcritics entry."""
+    counter = 1
+    entry_id_formatted = textcritics_entry_id.lower()
+
+    for svg_group_id, block_comment in zip(
+        tkk_comments.svg_group_ids,
+        tkk_comments.block_comments,
+    ):
+        helpers.logger.bump_stats("ids_seen")
+
+        matching_files = id_to_file_index.get(svg_group_id, [])
+
+        new_id = f"{TKK.prefix}{entry_id_formatted}-{counter:03d}"
+
+        svg_group_id_context = SvgGroupIdContext(
+            svg_group_id=svg_group_id,
+            block_comment=block_comment,
+            matching_files=matching_files,
+            new_id=new_id,
+        )
+
+        updated = process_single_svg_group_id(
+            textcritics_entry_id,
+            svg_group_id_context,
+            helpers,
+        )
+
+        if updated:
+            counter += 1
+
+
+def process_textcritics_entry(textcritics_entry, file_info_list, svg_loader, logger):
     """Process a single textcritics entry and all its block comments."""
-    if not isinstance(textcritics_entry, dict):
+    textcritics_entry_id = extract_textcritics_entry_id(textcritics_entry)
+    if textcritics_entry_id is None:
         return
 
-    if logger.verbose:
-        textcritics_entry_id = textcritics_entry.get("id", "")
-        if textcritics_entry_id:
-            print(f"\nProcessing textcritics entry ID: {textcritics_entry_id}")
+    logger.log_processing_entry_start(textcritics_entry_id)
 
-    context = get_textcritics_entry_context(textcritics_entry, all_svg_files, logger)
-    if context is None:
+    # Extract all svgGroupIds and block comments from this entry
+    svg_group_ids, block_comments = extract_svg_group_ids(textcritics_entry)
+
+    logger.log_items_found(svg_group_ids, "svgGroupIds")
+    if not svg_group_ids:
         return
 
-    logger.bump_stats("entries_seen")
-
-    textcritics_entry_context = context
-    helpers = ContextHelpers(svg_loader=svg_loader, logger=logger)
-
-    id_to_file_index = build_id_to_file_index_by_class(
-        textcritics_entry_context.relevant_svgs,
-        helpers.svg_loader,
-        target_class=TKK.css_class,
+    id_to_file_index = build_entry_id_index(
+        textcritics_entry_id, file_info_list, svg_loader, logger, TKK.css_class
     )
 
-    process_entry_svg_group_ids(
-        textcritics_entry_context,
+    tkk_comments = TextcriticalComments(
+        svg_group_ids=svg_group_ids,
+        block_comments=block_comments,
+    )
+    helpers = ContextHelpers(svg_loader=svg_loader, logger=logger)
+
+    process_tkk_ids_per_entry(
+        textcritics_entry_id,
+        tkk_comments,
         id_to_file_index,
         helpers,
     )
@@ -211,26 +192,26 @@ def unify_tkk_ids(json_path, svg_folder, logger):
     Returns:
         bool: True if processing completed successfully, False if there were issues
     """
-    if logger.verbose:
-        print("--- Starting TKK ID processing ---")
-        if logger.dry_run:
-            print(" [DRY-RUN] No files will be written.")
+    logger.log_processing_start("TKK ID")
 
-    json_data, all_svg_files = load_and_validate_inputs(json_path, svg_folder)
+    json_data, svg_file_names = load_and_validate_inputs(json_path, svg_folder)
+
+    # Pre-extract file infos to avoid redundant parsing
+    file_info_list = extract_file_info_list(svg_file_names)
 
     svg_file_cache = {}
     svg_loader = create_svg_loader(svg_folder, svg_file_cache)
 
-    all_textcritics_entries = (
+    textcritics_entries = (
         json_data.get("textcritics", json_data)
         if isinstance(json_data, dict)
         else json_data
     )
 
-    for textcritics_entry in all_textcritics_entries:
+    for textcritics_entry in textcritics_entries:
         process_textcritics_entry(
             textcritics_entry,
-            all_svg_files,
+            file_info_list,
             svg_loader,
             logger,
         )

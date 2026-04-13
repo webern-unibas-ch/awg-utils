@@ -117,10 +117,8 @@ def process_single_link_box(
         # Create new ID
         new_group_id = f"{LINKBOX.prefix}{entry_id}-to-{target_sheet_id}".lower()
 
-        # Duplicate linkBox and update ID in JSON
-        new_link_box = dict(link_box)
-        new_link_box["svgGroupId"] = new_group_id
-        parent_link_boxes.append(new_link_box)
+        # Shallow-copy linkBox with overridden svgGroupId and append to JSON list
+        parent_link_boxes.append({**link_box, "svgGroupId": new_group_id})
 
         if expanded_json:
             helpers.logger.log(

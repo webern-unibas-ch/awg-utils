@@ -26,8 +26,8 @@ import unittest
 from utils.logger_utils import Logger
 
 
-class TestLogger(unittest.TestCase):
-    """Tests for Logger class."""
+class TestLoggerInitAndStats(unittest.TestCase):
+    """Tests for Logger initialization, bump_stats, print_report, and print_stats_summary."""
 
     def setUp(self):
         """Set up a Logger instance for testing."""
@@ -46,6 +46,66 @@ class TestLogger(unittest.TestCase):
         }
         self.assertEqual(self.logger.stats, expected)
 
+    def test_bump_stats_and_summary(self):
+        """Test that bump_stats() increments counters and summary() prints correct string."""
+        self.logger.bump_stats("entries_seen")
+        self.logger.bump_stats("ids_changed", 5)
+        self.logger.bump_stats("svg_errors", 2)
+
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.print_stats_summary()
+            printed = mock_print.call_args[0][0]
+            self.assertIn("Summary:", printed)
+            self.assertIn("entries=1", printed)
+            self.assertIn("changed=5", printed)
+            self.assertIn("svg_errors=2", printed)
+
+    def test_bump_stats_invalid_key(self):
+        """Test that bump_stats() raises KeyError for invalid stat key."""
+        with self.assertRaises(KeyError):
+            self.logger.bump_stats("not_a_stat")
+
+    def test_print_stats_summary(self):
+        """Test that print_stats_summary prints the labeled summary string."""
+        self.logger.bump_stats("entries_seen", 2)
+        self.logger.bump_stats("ids_missing", 3)
+
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.print_stats_summary()
+            printed = mock_print.call_args[0][0]
+            self.assertIn("Summary:", printed)
+            self.assertIn("entries=2", printed)
+            self.assertIn("missing=3", printed)
+
+    def test_print_report_success(self):
+        """Test that print_report() prints success message when no messages are logged."""
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.print_report()
+            mock_print.assert_any_call(
+                "\n [\u2713] All JSON and SVG IDs successfully updated."
+            )
+
+    def test_print_report_with_errors_and_info(self):
+        """Test that print_report() correctly categorizes and prints messages."""
+        self.logger.log("error", "E001", "ID1", "Error message")
+        self.logger.log("info", "I001", "ID2", "Info message")
+
+        with unittest.mock.patch("builtins.print") as mock_print:
+            self.logger.print_report()
+            calls = [c[0][0] for c in mock_print.call_args_list]
+            self.assertTrue(
+                any("--- Errors and Warnings ---" in call for call in calls)
+            )
+            self.assertTrue(any("--- Info Messages ---" in call for call in calls))
+
+
+class TestLoggerLog(unittest.TestCase):
+    """Tests for log() and log_items_found()."""
+
+    def setUp(self):
+        """Set up a Logger instance for testing."""
+        self.logger = Logger(verbose=False)
+
     def test_log_appends_and_prints(self):
         """Test that log() appends formatted message to messages list and prints it."""
         self.logger.verbose = True
@@ -55,6 +115,12 @@ class TestLogger(unittest.TestCase):
             expected = " [ERROR] M143_TF1: Something went wrong [E001]"
             self.assertIn(expected, self.logger.messages)
             mock_print.assert_called_with(expected)
+
+    def test_log_without_entry_id_and_code(self):
+        """Test log() behavior when entry_id and code are empty."""
+        self.logger.log("warning", "", "", "something happened")
+        expected = " [WARNING] something happened"
+        self.assertIn(expected, self.logger.messages)
 
     def test_log_items_found_count_svg_group_ids(self):
         """Test that log_items_found() prints count when svgGroupIds are present."""
@@ -92,6 +158,15 @@ class TestLogger(unittest.TestCase):
             self.logger.log_items_found(["x"], "svgGroupIds")
             mock_print.assert_not_called()
 
+
+class TestLoggerProcessing(unittest.TestCase):
+    """Tests for log_processing_start, log_processing_entry_start,
+    log_processing_entry_context."""
+
+    def setUp(self):
+        """Set up a Logger instance for testing."""
+        self.logger = Logger(verbose=False)
+
     def test_log_processing_entry_start_prints_when_verbose(self):
         """Test that log_processing_entry_start() prints the entry ID when verbose."""
         self.logger.verbose = True
@@ -116,7 +191,7 @@ class TestLogger(unittest.TestCase):
             mock_print.assert_called_once_with("--- Starting TKK ID processing ---")
 
     def test_log_processing_start_prints_banner_and_dry_run_notice(self):
-        """Test that log_processing_start() also prints dry-run write notice when dry_run is True."""
+        """Test that log_processing_start() prints dry-run notice when dry_run is True."""
         self.logger.verbose = True
         self.logger.dry_run = True
         with unittest.mock.patch("builtins.print") as mock_print:
@@ -143,7 +218,7 @@ class TestLogger(unittest.TestCase):
             self.assertIn(" Relevant SVGs (2): ['a.svg', 'b.svg']", calls)
 
     def test_log_processing_entry_context_skrt(self):
-        """Test log_processing_entry_context() prints SkRT anchor label when entry_id contains 'SkRT'."""
+        """Test log_processing_entry_context() prints SkRT anchor when entry_id contains 'SkRT'."""
         self.logger.verbose = True
         with unittest.mock.patch("builtins.print") as mock_print:
             self.logger.log_processing_entry_context("M143_SkRT1", ["x.svg"])
@@ -156,11 +231,15 @@ class TestLogger(unittest.TestCase):
             self.logger.log_processing_entry_context("M143_TF1", ["a.svg"])
             mock_print.assert_not_called()
 
-    def test_log_without_entry_id_and_code(self):
-        """Test log() behavior when entry_id and code are empty."""
-        self.logger.log("warning", "", "", "something happened")
-        expected = " [WARNING] something happened"
-        self.assertIn(expected, self.logger.messages)
+
+
+class TestLoggerIdChange(unittest.TestCase):
+    """Tests for log_id_change, log_id_change_json, and log_id_change_svg,
+    log_ids_missing, log_ids_multiple, log_svg_error, and log_svg_unchanged."""
+
+    def setUp(self):
+        """Set up a Logger instance for testing."""
+        self.logger = Logger(verbose=False)
 
     def test_log_id_change_bumps_stat(self):
         """Test that log_id_change() increments ids_changed when bump_changed=True."""
@@ -278,59 +357,6 @@ class TestLogger(unittest.TestCase):
             " updating JSON only [svg_unchanged]"
         )
         self.assertIn(expected, self.logger.messages)
-
-    def test_print_report_success(self):
-        """Test that print_report() prints success message when no messages are logged."""
-        with unittest.mock.patch("builtins.print") as mock_print:
-            self.logger.print_report()
-            mock_print.assert_any_call(
-                "\n [\u2713] All JSON and SVG IDs successfully updated."
-            )
-
-    def test_print_report_with_errors_and_info(self):
-        """Test that print_report() correctly categorizes and prints messages."""
-        self.logger.log("error", "E001", "ID1", "Error message")
-        self.logger.log("info", "I001", "ID2", "Info message")
-
-        with unittest.mock.patch("builtins.print") as mock_print:
-            self.logger.print_report()
-            calls = [c[0][0] for c in mock_print.call_args_list]
-            self.assertTrue(
-                any("--- Errors and Warnings ---" in call for call in calls)
-            )
-            self.assertTrue(any("--- Info Messages ---" in call for call in calls))
-
-    def test_bump_stats_and_summary(self):
-        """Test that bump_stats() increments counters and summary() prints correct string."""
-        self.logger.bump_stats("entries_seen")
-        self.logger.bump_stats("ids_changed", 5)
-        self.logger.bump_stats("svg_errors", 2)
-
-        with unittest.mock.patch("builtins.print") as mock_print:
-            self.logger.print_stats_summary()
-            printed = mock_print.call_args[0][0]
-            self.assertIn("Summary:", printed)
-            self.assertIn("entries=1", printed)
-            self.assertIn("changed=5", printed)
-            self.assertIn("svg_errors=2", printed)
-
-    def test_bump_stats_invalid_key(self):
-        """Test that bump_stats() raises KeyError for invalid stat key."""
-        with self.assertRaises(KeyError):
-            self.logger.bump_stats("not_a_stat")
-
-    def test_print_stats_summary(self):
-        """Test that print_stats_summary prints the labeled summary string."""
-        self.logger.bump_stats("entries_seen", 2)
-        self.logger.bump_stats("ids_missing", 3)
-
-        with unittest.mock.patch("builtins.print") as mock_print:
-            self.logger.print_stats_summary()
-            # The first argument to print should contain the label
-            printed = mock_print.call_args[0][0]
-            self.assertIn("Summary:", printed)
-            self.assertIn("entries=2", printed)
-            self.assertIn("missing=3", printed)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
-numpy==2.2.3
-opencv-python==4.11.0.86
-pillow==11.1.0
-pylint==3.3.4
-PyMuPDF==1.25.2
+numpy==2.4.4
+opencv-python==4.13.0.92
+pillow==12.2.0
+pylint>=4.0.0
+PyMuPDF==1.27.2

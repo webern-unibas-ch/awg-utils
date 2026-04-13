@@ -1,0 +1,21 @@
+{
+    "textcritics": [
+        {
+            "id": "M241_Sk1",
+            "commentary": {
+                "comments": [
+                    {
+                        "blockComments": [
+                            {
+                                "svgGroupId": "old-id-mf-1"
+                            },
+                            {
+                                "svgGroupId": "old-id-mf-2"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

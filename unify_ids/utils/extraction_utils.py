@@ -7,17 +7,90 @@ This module provides utility functions for extracting and parsing various
 identifiers and data structures used in TKK ID processing workflows.
 
 Functions:
-- extract_moldenhauer_number: Extracts catalog numbers from entry ID strings
-- extract_svg_group_ids: Extracts svgGroupIds from JSON entry structures
+    - extract_file_info_list: Extracts file info (MNR number and rowtable status) from SVG filenames
+    - extract_id_suffix: Extracts suffix for linkBox IDs from SVG filenames
+    - extract_link_boxes: Extracts linkBox objects from JSON entry structures
+    - extract_moldenhauer_number: Extracts catalog numbers from entry ID strings
+    - extract_svg_group_ids: Extracts svgGroupIds from JSON entry structures
+    - has_class_token: Checks if a specific class token is present in a class attribute string
 
 Usage:
-    from extraction_utils import extract_moldenhauer_number, extract_svg_group_ids
+    from utils.extraction_utils import (
+        extract_file_info_list,
+        extract_id_suffix,
+        extract_link_boxes,
+        extract_moldenhauer_number,
+        extract_svg_group_ids,
+        has_class_token
+    )
 
+
+Example:
+    file_info = extract_file_info_list(["M143_Sk1-1von1-final.svg"])
+    suffix = extract_id_suffix("M35_42_Sk1-3von6-final.svg")
     number = extract_moldenhauer_number("M_143_TF1")
     ids, comments = extract_svg_group_ids(entry_data)
+    link_boxes = extract_link_boxes(entry_data)
+    has_tkk_class = has_class_token("tkk important", "tkk")
 """
 
 import re
+
+
+def extract_file_info_list(svg_file_names):
+    """Extract file info (MNR number and rowtable status) for a list of SVG filenames.
+
+    Args:
+        svg_file_names (list): List of SVG filenames
+    Returns:
+        list: List of dictionaries with keys 'file_name', 'mnr', and 'is_rowtable'
+    """
+    return [
+        {
+            "file_name": file_name,
+            "mnr": extract_moldenhauer_number(file_name),
+            "is_rowtable": "Reihentabelle" in file_name,
+        }
+        for file_name in svg_file_names
+    ]
+
+
+def extract_id_suffix(svg_filename):
+    """
+    Extract the suffix for a linkBox ID from an SVG filename based on '-NvonM-' pattern.
+
+    Supports filenames containing '-NvonM-' (e.g., '-3von6-', '-9von12-', '-1von1-').
+    - For '1von1', returns an empty string (no suffix).
+    - For other values, returns a letter suffix (1->'a', 2->'b', ...).
+    - If the pattern is not found, returns 'x'.
+
+    Args:
+        svg_filename (str): The SVG filename to extract the suffix from.
+
+    Returns:
+        str: The extracted suffix for the ID, or 'x' if not found.
+    """
+    m = re.search(r"-(\d+)von(\d+)-", svg_filename)
+    if m:
+        num = int(m.group(1))
+        total = int(m.group(2))
+        if num == 1 and total == 1:
+            return ""
+        return chr(ord("a") + num - 1)
+    return "x"
+
+
+def extract_link_boxes(entry):
+    """Extract all linkBoxes from an entry.
+
+    Args:
+        entry (dict): Single textcritics entry
+
+    Returns:
+        list: List of linkBox objects with svgGroupId and linkTo information
+    """
+    link_boxes = entry.get("linkBoxes", [])
+    return link_boxes if isinstance(link_boxes, list) else []
 
 
 def extract_moldenhauer_number(text):
@@ -36,8 +109,22 @@ def extract_moldenhauer_number(text):
     Returns:
         str: The extracted Moldenhauer number as string, or empty string if no match found.
     """
-    match = re.search(r'Mx?_?(\d+)', str(text))
+    match = re.search(r"Mx?_?(\d+)", str(text))
     return match.group(1) if match else ""
+
+
+def extract_textcritics_entry_id(textcritics_entry):
+    """Extract and validate the entry ID from a textcritics entry dict.
+
+    Args:
+        textcritics_entry (dict): The textcritics entry to extract the ID from.
+
+    Returns:
+        str or None: The extracted entry ID, or None if invalid.
+    """
+    if not isinstance(textcritics_entry, dict):
+        return None
+    return textcritics_entry.get("id") or None
 
 
 def extract_svg_group_ids(entry):
@@ -52,24 +139,29 @@ def extract_svg_group_ids(entry):
     svg_group_ids = []
     block_comments = []
 
-    comments_list = entry.get('commentary', {}).get('comments', [])
+    comments_list = entry.get("commentary", {}).get("comments", [])
     for comment_group in comments_list:
-        for block_comment in comment_group.get('blockComments', []):
-            svg_group_id = block_comment.get('svgGroupId')
+        for block_comment in comment_group.get("blockComments", []):
+            svg_group_id = block_comment.get("svgGroupId")
             if svg_group_id and svg_group_id != "TODO":
                 svg_group_ids.append(svg_group_id)
                 block_comments.append(block_comment)
 
     return svg_group_ids, block_comments
 
-def extract_link_boxes(entry):
-    """Extract all linkBoxes from an entry.
+
+def has_class_token(class_attr: str, wanted_class: str) -> bool:
+    """
+    Check if the required class token is present in the class attribute string.
 
     Args:
-        entry (dict): Single textcritics entry
+        class_attr (str): The class attribute value from an SVG tag.
+        wanted_class (str): The class name to check for.
 
     Returns:
-        list: List of linkBox objects with svgGroupId and linkTo information
+        bool: True if the required class token is present, False otherwise.
     """
-    link_boxes = entry.get('linkBoxes', [])
-    return link_boxes if isinstance(link_boxes, list) else []
+    wanted = (wanted_class or "").strip().lower()
+    if not wanted:
+        return False
+    return any(token.lower() == wanted for token in (class_attr or "").split())

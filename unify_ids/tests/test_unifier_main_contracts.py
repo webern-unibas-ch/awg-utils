@@ -20,6 +20,7 @@ import pytest
     ids=["tkk", "linkbox"],
 )
 def test_unifier_modules_export_entrypoint(module_name, entry_fn):
+    "Test that each unifier module exports its expected public entry function"
     module = importlib.import_module(module_name)
     assert hasattr(module, entry_fn)
     assert callable(getattr(module, entry_fn))
@@ -31,6 +32,7 @@ def test_unifier_modules_export_entrypoint(module_name, entry_fn):
     ids=["tkk", "linkbox"],
 )
 def test_main_handles_missing_file(module_name, entry_fn, mocker):
+    "Test that unifier main() exits with code 1 when required files are missing"
     module = importlib.import_module(module_name)
     if not hasattr(module, "main") or not hasattr(module, "sys"):
         pytest.skip(f"{module_name} has no script-style main()")

@@ -32,6 +32,7 @@ from utils.default_objects import (
     DEFAULT_TEXTCRITICAL_COMMENT_BLOCK,
     DEFAULT_TEXTCRITICS,
 )
+from utils.stripping_utils import StrippingUtils
 
 
 ############################################
@@ -98,8 +99,8 @@ class ConversionUtilsHelper:
         source_description["id"] = source_id
         source_description["siglum"] = siglum
         source_description["siglumAddendum"] = siglum_addendum
-        source_description["type"] = self._strip_tag(paras[1], P_TAG) or ""
-        source_description["location"] = self._strip_tag(paras[2], P_TAG) or ""
+        source_description["type"] = StrippingUtils.strip_tag(paras[1], P_TAG) or ""
+        source_description["location"] = StrippingUtils.strip_tag(paras[2], P_TAG) or ""
         source_description["physDesc"] = self._get_phys_desc(paras, source_id)
 
         return source_description
@@ -260,11 +261,13 @@ class ConversionUtilsHelper:
         """
         comment = copy.deepcopy(DEFAULT_TEXTCRITICAL_COMMENT)
 
-        comment["measure"] = self._strip_tag_and_clean(columns_in_row[0], "td")
-        comment["system"] = self._strip_tag_and_clean(columns_in_row[1], "td")
-        comment["position"] = self._strip_tag_and_clean(columns_in_row[2], "td")
+        comment["measure"] = StrippingUtils.strip_tag_and_clean(columns_in_row[0], "td")
+        comment["system"] = StrippingUtils.strip_tag_and_clean(columns_in_row[1], "td")
+        comment["position"] = StrippingUtils.strip_tag_and_clean(
+            columns_in_row[2], "td"
+        )
 
-        comment_text = self._strip_tag_and_clean(columns_in_row[3], "td")
+        comment_text = StrippingUtils.strip_tag_and_clean(columns_in_row[3], "td")
         comment_text = self._escape_curly_brackets(comment_text)
         comment_text = self._add_report_fragment_links(comment_text)
         comment_text = self._replace_glyphs(comment_text)
@@ -309,7 +312,7 @@ class ConversionUtilsHelper:
             PhysDesc: A dictionary representing the physical description of the source description.
         """
         phys_desc = copy.deepcopy(DEFAULT_PHYS_DESC)
-        conditions = self._strip_tag(paras[3], P_TAG) or ""
+        conditions = StrippingUtils.strip_tag(paras[3], P_TAG) or ""
         phys_desc["conditions"].append(conditions)
 
         # Define labels and corresponding keys in the physical description dictionary
@@ -407,7 +410,7 @@ class ConversionUtilsHelper:
         # Default value for empty writing instruments
         writing_instruments = {"main": "", "secondary": []}
         if writing_instruments_text is not None:
-            stripped_writing_instruments = self._strip_by_delimiter(
+            stripped_writing_instruments = StrippingUtils.strip_by_delimiter(
                 writing_instruments_text, SEMICOLON
             )
 
@@ -416,7 +419,7 @@ class ConversionUtilsHelper:
             if len(stripped_writing_instruments) > 1:
                 secondary = [
                     instr.strip().rstrip(FULL_STOP)
-                    for instr in self._strip_by_delimiter(
+                    for instr in StrippingUtils.strip_by_delimiter(
                         stripped_writing_instruments[1], COMMA
                     )
                 ]
@@ -529,9 +532,9 @@ class ConversionUtilsHelper:
         folios = []
 
         for para in sibling_paras:
-            stripped_para_text = self._strip_by_delimiter(para.text, " \t")
+            stripped_para_text = StrippingUtils.strip_by_delimiter(para.text, " \t")
             if len(stripped_para_text) != 2:
-                stripped_para_text = self._strip_by_delimiter(para.text, "\t")
+                stripped_para_text = StrippingUtils.strip_by_delimiter(para.text, "\t")
 
             # Check sibling paragraph for folioStr or pageStr to create a new folio entry
             folio_found = re.search(FOLIO_STR, para.text) is not None
@@ -601,7 +604,7 @@ class ConversionUtilsHelper:
         item_description = ""
 
         # Get content of para with inner tags
-        para_content = self._strip_tag(para, P_TAG)
+        para_content = StrippingUtils.strip_tag(para, P_TAG)
 
         # Check if the paragraph starts with a strong formatted sketch sigle
         if para_content.find(STRONG_TAG) and (
@@ -609,7 +612,9 @@ class ConversionUtilsHelper:
         ):
             # Extract itemLabel
             # (Get first part of the text content of para, split by "(" )
-            item_label = self._strip_by_delimiter(para.text, PARENTHESIS)[0].strip()
+            item_label = StrippingUtils.strip_by_delimiter(para.text, PARENTHESIS)[
+                0
+            ].strip()
 
             # Create itemLinkTo dictionary
             sheet_id = (
@@ -630,7 +635,7 @@ class ConversionUtilsHelper:
             # Extract itemDescription
             # (re-add delimiter that gets removed in the stripping action
             # and remove trailing colon)
-            item_description = PARENTHESIS + self._strip_by_delimiter(
+            item_description = PARENTHESIS + StrippingUtils.strip_by_delimiter(
                 para_content, PARENTHESIS
             )[1].strip().rstrip(COLON)
         elif para_content.find(STRONG_TAG):
@@ -709,8 +714,8 @@ class ConversionUtilsHelper:
         if content_paragraph is None:
             return content_lines
 
-        stripped_content = self._strip_tag(content_paragraph, P_TAG)
-        initial_content = self._strip_by_delimiter(stripped_content, label)[1]
+        stripped_content = StrippingUtils.strip_tag(content_paragraph, P_TAG)
+        initial_content = StrippingUtils.strip_by_delimiter(stripped_content, label)[1]
 
         content_lines.append(
             initial_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
@@ -722,7 +727,7 @@ class ConversionUtilsHelper:
             sibling = content_paragraph.next_sibling
 
             while sibling is not None and sibling.name == P_TAG:
-                sibling_content = self._strip_tag(sibling, P_TAG)
+                sibling_content = StrippingUtils.strip_tag(sibling, P_TAG)
                 if sibling_content.endswith(FULL_STOP) or sibling_content.endswith(
                     SEMICOLON
                 ):
@@ -791,7 +796,7 @@ class ConversionUtilsHelper:
 
             # Extract system label
             if SYSTEM_STR in para:
-                stripped_system_text = self._strip_by_delimiter(para, COLON)
+                stripped_system_text = StrippingUtils.strip_by_delimiter(para, COLON)
                 system_label = stripped_system_text[0].replace(SYSTEM_STR, "").strip()
 
                 system["system"] = system_label
@@ -884,7 +889,7 @@ class ConversionUtilsHelper:
                     block_index -= 1
 
                 comment_block = copy.deepcopy(DEFAULT_TEXTCRITICAL_COMMENT_BLOCK)
-                comment_block["blockHeader"] = self._strip_tag_and_clean(
+                comment_block["blockHeader"] = StrippingUtils.strip_tag_and_clean(
                     columns_in_row[0], "td"
                 )
                 textcritics["commentary"]["comments"].append(comment_block)
@@ -969,78 +974,3 @@ class ConversionUtilsHelper:
             return f"<span class='{css_class}'>{{{{ref.getGlyph('{glyph}')}}}}</span>"
 
         return re.sub(match_pattern, replace_glyph, text)
-
-    ############################################
-    # Helper function: _strip_by_delimiter
-    ############################################
-
-    def _strip_by_delimiter(self, input_str: str, delimiter: str) -> List[str]:
-        """
-        Splits a string by a delimiter and returns a list of stripped substrings.
-
-        Args:
-            input_str (str): The input string to split and strip.
-            delimiter (str): The delimiter to split the string by.
-
-        Returns:
-            List[str]: A list of stripped substrings.
-        """
-        stripped_substring_list: List[str] = [
-            s.strip() for s in input_str.split(delimiter)
-        ]
-        return stripped_substring_list
-
-    ############################################
-    # Helper function: _strip_tag_and_clean
-    ############################################
-
-    def _strip_tag_and_clean(self, content, tag) -> str:
-        """
-        Strips opening and closing tags from an HTML string and strips surrounding paragraph tags.
-
-        Args:
-        content (str): The input string.
-        tag (str): The name of the tag to strip.
-
-        Returns:
-        str: The content within the specified tags, with leading and trailing whitespace removed.
-        """
-        stripped_content = self._strip_tag(content, tag)
-        stripped_content = self._strip_tag(stripped_content, P_TAG)
-        return stripped_content.replace("</p><p>", " <br /> ")
-
-    ############################################
-    # Helper function: _strip_tag
-    ############################################
-
-    def _strip_tag(self, content: str, tag_str: str) -> str:
-        """
-        Strips opening and closing tags from an HTML/XML string and returns the
-        content within the tags as a string.
-
-        Args:
-        content (str): The input string.
-        tagStr (str): The name of the tag to strip.
-
-        Returns:
-        str: The content within the specified tags, with leading and trailing whitespace removed.
-        """
-        if content is None:
-            print(f"Content is None for tag_str: {tag_str}")
-            return ""
-
-        stripped_str = str(content)
-
-        # Strip opening and closing tags from input (incl. attributes in opening tag)
-        closing_tag = "</" + tag_str + ">"
-        opening_tag = "<" + tag_str
-        opening_tag_start_index = stripped_str.find(opening_tag)
-        opening_tag_end_index = stripped_str.find(">", opening_tag_start_index) + 1
-
-        stripped_str = stripped_str[opening_tag_end_index:]
-        stripped_str = stripped_str.removesuffix(closing_tag)
-
-        # Strip trailing white space
-        stripped_str = stripped_str.strip()
-
-        return stripped_str

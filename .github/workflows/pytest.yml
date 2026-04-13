@@ -39,4 +39,4 @@ jobs:
     - name: Test the code with pytest
       working-directory: ${{ matrix.dir }}
       run: |
-        pytest tests/test_utils_helper.py -v
+        pytest tests/ -v

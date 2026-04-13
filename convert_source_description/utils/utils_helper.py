@@ -591,10 +591,11 @@ class ConversionUtilsHelper:
             # Create itemLinkTo dictionary
             sheet_id = (
                 item_label.replace(" ", UNDERSCORE)
+                .replace(UNDERSCORE, "", 1)  # Remove first underscore (Mx_414 -> Mx414)
                 .replace(FULL_STOP, UNDERSCORE)
                 .replace(STAR, STAR_STR)
             )
-            complex_id = "".join(sheet_id.split(UNDERSCORE)[0:2]).lower()
+            complex_id = sheet_id.split(UNDERSCORE)[0].lower()
 
             item_link_to = {"complexId": complex_id, "sheetId": sheet_id}
 

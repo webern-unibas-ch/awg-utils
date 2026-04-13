@@ -263,3 +263,41 @@ class TestReplaceGlyphs:
         actual_result = helper._replace_glyphs(input_string)
         # Assert
         assert actual_result == expected_result
+
+
+class TestGetItem:
+    """Tests for the _get_item helper function."""
+
+    def test_get_item_uses_compact_sheet_id_for_m_number(self, helper):
+        """Test that 'M 34' gets normalized in sheetId."""
+        # Arrange
+        para = BeautifulSoup(
+            "<p><strong>M 34 Sk1 </strong>(Skizze zu Studienkomposition):</p>",
+            "html.parser",
+        ).p
+
+        # Act
+        item = helper._get_item(para)
+
+        # Assert
+        assert item["item"] == "M 34 Sk1"
+        assert item["itemLinkTo"]["sheetId"] == "M34_Sk1"
+        assert item["itemLinkTo"]["complexId"] == "m34"
+        assert item["itemDescription"] == "(Skizze zu Studienkomposition)"
+
+    def test_get_item_handles_starred_siglum_with_space(self, helper):
+        """Test that 'M* 414' gets normalized in sheetId/complexId."""
+        # Arrange
+        para = BeautifulSoup(
+            "<p><strong>M* 414 Sk1 </strong>(Skizze zu Studienkomposition):</p>",
+            "html.parser",
+        ).p
+
+        # Act
+        item = helper._get_item(para)
+
+        # Assert
+        assert item["item"] == "M* 414 Sk1"
+        assert item["itemLinkTo"]["sheetId"] == "Mx414_Sk1"
+        assert item["itemLinkTo"]["complexId"] == "mx414"
+        assert item["itemDescription"] == "(Skizze zu Studienkomposition)"

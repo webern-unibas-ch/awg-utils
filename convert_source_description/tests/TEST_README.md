@@ -17,6 +17,7 @@ convert_source_description/
 │   ├── TEST_README.md
 │   ├── test_convert_source_description.py
 │   ├── test_file_utils.py
+│   ├── test_paragraph_utils.py
 │   ├── test_stripping_utils.py
 │   └── test_utils_helper.py
 ├── requirements.txt
@@ -54,7 +55,7 @@ Run with coverage to see which parts of the code are tested:
 pytest tests/ --cov=utils --cov=convert_source_description --cov-report=term --cov-report=html
 
 # Coverage for helper-focused tests only
-pytest tests/test_utils_helper.py tests/test_stripping_utils.py --cov=utils --cov-report=term
+pytest tests/test_utils_helper.py tests/test_paragraph_utils.py tests/test_stripping_utils.py --cov=utils --cov-report=term
 
 # Coverage for a specific module
 pytest tests/test_stripping_utils.py --cov=utils.stripping_utils --cov-report=term
@@ -84,6 +85,14 @@ Tests for `file_utils.py` currently cover:
 
 The test module uses monkeypatching to isolate Mammoth conversion behavior and I/O failure paths.
 
+### Paragraph Utils Tests (`test_paragraph_utils.py`)
+
+Tests for `paragraph_utils.py` currently cover:
+- `get_paragraph_content_by_label()`
+- `get_paragraph_index_by_label()`
+
+The test module validates paragraph label discovery, multi-line content extraction, and index lookup behavior on both small fixtures and representative parsed HTML.
+
 ### Stripping Utils Tests (`test_stripping_utils.py`)
 
 Tests for `stripping_utils.py` currently cover:
@@ -97,9 +106,6 @@ The test module validates delimiter handling, tag removal behavior, and paragrap
 
 Tests for `utils_helper.py` currently cover:
 - `find_siglum_indices()`
-- paragraph-label lookup behavior
-- paragraph-content extraction behavior
-- paragraph-index lookup behavior
 - glyph replacement behavior
 
 The test module uses inline HTML fixtures built with BeautifulSoup to validate parser behavior against realistic source-description fragments.

@@ -32,6 +32,7 @@ from utils.default_objects import (
     DEFAULT_TEXTCRITICAL_COMMENT_BLOCK,
     DEFAULT_TEXTCRITICS,
 )
+from utils.paragraph_utils import ParagraphUtils
 from utils.stripping_utils import StrippingUtils
 
 
@@ -329,7 +330,7 @@ class ConversionUtilsHelper:
 
         # Get content for each label and assign it to the corresponding key
         for label, key in phys_desc_labels_keys:
-            content = self._get_paragraph_content_by_label(label, paras)
+            content = ParagraphUtils.get_paragraph_content_by_label(label, paras)
 
             # Writing instruments require special handling
             if key == "writingInstruments":
@@ -364,7 +365,7 @@ class ConversionUtilsHelper:
             List[str]: A list of content items extracted from the paragraphs.
         """
         # Get indices of content
-        content_index = self._get_paragraph_index_by_label("Inhalt:", paras)
+        content_index = ParagraphUtils.get_paragraph_index_by_label("Inhalt:", paras)
         if content_index == -1:
             print("No content found for", source_id)
             return []
@@ -374,9 +375,9 @@ class ConversionUtilsHelper:
         comments_labels = ["Textkritischer Kommentar:", "Textkritische Anmerkungen:"]
         comments_index = next(
             (
-                self._get_paragraph_index_by_label(label, paras)
+                ParagraphUtils.get_paragraph_index_by_label(label, paras)
                 for label in comments_labels
-                if self._get_paragraph_index_by_label(label, paras) != -1
+                if ParagraphUtils.get_paragraph_index_by_label(label, paras) != -1
             ),
             len(paras),
         )
@@ -458,30 +459,6 @@ class ConversionUtilsHelper:
         # If the current paragraph does not meet the criteria, recursively search the next sibling
         paras.append(sibling_para)
         return self._find_siblings(sibling_para.next_sibling, paras)
-
-    ############################################
-    # Helper function: _find_tag_with_label_in_soup
-    ############################################
-
-    def _find_tag_with_label_in_soup(
-        self, label: str, paras: List[Tag]
-    ) -> Optional[Tag]:
-        """
-        Searches for a specific label in a list of BeautifulSoup tags.
-
-        Args:
-        label (str): The label to search for.
-        paras (List[Tag]): The list of BeautifulSoup tags to search within.
-
-        Returns:
-        The BeautifulSoup.Tag with the specified label, or None if not found.
-        """
-        if not label:
-            return None
-        for para in paras:
-            if para.find(string=re.compile(label)):
-                return para
-        return None
 
     ############################################
     # Helper function: _get_folio_label
@@ -690,79 +667,6 @@ class ConversionUtilsHelper:
                 items.append(item)
 
         return items
-
-    ############################################
-    # Helper function: _get_paragraph_content_by_label
-    ############################################
-
-    def _get_paragraph_content_by_label(self, label: str, paras: List[Tag]) -> str:
-        """
-        Returns the content of the paragraph containing the specified label
-        within the BeautifulSoup object. If the label is not found, an empty string is returned.
-
-        Args:
-            label (str): The label to search for within the BeautifulSoup object.
-            paras (List[Tag]): The list of BeautifulSoup tags to search within.
-
-        Returns:
-            str: The content of the BeautifulSoup `p` tag containing the label,
-                with leading and trailing whitespace removed.
-        """
-        content_paragraph = self._find_tag_with_label_in_soup(label, paras)
-        content_lines = []
-
-        if content_paragraph is None:
-            return content_lines
-
-        stripped_content = StrippingUtils.strip_tag(content_paragraph, P_TAG)
-        initial_content = StrippingUtils.strip_by_delimiter(stripped_content, label)[1]
-
-        content_lines.append(
-            initial_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
-        )
-
-        if initial_content.endswith(SEMICOLON):
-            # Check for sibling paragraphs that belong to the same content
-            # (separated by semicolons)
-            sibling = content_paragraph.next_sibling
-
-            while sibling is not None and sibling.name == P_TAG:
-                sibling_content = StrippingUtils.strip_tag(sibling, P_TAG)
-                if sibling_content.endswith(FULL_STOP) or sibling_content.endswith(
-                    SEMICOLON
-                ):
-                    content_lines.append(
-                        sibling_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
-                    )
-                    if sibling_content.endswith(FULL_STOP):
-                        break
-                else:
-                    break
-
-                sibling = sibling.next_sibling
-
-        return content_lines
-
-    ############################################
-    # Helper function: _get_paragraph_index_by_label
-    ############################################
-
-    def _get_paragraph_index_by_label(self, label: str, paras: List[Tag]) -> int:
-        """
-        Gets the index of the first BeautifulSoup `p` element containing the specified label.
-
-        Args:
-            label (str): The label to search for.
-            paras (List[Tag]): The list of BeautifulSoup tags to search within.
-
-        Returns:
-            Index of p tag with given label in BeautifulSoup, or -1 if absent.
-        """
-        tag_with_label = self._find_tag_with_label_in_soup(label, paras)
-        try:
-            return paras.index(tag_with_label)
-        except ValueError:
-            return -1
 
     ############################################
     # Helper function: _get_system_group

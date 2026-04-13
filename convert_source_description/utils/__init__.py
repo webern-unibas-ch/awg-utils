@@ -6,6 +6,7 @@ Utils package for convert_source_description.
 This package contains utility modules for converting source descriptions:
 - default_objects: Default typed dictionary templates
 - file_utils: Word/JSON file input and output helpers
+- paragraph_utils: Paragraph lookup and labeled-content extraction helpers
 - typed_classes: TypedDict models for source and textcritical data
 - utils: Main conversion orchestration helpers
 - utils_helper: Low-level parsing and transformation helpers
@@ -27,6 +28,7 @@ from .default_objects import (
 	DEFAULT_TEXTCRITICS_LIST,
 )
 from .file_utils import FileUtils
+from .paragraph_utils import ParagraphUtils
 from .typed_classes import (
 	ContentItem,
 	ContentItemLinkTo,

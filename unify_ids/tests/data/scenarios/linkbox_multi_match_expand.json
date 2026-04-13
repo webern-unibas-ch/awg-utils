@@ -1,0 +1,15 @@
+{
+    "textcritics": [
+        {
+            "id": "M310_Sk1",
+            "linkBoxes": [
+                {
+                    "svgGroupId": "lb-dup-1",
+                    "linkTo": {
+                        "sheetId": "M311_Sk2"
+                    }
+                }
+            ]
+        }
+    ]
+}

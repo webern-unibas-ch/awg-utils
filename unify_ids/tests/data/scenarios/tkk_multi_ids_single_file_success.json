@@ -1,0 +1,24 @@
+{
+    "textcritics": [
+        {
+            "id": "M240_Sk1",
+            "commentary": {
+                "comments": [
+                    {
+                        "blockComments": [
+                            {
+                                "svgGroupId": "old-id-a"
+                            },
+                            {
+                                "svgGroupId": "old-id-b"
+                            },
+                            {
+                                "svgGroupId": "old-id-c"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

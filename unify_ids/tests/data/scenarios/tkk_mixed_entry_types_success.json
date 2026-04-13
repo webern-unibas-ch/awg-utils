@@ -1,0 +1,46 @@
+{
+    "textcritics": [
+        {
+            "id": "M242_Sk1",
+            "commentary": {
+                "comments": [
+                    {
+                        "blockComments": [
+                            {
+                                "svgGroupId": "old-id-mix-tf-1"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "M243_Sk2",
+            "commentary": {
+                "comments": [
+                    {
+                        "blockComments": [
+                            {
+                                "svgGroupId": "old-id-mix-sk-1"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "M244_SkRT",
+            "commentary": {
+                "comments": [
+                    {
+                        "blockComments": [
+                            {
+                                "svgGroupId": "old-id-mix-skrt-1"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

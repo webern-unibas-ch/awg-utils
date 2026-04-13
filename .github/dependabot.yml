@@ -8,6 +8,9 @@ updates:
   - package-ecosystem: pip
     directories:
       - "/compare_pdfs"
-      - "/convert_source_description"  
+      - "/convert_source_description"
+      - "/unify_ids"
     schedule:
       interval: daily
+    allow:
+      - dependency-type: "all"

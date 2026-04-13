@@ -1,0 +1,26 @@
+{
+    "textcritics": [
+        {
+            "id": "M245_Sk1",
+            "commentary": {
+                "comments": [
+                    {
+                        "blockComments": [
+                            {
+                                "svgGroupId": "old-id-tkk-1"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "linkBoxes": [
+                {
+                    "svgGroupId": "lb-old-mix-1",
+                    "linkTo": {
+                        "sheetId": "M246_Sk2"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -6,20 +6,30 @@ This module should not be run directly. Instead, run the `convert_source_descrip
 
 import copy
 import re
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from bs4 import Tag
 
-from utils.typed_classes import (
-    ContentItem,
-    Folio,
-    PhysDesc,
-    SourceDescription,
-    System,
-    TextcriticalComment,
-    TextCritics,
-    TextcriticsList,
-    WritingInstruments,
+from utils.constants import (
+    COLON,
+    COMMA,
+    FOLIO_STR,
+    FULL_STOP,
+    M_SIGLE,
+    MX_SIGLE,
+    MEASURE_STR,
+    PAGE_STR,
+    PARENTHESIS,
+    P_TAG,
+    ROWTABLE_SHEET_ID,
+    SEMICOLON,
+    SLASH,
+    STAR,
+    STAR_STR,
+    STRONG_TAG,
+    SUP_TAG,
+    SYSTEM_STR,
+    UNDERSCORE,
 )
 from utils.default_objects import (
     DEFAULT_CONTENT_ITEM,
@@ -34,32 +44,17 @@ from utils.default_objects import (
 )
 from utils.paragraph_utils import ParagraphUtils
 from utils.stripping_utils import StrippingUtils
-
-
-############################################
-# Helper constants
-############################################
-FOLIO_STR = "Bl."
-M_SIGLE = "M "
-M_STAR_SIGLE = "M* "
-MEASURE_STR = "T."
-PAGE_STR = "S."
-ROWTABLE_SHEET_ID = "SkRT"
-STAR_STR = "star"
-SYSTEM_STR = "System"
-
-COLON = ":"
-COMMA = ","
-FULL_STOP = "."
-PARENTHESIS = "("
-SEMICOLON = ";"
-SLASH = "/"
-STAR = "*"
-UNDERSCORE = "_"
-
-P_TAG = "p"
-STRONG_TAG = "strong"
-SUP_TAG = "sup"
+from utils.typed_classes import (
+    ContentItem,
+    Folio,
+    PhysDesc,
+    SourceDescription,
+    System,
+    TextcriticalComment,
+    TextCritics,
+    TextcriticsList,
+    WritingInstruments,
+)
 
 
 ############################################
@@ -585,7 +580,7 @@ class ConversionUtilsHelper:
 
         # Check if the paragraph starts with a strong formatted sketch sigle
         if para_content.find(STRONG_TAG) and (
-            para.text.startswith(M_SIGLE) or para.text.startswith(M_STAR_SIGLE)
+            para.text.startswith(M_SIGLE) or para.text.startswith(MX_SIGLE)
         ):
             # Extract itemLabel
             # (Get first part of the text content of para, split by "(" )

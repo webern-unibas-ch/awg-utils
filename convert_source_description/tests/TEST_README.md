@@ -7,6 +7,7 @@ This directory contains the current tests for the `convert_source_description.py
 ```
 convert_source_description/
 ├── convert_source_description.py      # Main conversion script
+├── constants.py                       # Shared parsing and string constants
 ├── default_objects.py                 # Default output object templates
 ├── file_utils.py                      # File loading and output helpers
 ├── typed_classes.py                   # Typed helper classes

@@ -10,7 +10,7 @@ from typing import List, Optional, Tuple
 
 from bs4 import Tag
 
-from typed_classes import (
+from utils.typed_classes import (
     ContentItem,
     Folio,
     PhysDesc,
@@ -21,17 +21,18 @@ from typed_classes import (
     TextcriticsList,
     WritingInstruments,
 )
-from default_objects import (
-    defaultContentItem,
-    defaultFolio,
-    defaultPhysDesc,
-    defaultRow,
-    defaultSourceDescription,
-    defaultSystem,
-    defaultTextcriticalComment,
-    defaultTextcriticalCommentBlock,
-    defaultTextcritics,
+from utils.default_objects import (
+    DEFAULT_CONTENT_ITEM,
+    DEFAULT_FOLIO,
+    DEFAULT_PHYS_DESC,
+    DEFAULT_ROW,
+    DEFAULT_SOURCE_DESCRIPTION,
+    DEFAULT_SYSTEM,
+    DEFAULT_TEXTCRITICAL_COMMENT,
+    DEFAULT_TEXTCRITICAL_COMMENT_BLOCK,
+    DEFAULT_TEXTCRITICS,
 )
+from utils.stripping_utils import StrippingUtils
 
 
 ############################################
@@ -79,7 +80,7 @@ class ConversionUtilsHelper:
         Returns:
             SourceDescription: A dictionary representing the source description.
         """
-        source_description = copy.deepcopy(defaultSourceDescription)
+        source_description = copy.deepcopy(DEFAULT_SOURCE_DESCRIPTION)
 
         # Get siglum
         siglum, siglum_addendum = self._get_siglum(paras)
@@ -98,8 +99,8 @@ class ConversionUtilsHelper:
         source_description["id"] = source_id
         source_description["siglum"] = siglum
         source_description["siglumAddendum"] = siglum_addendum
-        source_description["type"] = self._strip_tag(paras[1], P_TAG) or ""
-        source_description["location"] = self._strip_tag(paras[2], P_TAG) or ""
+        source_description["type"] = StrippingUtils.strip_tag(paras[1], P_TAG) or ""
+        source_description["location"] = StrippingUtils.strip_tag(paras[2], P_TAG) or ""
         source_description["physDesc"] = self._get_phys_desc(paras, source_id)
 
         return source_description
@@ -124,7 +125,9 @@ class ConversionUtilsHelper:
         siglum_pattern = re.compile(r"^<p>\s*<strong>\s*([A-Z])\s*</strong>\s*</p>$")
 
         # pattern for bold formatted single siglum with square brackets, like [A], [B], or [G]
-        siglum_missing_pattern = re.compile(r"^<p>\s*<strong>\s*\[([A-Z])\]\s*</strong>\s*</p>$")
+        siglum_missing_pattern = re.compile(
+            r"^<p>\s*<strong>\s*\[([A-Z])\]\s*</strong>\s*</p>$"
+        )
 
         # pattern for bold formatted siglum with superscript addition, like Ac, AH, or AF1–2
         siglum_with_addendum_pattern = re.compile(
@@ -155,10 +158,8 @@ class ConversionUtilsHelper:
     # Public method: process_table
     ############################################
     def process_table(
-            self,
-            textcritics_list: TextcriticsList,
-            table: Tag,
-            table_index: int) -> TextcriticsList:
+        self, textcritics_list: TextcriticsList, table: Tag, table_index: int
+    ) -> TextcriticsList:
         """
         Processes a table and extracts textcritical comments from it.
 
@@ -166,31 +167,32 @@ class ConversionUtilsHelper:
             table (Tag): A BeautifulSoup `Tag` object representing a table.
             table_index (int): The index of the table in the list of tables.
         """
-        textcritics = copy.deepcopy(defaultTextcritics)
-        textcritics['commentary']['comments'] = []
+        textcritics = copy.deepcopy(DEFAULT_TEXTCRITICS)
+        textcritics["commentary"]["comments"] = []
 
-        rows_in_table = table.find_all('tr')
+        rows_in_table = table.find_all("tr")
         block_index = -1
 
         # Create a default comment block with an empty blockHeader
-        default_comment_block = copy.deepcopy(defaultTextcriticalCommentBlock)
-        default_comment_block['blockHeader'] = ""
-        textcritics['commentary']['comments'].append(default_comment_block)
+        default_comment_block = copy.deepcopy(DEFAULT_TEXTCRITICAL_COMMENT_BLOCK)
+        default_comment_block["blockHeader"] = ""
+        textcritics["commentary"]["comments"].append(default_comment_block)
         block_index += 1
 
         textcritics = self._process_table_rows(textcritics, rows_in_table, block_index)
 
-        print(
-            f"Appending textcritics for table {table_index + 1}...")
+        print(f"Appending textcritics for table {table_index + 1}...")
 
         # Determine if the table is for corrections based on the presence of "Korrektur"
-        is_corrections = "Korrektur" in rows_in_table[0].find_all('td')[-1].get_text(strip=True)
+        is_corrections = "Korrektur" in rows_in_table[0].find_all("td")[-1].get_text(
+            strip=True
+        )
 
         # Adjust textcritics output based on the presence of corrections
         if is_corrections:
             textcritics_list = self._process_corrections(textcritics_list, textcritics)
         else:
-            textcritics_list['textcritics'].append(textcritics)
+            textcritics_list["textcritics"].append(textcritics)
 
         return textcritics_list
 
@@ -214,7 +216,7 @@ class ConversionUtilsHelper:
                 r"{complexId: 'TODO', fragmentId: 'source_\1'}"
                 r')"><strong>\1</strong></a>'
             ),
-            text
+            text,
         )
 
         return text
@@ -233,11 +235,13 @@ class ConversionUtilsHelper:
             str: The escaped text.
         """
         # Replace curly brackets with placeholders to avoid duplicated escaping
-        text = text.replace('{', '__LEFT_CURLY_BRACKET__') \
-                   .replace('}', '__RIGHT_CURLY_BRACKET__')
+        text = text.replace("{", "__LEFT_CURLY_BRACKET__").replace(
+            "}", "__RIGHT_CURLY_BRACKET__"
+        )
         # Escape curly brackets
-        text = text.replace('__LEFT_CURLY_BRACKET__', "{{ '{' }}") \
-                   .replace('__RIGHT_CURLY_BRACKET__', "{{ '}' }}")
+        text = text.replace("__LEFT_CURLY_BRACKET__", "{{ '{' }}").replace(
+            "__RIGHT_CURLY_BRACKET__", "{{ '}' }}"
+        )
         return text
 
     ############################################
@@ -255,17 +259,19 @@ class ConversionUtilsHelper:
         Returns:
             TextcriticalComment: A dictionary representing the textcritical comment.
         """
-        comment = copy.deepcopy(defaultTextcriticalComment)
+        comment = copy.deepcopy(DEFAULT_TEXTCRITICAL_COMMENT)
 
-        comment['measure'] = self._strip_tag_and_clean(columns_in_row[0], 'td')
-        comment['system'] = self._strip_tag_and_clean(columns_in_row[1], 'td')
-        comment['position'] = self._strip_tag_and_clean(columns_in_row[2], 'td')
+        comment["measure"] = StrippingUtils.strip_tag_and_clean(columns_in_row[0], "td")
+        comment["system"] = StrippingUtils.strip_tag_and_clean(columns_in_row[1], "td")
+        comment["position"] = StrippingUtils.strip_tag_and_clean(
+            columns_in_row[2], "td"
+        )
 
-        comment_text = self._strip_tag_and_clean(columns_in_row[3], 'td')
+        comment_text = StrippingUtils.strip_tag_and_clean(columns_in_row[3], "td")
         comment_text = self._escape_curly_brackets(comment_text)
         comment_text = self._add_report_fragment_links(comment_text)
         comment_text = self._replace_glyphs(comment_text)
-        comment['comment'] = comment_text
+        comment["comment"] = comment_text
 
         return comment
 
@@ -305,8 +311,8 @@ class ConversionUtilsHelper:
         Returns:
             PhysDesc: A dictionary representing the physical description of the source description.
         """
-        phys_desc = copy.deepcopy(defaultPhysDesc)
-        conditions = self._strip_tag(paras[3], P_TAG) or ""
+        phys_desc = copy.deepcopy(DEFAULT_PHYS_DESC)
+        conditions = StrippingUtils.strip_tag(paras[3], P_TAG) or ""
         phys_desc["conditions"].append(conditions)
 
         # Define labels and corresponding keys in the physical description dictionary
@@ -327,8 +333,11 @@ class ConversionUtilsHelper:
 
             # Writing instruments require special handling
             if key == "writingInstruments":
-                content = self._extract_writing_instruments(
-                    content[0]) if content else phys_desc[key]
+                content = (
+                    self._extract_writing_instruments(content[0])
+                    if content
+                    else phys_desc[key]
+                )
 
             phys_desc[key] = content
 
@@ -364,21 +373,27 @@ class ConversionUtilsHelper:
         # If no comments labels are found, set the index to the last paragraph
         comments_labels = ["Textkritischer Kommentar:", "Textkritische Anmerkungen:"]
         comments_index = next(
-            (self._get_paragraph_index_by_label(
-                label, paras) for label in comments_labels if self._get_paragraph_index_by_label(
-                label, paras) != -1), len(paras))
+            (
+                self._get_paragraph_index_by_label(label, paras)
+                for label in comments_labels
+                if self._get_paragraph_index_by_label(label, paras) != -1
+            ),
+            len(paras),
+        )
 
         # Ensure comments_index is within valid range
         if comments_index >= len(paras):
             comments_index = len(paras) - 1
 
-        return self._get_items(paras[(content_index + 1): comments_index])
+        return self._get_items(paras[(content_index + 1) : comments_index])
 
     ############################################
     # Helper function: _extract_writing_instruments
     ############################################
 
-    def _extract_writing_instruments(self, writing_instruments_text: str) -> WritingInstruments:
+    def _extract_writing_instruments(
+        self, writing_instruments_text: str
+    ) -> WritingInstruments:
         """
         Extracts the main and secondary writing instruments from the given text.
 
@@ -395,15 +410,18 @@ class ConversionUtilsHelper:
         # Default value for empty writing instruments
         writing_instruments = {"main": "", "secondary": []}
         if writing_instruments_text is not None:
-            stripped_writing_instruments = self._strip_by_delimiter(
-                writing_instruments_text, SEMICOLON)
+            stripped_writing_instruments = StrippingUtils.strip_by_delimiter(
+                writing_instruments_text, SEMICOLON
+            )
 
             # Strip . from last main and secondary writing instruments
             main = stripped_writing_instruments[0].strip().rstrip(FULL_STOP)
             if len(stripped_writing_instruments) > 1:
                 secondary = [
                     instr.strip().rstrip(FULL_STOP)
-                    for instr in self._strip_by_delimiter(stripped_writing_instruments[1], COMMA)
+                    for instr in StrippingUtils.strip_by_delimiter(
+                        stripped_writing_instruments[1], COMMA
+                    )
                 ]
             else:
                 secondary = []
@@ -445,7 +463,9 @@ class ConversionUtilsHelper:
     # Helper function: _find_tag_with_label_in_soup
     ############################################
 
-    def _find_tag_with_label_in_soup(self, label: str, paras: List[Tag]) -> Optional[Tag]:
+    def _find_tag_with_label_in_soup(
+        self, label: str, paras: List[Tag]
+    ) -> Optional[Tag]:
         """
         Searches for a specific label in a list of BeautifulSoup tags.
 
@@ -512,9 +532,9 @@ class ConversionUtilsHelper:
         folios = []
 
         for para in sibling_paras:
-            stripped_para_text = self._strip_by_delimiter(para.text, " \t")
+            stripped_para_text = StrippingUtils.strip_by_delimiter(para.text, " \t")
             if len(stripped_para_text) != 2:
-                stripped_para_text = self._strip_by_delimiter(para.text, "\t")
+                stripped_para_text = StrippingUtils.strip_by_delimiter(para.text, "\t")
 
             # Check sibling paragraph for folioStr or pageStr to create a new folio entry
             folio_found = re.search(FOLIO_STR, para.text) is not None
@@ -523,16 +543,24 @@ class ConversionUtilsHelper:
 
             if has_folio_str:
                 # Create folio object
-                folio = copy.deepcopy(defaultFolio)
+                folio = copy.deepcopy(DEFAULT_FOLIO)
 
                 # Extract folio label
                 if stripped_para_text:
-                    if FOLIO_STR in stripped_para_text[0] or PAGE_STR in stripped_para_text[0]:
-                        folio["folio"] = self._get_folio_label(stripped_para_text[0].strip())
-                    elif len(stripped_para_text) > 2 and (
-                        FOLIO_STR in stripped_para_text[1] or PAGE_STR in stripped_para_text[1]
+                    if (
+                        FOLIO_STR in stripped_para_text[0]
+                        or PAGE_STR in stripped_para_text[0]
                     ):
-                        folio["folio"] = self._get_folio_label(stripped_para_text[1].strip())
+                        folio["folio"] = self._get_folio_label(
+                            stripped_para_text[0].strip()
+                        )
+                    elif len(stripped_para_text) > 2 and (
+                        FOLIO_STR in stripped_para_text[1]
+                        or PAGE_STR in stripped_para_text[1]
+                    ):
+                        folio["folio"] = self._get_folio_label(
+                            stripped_para_text[1].strip()
+                        )
 
                 # Check if the paragraph contains a page marker
                 if page_found:
@@ -576,7 +604,7 @@ class ConversionUtilsHelper:
         item_description = ""
 
         # Get content of para with inner tags
-        para_content = self._strip_tag(para, P_TAG)
+        para_content = StrippingUtils.strip_tag(para, P_TAG)
 
         # Check if the paragraph starts with a strong formatted sketch sigle
         if para_content.find(STRONG_TAG) and (
@@ -584,16 +612,16 @@ class ConversionUtilsHelper:
         ):
             # Extract itemLabel
             # (Get first part of the text content of para, split by "(" )
-            item_label = self._strip_by_delimiter(para.text, PARENTHESIS)[0].strip()
+            item_label = StrippingUtils.strip_by_delimiter(para.text, PARENTHESIS)[
+                0
+            ].strip()
 
             # Create itemLinkTo dictionary
-            sheet_id = item_label.replace(
-                " ",
-                UNDERSCORE).replace(
-                FULL_STOP,
-                UNDERSCORE).replace(
-                STAR,
-                STAR_STR)
+            sheet_id = (
+                item_label.replace(" ", UNDERSCORE)
+                .replace(FULL_STOP, UNDERSCORE)
+                .replace(STAR, STAR_STR)
+            )
             complex_id = "".join(sheet_id.split(UNDERSCORE)[0:2]).lower()
 
             item_link_to = {"complexId": complex_id, "sheetId": sheet_id}
@@ -607,15 +635,16 @@ class ConversionUtilsHelper:
             # Extract itemDescription
             # (re-add delimiter that gets removed in the stripping action
             # and remove trailing colon)
-            item_description = PARENTHESIS + \
-                self._strip_by_delimiter(para_content, PARENTHESIS)[1].strip().rstrip(COLON)
+            item_description = PARENTHESIS + StrippingUtils.strip_by_delimiter(
+                para_content, PARENTHESIS
+            )[1].strip().rstrip(COLON)
         elif para_content.find(STRONG_TAG):
             print("--- Potential error? Strong tag found in para:", para_content)
         else:
             item_description = para_content.strip().rstrip(COLON)
 
         # Create item object
-        item = copy.deepcopy(defaultContentItem)
+        item = copy.deepcopy(DEFAULT_CONTENT_ITEM)
         item["item"] = item_label
         item["itemLinkTo"] = item_link_to
         item["itemDescription"] = item_description
@@ -642,7 +671,6 @@ class ConversionUtilsHelper:
         items = []
 
         for para in paras:
-
             if (
                 not para.text.startswith("\t")
                 and not para.text.startswith(PAGE_STR)
@@ -686,10 +714,12 @@ class ConversionUtilsHelper:
         if content_paragraph is None:
             return content_lines
 
-        stripped_content = self._strip_tag(content_paragraph, P_TAG)
-        initial_content = self._strip_by_delimiter(stripped_content, label)[1]
+        stripped_content = StrippingUtils.strip_tag(content_paragraph, P_TAG)
+        initial_content = StrippingUtils.strip_by_delimiter(stripped_content, label)[1]
 
-        content_lines.append(initial_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON))
+        content_lines.append(
+            initial_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
+        )
 
         if initial_content.endswith(SEMICOLON):
             # Check for sibling paragraphs that belong to the same content
@@ -697,8 +727,10 @@ class ConversionUtilsHelper:
             sibling = content_paragraph.next_sibling
 
             while sibling is not None and sibling.name == P_TAG:
-                sibling_content = self._strip_tag(sibling, P_TAG)
-                if sibling_content.endswith(FULL_STOP) or sibling_content.endswith(SEMICOLON):
+                sibling_content = StrippingUtils.strip_tag(sibling, P_TAG)
+                if sibling_content.endswith(FULL_STOP) or sibling_content.endswith(
+                    SEMICOLON
+                ):
                     content_lines.append(
                         sibling_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
                     )
@@ -760,11 +792,11 @@ class ConversionUtilsHelper:
                 continue
 
             # Create system object
-            system = copy.deepcopy(defaultSystem)
+            system = copy.deepcopy(DEFAULT_SYSTEM)
 
             # Extract system label
             if SYSTEM_STR in para:
-                stripped_system_text = self._strip_by_delimiter(para, COLON)
+                stripped_system_text = StrippingUtils.strip_by_delimiter(para, COLON)
                 system_label = stripped_system_text[0].replace(SYSTEM_STR, "").strip()
 
                 system["system"] = system_label
@@ -784,12 +816,14 @@ class ConversionUtilsHelper:
                     # pattern matches, e.g., "Gg (1)", "KUgis (38)",
                     # or "Gg (I)", "KUgis (XXXVIII)",
                     # but also "Gg", "KUgis"
-                    pattern = r"([A-Z]{1,2})([a-z]{1,3})(\s[(](\d{1,2}|[I,V,X,L]{1,7})[)])?"
+                    pattern = (
+                        r"([A-Z]{1,2})([a-z]{1,3})(\s[(](\d{1,2}|[I,V,X,L]{1,7})[)])?"
+                    )
 
                     if re.search(pattern, stripped_system_text[1]):
                         row_text = re.findall(pattern, stripped_system_text[1])[0]
 
-                        row = copy.deepcopy(defaultRow)
+                        row = copy.deepcopy(DEFAULT_ROW)
                         row["rowType"] = row_text[0]
                         row["rowBase"] = row_text[1]
                         if len(row_text) > 3:
@@ -805,8 +839,9 @@ class ConversionUtilsHelper:
     # Helper function: _process_corrections
     ############################################
 
-    def _process_corrections(self, textcritics_list: TextcriticsList,
-                             textcritics: TextCritics) -> TextcriticsList:
+    def _process_corrections(
+        self, textcritics_list: TextcriticsList, textcritics: TextCritics
+    ) -> TextcriticsList:
         """
         Processes textcritics as corrections and appends to the corrections list.
 
@@ -814,13 +849,15 @@ class ConversionUtilsHelper:
             textcritics (dict): The textcritics object to process.
             textcritics_list (dict): The dictionary containing textcritics and corrections lists.
         """
-        textcritics_list['corrections'].append(textcritics)
+        textcritics_list["corrections"].append(textcritics)
         textcritics.pop("linkBoxes", None)  # Remove linkBoxes property if it exists
 
         # Remove svgGroupId property from textcritical comments
-        for comment_block in textcritics['commentary']['comments']:
-            for comment in comment_block['blockComments']:
-                comment.pop("svgGroupId", None)  # Remove svgGroupId property if it exists
+        for comment_block in textcritics["commentary"]["comments"]:
+            for comment in comment_block["blockComments"]:
+                comment.pop(
+                    "svgGroupId", None
+                )  # Remove svgGroupId property if it exists
 
         return textcritics_list
 
@@ -842,27 +879,30 @@ class ConversionUtilsHelper:
         comment_id = 1
 
         for row in rows_in_table[1:]:
-            columns_in_row = row.find_all('td')
+            columns_in_row = row.find_all("td")
 
             # Check if the first td has a colspan attribute
-            if 'colspan' in columns_in_row[0].attrs:
+            if "colspan" in columns_in_row[0].attrs:
                 # If the default comment block is empty, remove it
-                if not textcritics['commentary']['comments'][0]['blockComments']:
-                    textcritics['commentary']['comments'].pop(0)
+                if not textcritics["commentary"]["comments"][0]["blockComments"]:
+                    textcritics["commentary"]["comments"].pop(0)
                     block_index -= 1
 
-                comment_block = copy.deepcopy(defaultTextcriticalCommentBlock)
-                comment_block['blockHeader'] = self._strip_tag_and_clean(
-                    columns_in_row[0], 'td')
-                textcritics['commentary']['comments'].append(comment_block)
+                comment_block = copy.deepcopy(DEFAULT_TEXTCRITICAL_COMMENT_BLOCK)
+                comment_block["blockHeader"] = StrippingUtils.strip_tag_and_clean(
+                    columns_in_row[0], "td"
+                )
+                textcritics["commentary"]["comments"].append(comment_block)
                 block_index += 1
 
                 continue
 
             if block_index >= 0:
                 comment = self._get_comment(columns_in_row)
-                comment['svgGroupId'] = f"g-tkk-{comment_id}"
-                textcritics['commentary']['comments'][block_index]['blockComments'].append(comment)
+                comment["svgGroupId"] = f"g-tkk-{comment_id}"
+                textcritics["commentary"]["comments"][block_index][
+                    "blockComments"
+                ].append(comment)
                 comment_id += 1
 
         return textcritics
@@ -881,104 +921,56 @@ class ConversionUtilsHelper:
             str: The replaced text.
         """
         glyphs = [
-            "a", "b", "bb", "#", "x",
-            "f", "ff", "fff", "ffff", "mf", "mp", "p", "pp", "ppp", "pppp",
+            "a",
+            "b",
+            "bb",
+            "#",
+            "x",
+            "f",
+            "ff",
+            "fff",
+            "ffff",
+            "mf",
+            "mp",
+            "p",
+            "pp",
+            "ppp",
+            "pppp",
             "ped",
-            "sf", "sfz","sp",
-            "Achtelnote", "Ganze Note", "Halbe Note",
-            "Punktierte Halbe Note", "Sechzehntelnote", "Viertelnote"
+            "sf",
+            "sfz",
+            "sp",
+            "Achtelnote",
+            "Ganze Note",
+            "Halbe Note",
+            "Punktierte Halbe Note",
+            "Sechzehntelnote",
+            "Viertelnote",
         ]
-        glyph_pattern = '|'.join(re.escape(glyph) for glyph in glyphs)
+        glyph_pattern = "|".join(re.escape(glyph) for glyph in glyphs)
 
         # Match pattern for glyphs in square brackets, but not followed by a hyphen
-        match_pattern = rf'\[({glyph_pattern})\](?!-)'
+        match_pattern = rf"\[({glyph_pattern})\](?!-)"
 
         accid_glyphs = {"a", "b", "bb", "#", "x"}
         note_glyphs = {
-            "Achtelnote", "Ganze Note", "Halbe Note",
-            "Punktierte Halbe Note", "Sechzehntelnote", "Viertelnote"
+            "Achtelnote",
+            "Ganze Note",
+            "Halbe Note",
+            "Punktierte Halbe Note",
+            "Sechzehntelnote",
+            "Viertelnote",
         }
 
         def replace_glyph(match):
             glyph = match.group(1)
             css_class = (
-                "glyph accid" if glyph in accid_glyphs
-                else "glyph note" if glyph in note_glyphs
+                "glyph accid"
+                if glyph in accid_glyphs
+                else "glyph note"
+                if glyph in note_glyphs
                 else "glyph"
             )
             return f"<span class='{css_class}'>{{{{ref.getGlyph('{glyph}')}}}}</span>"
 
         return re.sub(match_pattern, replace_glyph, text)
-
-    ############################################
-    # Helper function: _strip_by_delimiter
-    ############################################
-
-    def _strip_by_delimiter(self, input_str: str, delimiter: str) -> List[str]:
-        """
-        Splits a string by a delimiter and returns a list of stripped substrings.
-
-        Args:
-            input_str (str): The input string to split and strip.
-            delimiter (str): The delimiter to split the string by.
-
-        Returns:
-            List[str]: A list of stripped substrings.
-        """
-        stripped_substring_list: List[str] = [s.strip() for s in input_str.split(delimiter)]
-        return stripped_substring_list
-
-    ############################################
-    # Helper function: _strip_tag_and_clean
-    ############################################
-
-    def _strip_tag_and_clean(self, content, tag) -> str:
-        """
-        Strips opening and closing tags from an HTML string and strips surrounding paragraph tags.
-
-        Args:
-        content (str): The input string.
-        tag (str): The name of the tag to strip.
-
-        Returns:
-        str: The content within the specified tags, with leading and trailing whitespace removed.
-        """
-        stripped_content = self._strip_tag(content, tag)
-        stripped_content = self._strip_tag(stripped_content, P_TAG)
-        return stripped_content.replace('</p><p>', ' <br /> ')
-
-    ############################################
-    # Helper function: _strip_tag
-    ############################################
-
-    def _strip_tag(self, content: str, tag_str: str) -> str:
-        """
-        Strips opening and closing tags from an HTML/XML string and returns the
-        content within the tags as a string.
-
-        Args:
-        content (str): The input string.
-        tagStr (str): The name of the tag to strip.
-
-        Returns:
-        str: The content within the specified tags, with leading and trailing whitespace removed.
-        """
-        if content is None:
-            print(f"Content is None for tag_str: {tag_str}")
-            return ""
-
-        stripped_str = str(content)
-
-        # Strip opening and closing tags from input (incl. attributes in opening tag)
-        closing_tag = "</" + tag_str + ">"
-        opening_tag = "<" + tag_str
-        opening_tag_start_index = stripped_str.find(opening_tag)
-        opening_tag_end_index = stripped_str.find('>', opening_tag_start_index) + 1
-
-        stripped_str = stripped_str[opening_tag_end_index:]
-        stripped_str = stripped_str.removesuffix(closing_tag)
-
-        # Strip trailing white space
-        stripped_str = stripped_str.strip()
-
-        return stripped_str

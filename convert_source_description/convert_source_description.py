@@ -47,10 +47,10 @@ The script expects a Word file input structured in the following way:
 """
 
 import argparse
-
 from bs4 import BeautifulSoup
-from file_utils import FileUtils
-from utils import ConversionUtils
+
+from utils.file_utils import FileUtils
+from utils.utils import ConversionUtils
 
 
 def convert_source_description(directory: str, file_name: str):
@@ -74,7 +74,7 @@ def convert_source_description(directory: str, file_name: str):
     html = file_utils.read_html_from_word_file(file_path)
 
     # Parse HTML
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, "html.parser")
 
     # Create the full sourceList object
     source_list = conversion_utils.create_source_list(soup)
@@ -83,22 +83,20 @@ def convert_source_description(directory: str, file_name: str):
     textcritics = conversion_utils.create_textcritics(soup)
 
     # Output
-    file_utils.write_json(source_list, file_path + '_source-description')
-    file_utils.write_json(textcritics, file_path + '_textcritics')
+    file_utils.write_json(source_list, file_path + "_source-description")
+    file_utils.write_json(textcritics, file_path + "_textcritics")
 
 
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        'directory',
-        type=str,
-        help="The directory where the Word file is located."
+        "directory", type=str, help="The directory where the Word file is located."
     )
     parser.add_argument(
-        'file_name',
+        "file_name",
         type=str,
-        help="The Word file to extract the source description from (without the .docx extension)."
+        help="The Word file to extract the source description from (without the .docx extension).",
     )
     args = parser.parse_args()
     convert_source_description(args.directory, args.file_name)

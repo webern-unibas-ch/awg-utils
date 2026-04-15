@@ -8,8 +8,8 @@ import copy
 
 from bs4 import BeautifulSoup
 
-from utils.typed_classes import SourceList, TextCritics
-from utils.default_objects import DEFAULT_SOURCE_LIST, DEFAULT_TEXTCRITICS_LIST
+from utils.default_objects import DEFAULT_SOURCE_LIST
+from utils.typed_classes import SourceList
 from utils.utils_helper import ConversionUtilsHelper
 
 ############################################
@@ -71,33 +71,3 @@ class ConversionUtils:
                     sources.append(source_description)
 
         return source_list
-
-    ############################################
-    # Public class function: create_textcritics
-    ############################################
-    def create_textcritics(self, soup: BeautifulSoup) -> TextCritics:
-        """
-        Creates a list of textcritics based on the given soup elements.
-
-        Args:
-            soup (BeautifulSoup): A BeautifulSoup object representing the document.
-
-        Returns:
-            A SourceList object containing a list of SourceDescription objects.
-        """
-        textcritics_list = copy.deepcopy(DEFAULT_TEXTCRITICS_LIST)
-
-        # Find all table tags in soup
-        tables = soup.find_all("table")
-
-        # Iterate over tables and create textcritics
-        for table_index, table in enumerate(tables):
-            self.utils_helper.process_table(textcritics_list, table, table_index)
-
-        # Remove empty lists if they exist
-        if not textcritics_list["textcritics"]:
-            textcritics_list.pop("textcritics")
-        if not textcritics_list["corrections"]:
-            textcritics_list.pop("corrections")
-
-        return textcritics_list

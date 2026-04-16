@@ -50,6 +50,7 @@ import argparse
 from bs4 import BeautifulSoup
 
 from utils.file_utils import FileUtils
+from utils.textcritics_utils import TextcriticsUtils
 from utils.utils import ConversionUtils
 
 
@@ -64,8 +65,9 @@ def convert_source_description(directory: str, file_name: str):
         A JSON file with the source description.
     """
 
-    file_utils = FileUtils()
     conversion_utils = ConversionUtils()
+    file_utils = FileUtils()
+    textcritics_utils = TextcriticsUtils()
 
     # Define file path
     file_path = directory + file_name
@@ -80,7 +82,7 @@ def convert_source_description(directory: str, file_name: str):
     source_list = conversion_utils.create_source_list(soup)
 
     # Create the full textcritics object
-    textcritics = conversion_utils.create_textcritics(soup)
+    textcritics = textcritics_utils.create_textcritics(soup)
 
     # Output
     file_utils.write_json(source_list, file_path + "_source-description")

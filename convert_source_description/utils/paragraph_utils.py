@@ -35,7 +35,7 @@ class ParagraphUtils:
         )
 
         if initial_content.endswith(SEMICOLON):
-            ParagraphUtils._get_paragraph_siblings(content_paragraph, content_lines)
+            ParagraphUtils._append_multiline_content(content_paragraph, content_lines)
 
         return content_lines
 
@@ -52,31 +52,31 @@ class ParagraphUtils:
             return -1
 
     ############################################
-    # Helper function: _get_paragraph_siblings
+    # Helper function: _append_multiline_content
     ############################################
     @staticmethod
-    def _get_paragraph_siblings(
+    def _append_multiline_content(
         content_paragraph: Tag, content_lines: List[str]
     ) -> None:
-        """Recursively get the content of sibling paragraphs and append to content_lines.
-        Continues until a sibling ends with FULL_STOP or doesn't end with FULL_STOP/SEMICOLON.
+        """Iteratively find the content of sibling paragraphs and append to content_lines.
+        Continues until a paragraph ends with FULL_STOP or doesn't end with FULL_STOP/SEMICOLON.
         """
-        sibling = content_paragraph.next_sibling
+        next_paragraph = content_paragraph.next_sibling
 
-        while sibling is not None and sibling.name == P_TAG:
-            sibling_content = StrippingUtils.strip_tag(sibling, P_TAG)
-            if sibling_content.endswith(FULL_STOP) or sibling_content.endswith(
-                SEMICOLON
-            ):
+        while next_paragraph is not None and next_paragraph.name == P_TAG:
+            next_paragraph_content = StrippingUtils.strip_tag(next_paragraph, P_TAG)
+            if next_paragraph_content.endswith(
+                FULL_STOP
+            ) or next_paragraph_content.endswith(SEMICOLON):
                 content_lines.append(
-                    sibling_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
+                    next_paragraph_content.strip().rstrip(FULL_STOP).rstrip(SEMICOLON)
                 )
-                if sibling_content.endswith(FULL_STOP):
+                if next_paragraph_content.endswith(FULL_STOP):
                     break
             else:
                 break
 
-            sibling = sibling.next_sibling
+            next_paragraph = next_paragraph.next_sibling
 
     ############################################
     # Helper function: _get_paragraph_tag_with_label

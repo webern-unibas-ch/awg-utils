@@ -71,8 +71,8 @@ class TestGetParagraphContentByLabel:
 
         with patch.object(
             ParagraphUtils,
-            "_get_paragraph_siblings",
-            wraps=ParagraphUtils._get_paragraph_siblings,
+            "_append_multiline_content",
+            wraps=ParagraphUtils._append_multiline_content,
         ) as mock_siblings:
             ParagraphUtils.get_paragraph_content_by_label("Label:", paras)
             mock_siblings.assert_called_once()
@@ -87,7 +87,7 @@ class TestGetParagraphContentByLabel:
         soup = BeautifulSoup(html, "html.parser")
         paras = soup.find_all("p")
 
-        with patch.object(ParagraphUtils, "_get_paragraph_siblings") as mock_siblings:
+        with patch.object(ParagraphUtils, "_append_multiline_content") as mock_siblings:
             ParagraphUtils.get_paragraph_content_by_label("Label:", paras)
             mock_siblings.assert_not_called()
 
@@ -150,10 +150,10 @@ class TestGetParagraphIndexByLabel:
 
 
 class TestGetParagraphSiblings:
-    """Tests for the _get_paragraph_siblings function."""
+    """Tests for the _append_multiline_content function."""
 
-    def test_get_paragraph_siblings_with_semicolon_to_fullstop(self):
-        """Test that siblings are processed until one ends with full stop."""
+    def test_append_multiline_content_with_semicolon_to_fullstop(self):
+        """Test that multiline content is processed until a paragraph ends with full stop."""
         html = """
             <p>Content 1; </p><p>Content 2;</p><p>Content 3.</p><p>Content 4</p>
             """
@@ -162,78 +162,14 @@ class TestGetParagraphSiblings:
         content_paragraph = paras[0]
         content_lines = ["Content 1"]
 
-        ParagraphUtils._get_paragraph_siblings(content_paragraph, content_lines)
+        ParagraphUtils._append_multiline_content(content_paragraph, content_lines)
 
+        # Should NOT include Content 4 because loop breaks after Content 3 (ends with .)
         expected_content = ["Content 1", "Content 2", "Content 3"]
         assert content_lines == expected_content
 
-    def test_get_paragraph_siblings_breaks_at_fullstop(self):
-        """Test that loop breaks when sibling ends with full stop."""
-        html = """
-            <p>Content 1; </p><p>Content 2.</p><p>Content 3</p>
-            """
-        soup = BeautifulSoup(html, "html.parser")
-        paras = soup.find_all("p")
-        content_paragraph = paras[0]
-        content_lines = ["Content 1"]
-
-        ParagraphUtils._get_paragraph_siblings(content_paragraph, content_lines)
-
-        # Should NOT include Content 3 because loop breaks after Content 2 (ends with .)
-        expected_content = ["Content 1", "Content 2"]
-        assert content_lines == expected_content
-
-    def test_get_paragraph_siblings_breaks_at_no_punctuation(self):
-        """Test that loop breaks when sibling doesn't end with full stop or semicolon."""
-        html = """
-            <p>Content 1; </p><p>Content 2;</p><p>Content 3 no punctuation</p><p>Content 4</p>
-            """
-        soup = BeautifulSoup(html, "html.parser")
-        paras = soup.find_all("p")
-        content_paragraph = paras[0]
-        content_lines = ["Content 1"]
-
-        ParagraphUtils._get_paragraph_siblings(content_paragraph, content_lines)
-
-        # Should include Content 2 but break at Content 3 (no punctuation)
-        expected_content = ["Content 1", "Content 2"]
-        assert content_lines == expected_content
-
-    def test_get_paragraph_siblings_no_siblings(self):
-        """Test sibling processing when there are no siblings."""
-        html = "<p>Content 1; </p>"
-        soup = BeautifulSoup(html, "html.parser")
-        paras = soup.find_all("p")
-        content_paragraph = paras[0]
-        content_lines = ["Content 1"]
-
-        ParagraphUtils._get_paragraph_siblings(content_paragraph, content_lines)
-
-        # Should remain unchanged
-        expected_content = ["Content 1"]
-        assert content_lines == expected_content
-
-    def test_get_paragraph_siblings_strips_punctuation(self):
-        """Test that sibling content strips FULL_STOP and SEMICOLON punctuation."""
-        html = """
-            <p>Content 1; </p><p>Content 2 with semicolon;</p><p>Content 3 with period.</p>
-            """
-        soup = BeautifulSoup(html, "html.parser")
-        paras = soup.find_all("p")
-        content_paragraph = paras[0]
-        content_lines = ["Content 1"]
-
-        ParagraphUtils._get_paragraph_siblings(content_paragraph, content_lines)
-
-        expected_content = [
-            "Content 1",
-            "Content 2 with semicolon",
-            "Content 3 with period",
-        ]
-        assert content_lines == expected_content
-
-    def test_get_paragraph_siblings_multiple_semicolons(self):
-        """Test sibling processing with multiple semicolon-terminated siblings."""
+    def test_append_multiline_content_multiple_semicolons(self):
+        """Test multiline content processing with multiple semicolon-terminated paragraphs."""
         html = """
             <p>Content 1; </p><p>Content 2;</p><p>Content 3;</p><p>Content 4;</p><p>Content 5.</p>
             """
@@ -242,7 +178,7 @@ class TestGetParagraphSiblings:
         content_paragraph = paras[0]
         content_lines = ["Content 1"]
 
-        ParagraphUtils._get_paragraph_siblings(content_paragraph, content_lines)
+        ParagraphUtils._append_multiline_content(content_paragraph, content_lines)
 
         expected_content = [
             "Content 1",
@@ -251,6 +187,55 @@ class TestGetParagraphSiblings:
             "Content 4",
             "Content 5",
         ]
+        assert content_lines == expected_content
+
+    def test_append_multiline_content_strips_punctuation(self):
+        """Test that multiline content strips FULL_STOP and SEMICOLON punctuation."""
+        html = """
+            <p>Content 1; </p><p>Content 2 with semicolon;</p><p>Content 3 with period.</p>
+            """
+        soup = BeautifulSoup(html, "html.parser")
+        paras = soup.find_all("p")
+        content_paragraph = paras[0]
+        content_lines = ["Content 1"]
+
+        ParagraphUtils._append_multiline_content(content_paragraph, content_lines)
+
+        expected_content = [
+            "Content 1",
+            "Content 2 with semicolon",
+            "Content 3 with period",
+        ]
+        assert content_lines == expected_content
+
+    def test_append_multiline_content_breaks_at_no_punctuation(self):
+        """Test that loop breaks when multiline content doesn't end with full stop or semicolon."""
+        html = """
+            <p>Content 1; </p><p>Content 2;</p><p>Content 3 no punctuation</p><p>Content 4</p>
+            """
+        soup = BeautifulSoup(html, "html.parser")
+        paras = soup.find_all("p")
+        content_paragraph = paras[0]
+        content_lines = ["Content 1"]
+
+        ParagraphUtils._append_multiline_content(content_paragraph, content_lines)
+
+        # Should include Content 2 but break at Content 3 (no punctuation)
+        expected_content = ["Content 1", "Content 2"]
+        assert content_lines == expected_content
+
+    def test_append_multiline_content_no_siblings(self):
+        """Test multiline content processing when there are no sibling paragraphs."""
+        html = "<p>Content 1; </p>"
+        soup = BeautifulSoup(html, "html.parser")
+        paras = soup.find_all("p")
+        content_paragraph = paras[0]
+        content_lines = ["Content 1"]
+
+        ParagraphUtils._append_multiline_content(content_paragraph, content_lines)
+
+        # Should remain unchanged
+        expected_content = ["Content 1"]
         assert content_lines == expected_content
 
 

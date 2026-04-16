@@ -6,7 +6,7 @@ This module should not be run directly. Instead, run the `convert_source_descrip
 
 import copy
 import re
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from bs4 import Tag
 
@@ -45,6 +45,7 @@ from utils.typed_classes import (
     ContentItem,
     Folio,
     PhysDesc,
+    Row,
     SourceDescription,
     System,
     WritingInstruments,
@@ -417,7 +418,9 @@ class ConversionUtilsHelper:
                 if not para.find(string=re.compile(SYSTEM_STR)):
                     folio["folioDescription"] = stripped_para_text[1].strip()
                 else:
-                    folio["systemGroups"] = [self._get_system_group(stripped_para_text)]
+                    folio["systemGroups"] = [
+                        self._process_system_group(stripped_para_text)
+                    ]
 
                 # Add folio to folios
                 folios.append(folio)
@@ -425,7 +428,9 @@ class ConversionUtilsHelper:
             # If there is no folioStr, but a systemStr,
             # add a new systemGroup to the folio's systemGroups
             elif not has_folio_str and para.find(string=re.compile(SYSTEM_STR)):
-                folio["systemGroups"].append(self._get_system_group(stripped_para_text))
+                folio["systemGroups"].append(
+                    self._process_system_group(stripped_para_text)
+                )
 
         return folios
 
@@ -538,12 +543,12 @@ class ConversionUtilsHelper:
         return items
 
     ############################################
-    # Helper function: _get_system_group
+    # Helper function: _process_system_group
     ############################################
 
-    def _get_system_group(self, stripped_para_text: List[str]) -> List[System]:
+    def _process_system_group(self, stripped_para_text: List[str]) -> List[System]:
         """
-        Extracts a system group from a list of stripped paragraph texts.
+        Processes a system group in a list of stripped paragraph texts.
 
         Args:
             stripped_para_text (List[str]): The stripped paragraph text containing system groups.
@@ -556,54 +561,91 @@ class ConversionUtilsHelper:
 
         system_group = []
 
-        for _, para in enumerate(stripped_para_text):
-            # Skip folio label
-            if FOLIO_STR in para:
+        for para_text in stripped_para_text:
+            # Skip folio or page label
+            if FOLIO_STR in para_text or PAGE_STR in para_text:
                 continue
 
-            if PAGE_STR in para:
-                continue
-
-            # Create system object
-            system = copy.deepcopy(DEFAULT_SYSTEM)
-
-            # Extract system label
-            if SYSTEM_STR in para:
-                stripped_system_text = StrippingUtils.strip_by_delimiter(para, COLON)
-                system_label = stripped_system_text[0].replace(SYSTEM_STR, "").strip()
-
-                system["system"] = system_label
-
-                # Extract measure label
-                if len(stripped_system_text) == 1:
-                    continue
-
-                if MEASURE_STR in stripped_system_text[1]:
-                    # Remove leading measure string and trailing full stop or semicolon.
-                    measure_label = (
-                        stripped_system_text[1].lstrip(MEASURE_STR).rstrip(".;").strip()
-                    )
-                    system["measure"] = measure_label
-                else:
-                    # Extract row label
-                    # pattern matches, e.g., "Gg (1)", "KUgis (38)",
-                    # or "Gg (I)", "KUgis (XXXVIII)",
-                    # but also "Gg", "KUgis"
-                    pattern = (
-                        r"([A-Z]{1,2})([a-z]{1,3})(\s[(](\d{1,2}|[I,V,X,L]{1,7})[)])?"
-                    )
-
-                    if re.search(pattern, stripped_system_text[1]):
-                        row_text = re.findall(pattern, stripped_system_text[1])[0]
-
-                        row = copy.deepcopy(DEFAULT_ROW)
-                        row["rowType"] = row_text[0]
-                        row["rowBase"] = row_text[1]
-                        if len(row_text) > 3:
-                            row["rowNumber"] = row_text[3]
-
-                        system["row"] = row
-
+            # Process system object
+            system = self._process_system(para_text)
+            if system:
                 system_group.append(system)
 
         return system_group
+
+    ############################################
+    # Helper function: _process_system
+    ############################################
+    def _process_system(self, para_text: str) -> Optional[System]:
+        """Processes a system in a given paragraph text.
+
+        Args:
+            para_text (str): The paragraph text containing the system information.
+
+        Returns:
+            Optional[System]: A dictionary representing the system information,
+            or None if the paragraph does not contain valid system information.
+        """
+        if SYSTEM_STR not in para_text:
+            return None
+
+        system = copy.deepcopy(DEFAULT_SYSTEM)
+
+        stripped_system_text = StrippingUtils.strip_by_delimiter(para_text, COLON)
+
+        system["system"] = stripped_system_text[0].replace(SYSTEM_STR, "").strip()
+
+        if len(stripped_system_text) == 1:
+            return system
+
+        if MEASURE_STR in stripped_system_text[1]:
+            system["measure"] = self._process_measure(stripped_system_text[1])
+        else:
+            row = self._process_row(stripped_system_text[1])
+            if row:
+                system["row"] = row
+
+        return system
+
+    ############################################
+    # Helper function: _process_measure
+    ############################################
+    def _process_measure(self, text: str) -> str:
+        """Processes a measure label from a given text string.
+
+        Args:
+            text (str): The text to extract the measure label from.
+
+        Returns:
+            str: The extracted measure label.
+        """
+        return text.lstrip(MEASURE_STR).rstrip(".;").strip()
+
+    ############################################
+    # Helper function: _process_row
+    ############################################
+    def _process_row(self, text: str) -> Optional[Row]:
+        """Processes a row label from a given text string.
+
+        Args:
+            text (str): The text to extract the row label from.
+
+        Returns:
+            Optional[Row]: A dictionary representing the row label,
+            or None if the text does not match the expected pattern.
+        """
+        # Pattern matches, e.g., "Gg (1)", "KUgis (38)" (integers),
+        # or "Gg (I)", "KUgis (XXXVIII)" (roman numerals),
+        # but also "Gg", "KUgis" (without row number in parentheses)
+        pattern = r"([A-Z]{1,2})([a-z]{1,3})(\s[(](\d{1,2}|[I,V,X,L]{1,7})[)])?"
+
+        if not re.search(pattern, text):
+            return None
+
+        row_text = re.findall(pattern, text)[0]
+        row = copy.deepcopy(DEFAULT_ROW)
+        row["rowType"] = row_text[0]
+        row["rowBase"] = row_text[1]
+        if len(row_text) > 3:
+            row["rowNumber"] = row_text[3]
+        return row

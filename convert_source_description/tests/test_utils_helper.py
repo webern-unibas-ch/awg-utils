@@ -147,3 +147,77 @@ class TestGetItem:
         assert item["itemLinkTo"]["sheetId"] == "Mx414_Sk1"
         assert item["itemLinkTo"]["complexId"] == "mx414"
         assert item["itemDescription"] == "(Skizze zu Studienkomposition)"
+
+
+class TestProcessMeasure:
+    """Tests for the _process_measure helper function."""
+
+    def test_process_measure_returns_measure_label(self, helper):
+        """Test that the measure string prefix and trailing punctuation are stripped."""
+        assert helper._process_measure("T. 1–3.") == "1–3"
+
+    def test_process_measure_strips_trailing_semicolon(self, helper):
+        """Test that a trailing semicolon is stripped."""
+        assert helper._process_measure("T. 4–6;") == "4–6"
+
+    def test_process_measure_strips_whitespace(self, helper):
+        """Test that leading and trailing whitespace is stripped."""
+        assert helper._process_measure("T.  12 ") == "12"
+
+    def test_process_measure_returns_empty_string_when_only_measure_str(self, helper):
+        """Test that an empty string is returned when the text is only the measure string."""
+        assert helper._process_measure("T.") == ""
+
+
+class TestProcessRow:
+    """Tests for the _process_row helper function."""
+
+    def test_process_row_returns_single_letter_row_without_row_number(self, helper):
+        """Test that a single-letter row without a row number is extracted correctly."""
+        row = helper._process_row("Gc")
+        assert row["rowType"] == "G"
+        assert row["rowBase"] == "c"
+        assert row["rowNumber"] == ""
+
+    def test_process_row_returns_multi_letter_row_without_row_number(self, helper):
+        """Test that a multi-letter row without a row number is extracted correctly."""
+        row = helper._process_row("KUg")
+        assert row["rowType"] == "KU"
+        assert row["rowBase"] == "g"
+        assert row["rowNumber"] == ""
+
+    def test_process_row_returns_row_with_single_letter_base(self, helper):
+        """Test that a row with a single-letter base is extracted correctly."""
+        row = helper._process_row("Ua")
+        assert row["rowType"] == "U"
+        assert row["rowBase"] == "a"
+        assert row["rowNumber"] == ""
+
+    def test_process_row_returns_row_with_multi_letter_base(self, helper):
+        """Test that a row with a multi-letter base is extracted correctly."""
+        row = helper._process_row("KUgis")
+        assert row["rowType"] == "KU"
+        assert row["rowBase"] == "gis"
+        assert row["rowNumber"] == ""
+
+    def test_process_row_returns_row_with_integer_row_number(self, helper):
+        """Test that a row with an integer row number is extracted correctly."""
+        row = helper._process_row("Gg (1)")
+        assert row["rowType"] == "G"
+        assert row["rowBase"] == "g"
+        assert row["rowNumber"] == "1"
+
+    def test_process_row_returns_row_with_roman_numeral_row_number(self, helper):
+        """Test that a row with a roman numeral row number is extracted correctly."""
+        row = helper._process_row("KUgis (XXXVIII)")
+        assert row["rowType"] == "KU"
+        assert row["rowBase"] == "gis"
+        assert row["rowNumber"] == "XXXVIII"
+
+    def test_process_row_returns_none_when_pattern_does_not_match(self, helper):
+        """Test that None is returned when the text does not match the row pattern."""
+        assert helper._process_row("T. 1–3") is None
+
+    def test_process_row_returns_none_for_empty_string(self, helper):
+        """Test that None is returned for an empty string."""
+        assert helper._process_row("") is None

@@ -92,7 +92,7 @@ class ConversionUtilsHelper:
         source_description["siglumAddendum"] = siglum_addendum
         source_description["type"] = StrippingUtils.strip_tag(paras[1], P_TAG) or ""
         source_description["location"] = StrippingUtils.strip_tag(paras[2], P_TAG) or ""
-        source_description["physDesc"] = self._get_phys_desc(paras, source_id)
+        source_description["physDesc"] = self._process_phys_desc(paras, source_id)
 
         return source_description
 
@@ -167,12 +167,12 @@ class ConversionUtilsHelper:
         return siglum, siglum_addendum
 
     ############################################
-    # Helper function: _get_phys_desc
+    # Helper function: _process_phys_desc
     ############################################
 
-    def _get_phys_desc(self, paras: List[Tag], source_id: str) -> PhysDesc:
+    def _process_phys_desc(self, paras: List[Tag], source_id: str) -> PhysDesc:
         """
-        Extracts the physDesc of a source description from a list of BeautifulSoup `Tag` objects.
+        Processes the physDesc of a source description from a list of BeautifulSoup `Tag` objects.
 
         Args:
             paras (List[Tag]): A list of BeautifulSoup `Tag` objects representing paragraphs.
@@ -204,23 +204,23 @@ class ConversionUtilsHelper:
             # Writing instruments require special handling
             if key == "writingInstruments":
                 content = (
-                    self._extract_writing_instruments(content[0])
+                    self._process_writing_instruments(content[0])
                     if content
                     else phys_desc[key]
                 )
 
             phys_desc[key] = content
 
-        # Get content items
-        phys_desc["contents"] = self._get_content_items(paras, source_id)
+        # Process content items
+        phys_desc["contents"] = self._process_content_items(paras, source_id)
 
         return phys_desc
 
     ############################################
-    # Helper function: _get_content_items
+    # Helper function: _process_content_items
     ############################################
 
-    def _get_content_items(self, paras: List[Tag], source_id: str) -> List[str]:
+    def _process_content_items(self, paras: List[Tag], source_id: str) -> List[str]:
         """
         Extracts the content items from a list of BeautifulSoup `Tag` objects
         representing paragraphs.
@@ -258,45 +258,40 @@ class ConversionUtilsHelper:
         return self._get_items(paras[(content_index + 1) : comments_index])
 
     ############################################
-    # Helper function: _extract_writing_instruments
+    # Helper function: _process_writing_instruments
     ############################################
 
-    def _extract_writing_instruments(
+    def _process_writing_instruments(
         self, writing_instruments_text: str
     ) -> WritingInstruments:
         """
-        Extracts the main and secondary writing instruments from the given text.
+        Processes the main and secondary writing instruments from the given text.
 
         Args:
-            writingInstrumentsText (str): The text to extract writing instruments from.
+            writingInstrumentsText (str): The text to process writing instruments from.
 
         Returns:
             A dictionary of type WritingInstruments that represents the set of writing instruments
-                extracted from the text string.
+                processed from the text string.
                 If no writing instruments are found in the input text,
                 the default value of an empty main writing instrument and
                 an empty list of secondary writing instruments is returned.
         """
-        # Default value for empty writing instruments
-        writing_instruments = {"main": "", "secondary": []}
-        if writing_instruments_text is not None:
-            stripped_writing_instruments = StrippingUtils.strip_by_delimiter(
-                writing_instruments_text, SEMICOLON
-            )
+        if writing_instruments_text is None:
+            return {"main": "", "secondary": []}
 
-            # Strip . from last main and secondary writing instruments
-            main = stripped_writing_instruments[0].strip().rstrip(FULL_STOP)
-            if len(stripped_writing_instruments) > 1:
-                secondary = [
-                    instr.strip().rstrip(FULL_STOP)
-                    for instr in StrippingUtils.strip_by_delimiter(
-                        stripped_writing_instruments[1], COMMA
-                    )
-                ]
-            else:
-                secondary = []
-            writing_instruments = {"main": main, "secondary": secondary}
-        return writing_instruments
+        main, *secondaries = StrippingUtils.strip_by_delimiter(
+            writing_instruments_text, SEMICOLON
+        )
+        secondary = (
+            [
+                instr.strip().rstrip(FULL_STOP)
+                for instr in StrippingUtils.strip_by_delimiter(secondaries[0], COMMA)
+            ]
+            if secondaries
+            else []
+        )
+        return {"main": main.strip().rstrip(FULL_STOP), "secondary": secondary}
 
     ############################################
     # Helper function: _find_siblings
@@ -591,17 +586,24 @@ class ConversionUtilsHelper:
 
         system = copy.deepcopy(DEFAULT_SYSTEM)
 
-        stripped_system_text = StrippingUtils.strip_by_delimiter(para_text, COLON)
+        system_label, *system_content = StrippingUtils.strip_by_delimiter(
+            para_text, COLON
+        )
+        system["system"] = system_label.replace(SYSTEM_STR, "").strip()
 
-        system["system"] = stripped_system_text[0].replace(SYSTEM_STR, "").strip()
-
-        if len(stripped_system_text) == 1:
+        if not system_content:
             return system
 
-        if MEASURE_STR in stripped_system_text[1]:
-            system["measure"] = self._process_measure(stripped_system_text[1])
+        if len(system_content) > 1:
+            print(
+                f"--- Potential error? Unexpected colon in system content: {para_text!r}"
+            )
+
+        content = system_content[0]
+        if MEASURE_STR in content:
+            system["measure"] = self._process_measure(content)
         else:
-            row = self._process_row(stripped_system_text[1])
+            row = self._process_row(content)
             if row:
                 system["row"] = row
 

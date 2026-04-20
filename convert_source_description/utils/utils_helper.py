@@ -325,36 +325,26 @@ class ConversionUtilsHelper:
         return self._find_siblings(sibling_para.next_sibling, paras)
 
     ############################################
-    # Helper function: _get_folio_label
+    # Helper function: _process_folio_label
     ############################################
 
-    def _get_folio_label(self, stripped_para_text: str) -> str:
+    def _process_folio_label(self, stripped_para_text: str) -> str:
         """
-        Extracts the folio label from a paragraph of text containing a folio number.
+        Processes the folio label from a paragraph of text containing a folio number.
 
         Args:
             stripped_para_text (str): The text of the paragraph with whitespace removed.
             folio_str (str): The string indicating the folio or page marker, such as 'Bl.' or 'S.'.
 
         Returns:
-            str: The extracted folio label (if found), otherwise an empty string.
+            str: The processed folio label (if found), otherwise an empty string.
         """
-
-        def process_text(text, string):
-            text = text.lstrip("\t")
-            text = text.replace(string + "\xa0", "").strip()
-            text = text.replace(string, "").strip()
-            return text
-
-        folio_label = ""
-
         if FOLIO_STR in stripped_para_text:
-            folio_label = process_text(stripped_para_text, FOLIO_STR)
-
+            return StrippingUtils.strip_label_from_text(stripped_para_text, FOLIO_STR)
         if PAGE_STR in stripped_para_text:
-            folio_label = process_text(stripped_para_text, PAGE_STR)
+            return StrippingUtils.strip_label_from_text(stripped_para_text, PAGE_STR)
 
-        return folio_label
+        return ""
 
     ############################################
     # Helper function: _get_folios
@@ -388,20 +378,16 @@ class ConversionUtilsHelper:
 
                 # Extract folio label
                 if stripped_para_text:
-                    if (
-                        FOLIO_STR in stripped_para_text[0]
-                        or PAGE_STR in stripped_para_text[0]
-                    ):
-                        folio["folio"] = self._get_folio_label(
-                            stripped_para_text[0].strip()
-                        )
-                    elif len(stripped_para_text) > 2 and (
-                        FOLIO_STR in stripped_para_text[1]
-                        or PAGE_STR in stripped_para_text[1]
-                    ):
-                        folio["folio"] = self._get_folio_label(
-                            stripped_para_text[1].strip()
-                        )
+                    folio_part = next(
+                        (
+                            p
+                            for p in stripped_para_text
+                            if FOLIO_STR in p or PAGE_STR in p
+                        ),
+                        None,
+                    )
+                    if folio_part:
+                        folio["folio"] = self._process_folio_label(folio_part.strip())
 
                 # Check if the paragraph contains a page marker
                 if page_found:

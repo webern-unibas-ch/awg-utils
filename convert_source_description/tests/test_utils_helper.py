@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from bs4 import BeautifulSoup
 
+from utils.stripping_utils import StrippingUtils
 from utils.utils_helper import ConversionUtilsHelper
 
 
@@ -135,27 +136,31 @@ class TestProcessWritingInstruments:
 
     def test_returns_main_and_single_secondary(self, helper):
         """Test that main and a single secondary instrument are extracted."""
-        result = helper._process_writing_instruments("Bleistift; Rotstift")
+        result = helper._process_writing_instruments("Bleistift; roter Buntstift")
         assert result["main"] == "Bleistift"
-        assert result["secondary"] == ["Rotstift"]
+        assert result["secondary"] == ["roter Buntstift"]
 
     def test_strips_trailing_full_stop_from_secondary(self, helper):
         """Test that a trailing full stop is stripped from secondary instruments."""
-        result = helper._process_writing_instruments("Bleistift; Rotstift.")
+        result = helper._process_writing_instruments("Bleistift; roter Buntstift.")
         assert result["main"] == "Bleistift"
-        assert result["secondary"] == ["Rotstift"]
+        assert result["secondary"] == ["roter Buntstift"]
 
     def test_returns_main_and_multiple_secondaries(self, helper):
         """Test that multiple secondary instruments separated by commas are extracted."""
-        result = helper._process_writing_instruments("Bleistift; Rotstift, Tinte")
+        result = helper._process_writing_instruments(
+            "Bleistift; roter Buntstift, blaue Tinte"
+        )
         assert result["main"] == "Bleistift"
-        assert result["secondary"] == ["Rotstift", "Tinte"]
+        assert result["secondary"] == ["roter Buntstift", "blaue Tinte"]
 
     def test_strips_trailing_full_stop_from_multiple_secondaries(self, helper):
         """Test that trailing full stops are stripped from each secondary instrument."""
-        result = helper._process_writing_instruments("Bleistift; Rotstift, Tinte.")
+        result = helper._process_writing_instruments(
+            "Bleistift; roter Buntstift, blaue Tinte."
+        )
         assert result["main"] == "Bleistift"
-        assert result["secondary"] == ["Rotstift", "Tinte"]
+        assert result["secondary"] == ["roter Buntstift", "blaue Tinte"]
 
     def test_strips_whitespace_from_main(self, helper):
         """Test that surrounding whitespace is stripped from the main instrument."""
@@ -168,6 +173,50 @@ class TestProcessWritingInstruments:
         result = helper._process_writing_instruments("Bleistift;  Rotstift ,  Tinte ")
         assert result["main"] == "Bleistift"
         assert result["secondary"] == ["Rotstift", "Tinte"]
+
+
+class TestProcessFolioLabel:
+    """Tests for the _process_folio_label helper function."""
+
+    def test_returns_folio_label_for_folio_str(self, helper):
+        """Test that the folio label is extracted for a FOLIO_STR ('Bl.') input."""
+        assert helper._process_folio_label("Bl. 1r") == "1r"
+
+    def test_returns_folio_label_for_page_str(self, helper):
+        """Test that the folio label is extracted for a PAGE_STR ('S.') input."""
+        assert helper._process_folio_label("S. 12") == "12"
+
+    def test_folio_str_takes_priority_over_page_str(self, helper):
+        """Test that FOLIO_STR is used when both markers are present."""
+        assert helper._process_folio_label("Bl. 3r S. 12") == "3r S. 12"
+
+    def test_returns_empty_string_when_no_marker(self, helper):
+        """Test that an empty string is returned when neither marker is present."""
+        assert helper._process_folio_label("System 1: T. 1–3") == ""
+
+    def test_strips_non_breaking_space_after_folio_str(self, helper):
+        """Test that a non-breaking space after the folio marker is stripped."""
+        assert helper._process_folio_label("Bl.\xa01r") == "1r"
+
+    def test_strips_non_breaking_space_after_page_str(self, helper):
+        """Test that a non-breaking space after the page marker is stripped."""
+        assert helper._process_folio_label("S.\xa07") == "7"
+
+    def test_calls_strip_label_from_text_with_folio_str(self, helper):
+        """Test that strip_label_from_text is called with FOLIO_STR when FOLIO_STR is present."""
+        with patch.object(
+            StrippingUtils, "strip_label_from_text", return_value="1r"
+        ) as mock_strip:
+            helper._process_folio_label("Bl. 1r")
+            mock_strip.assert_called_once_with("Bl. 1r", "Bl.")
+
+    def test_calls_strip_label_from_text_with_page_str(self, helper):
+        """Test that strip_label_from_text is called with PAGE_STR when PAGE_STR is present."""
+        with patch.object(
+            StrippingUtils, "strip_label_from_text", return_value="12"
+        ) as mock_strip:
+            helper._process_folio_label("S. 12")
+            mock_strip.assert_called_once_with("S. 12", "S.")
 
 
 class TestGetItem:

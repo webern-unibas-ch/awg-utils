@@ -19,7 +19,9 @@ class TestStripByDelimiter:
     )
     def test_with_single_occurence(self, input_string, delimiter, expected_result):
         """Test that the input string with single occurcence is stripped correctly."""
-        actual_stripped_result = StrippingUtils.strip_by_delimiter(input_string, delimiter)
+        actual_stripped_result = StrippingUtils.strip_by_delimiter(
+            input_string, delimiter
+        )
         assert actual_stripped_result == expected_result
 
     @pytest.mark.parametrize(
@@ -33,7 +35,9 @@ class TestStripByDelimiter:
     )
     def test_with_multiple_occurences(self, input_string, delimiter, expected_result):
         """Test that the input string with multiple occurences is stripped correctly."""
-        actual_stripped_result = StrippingUtils.strip_by_delimiter(input_string, delimiter)
+        actual_stripped_result = StrippingUtils.strip_by_delimiter(
+            input_string, delimiter
+        )
         assert actual_stripped_result == expected_result
 
     @pytest.mark.parametrize(
@@ -47,7 +51,9 @@ class TestStripByDelimiter:
     )
     def test_with_different_delimiters(self, input_string, delimiter, expected_result):
         """Test that the input string is stripped correctly with different delimiters."""
-        actual_stripped_result = StrippingUtils.strip_by_delimiter(input_string, delimiter)
+        actual_stripped_result = StrippingUtils.strip_by_delimiter(
+            input_string, delimiter
+        )
         assert actual_stripped_result == expected_result
 
     def test_with_leading_delimiter(self):
@@ -72,7 +78,9 @@ class TestStripByDelimiter:
     )
     def test_with_whitespace(self, input_string, delimiter, expected_result):
         """Test that the input string with whitespace is stripped correctly."""
-        actual_stripped_result = StrippingUtils.strip_by_delimiter(input_string, delimiter)
+        actual_stripped_result = StrippingUtils.strip_by_delimiter(
+            input_string, delimiter
+        )
         assert actual_stripped_result == expected_result
 
     def test_with_delimiter_not_found(self):
@@ -86,6 +94,38 @@ class TestStripByDelimiter:
         expected_result = [""]
         actual_stripped_result = StrippingUtils.strip_by_delimiter("", ",")
         assert actual_stripped_result == expected_result
+
+
+class TestStripLabelFromText:
+    """Tests for the strip_label_from_text function."""
+
+    def test_removes_label_from_text(self):
+        """Test that the label is removed from the text."""
+        assert StrippingUtils.strip_label_from_text("Bl. 1r", "Bl.") == "1r"
+
+    def test_removes_label_followed_by_non_breaking_space(self):
+        """Test that the label followed by a non-breaking space is removed."""
+        assert StrippingUtils.strip_label_from_text("Bl.\xa01r", "Bl.") == "1r"
+
+    def test_removes_page_label(self):
+        """Test that a page label ('S.') is removed from the text."""
+        assert StrippingUtils.strip_label_from_text("S. 12", "S.") == "12"
+
+    def test_strips_leading_tab(self):
+        """Test that a leading tab is stripped from the text."""
+        assert StrippingUtils.strip_label_from_text("\tBl. 2v", "Bl.") == "2v"
+
+    def test_strips_surrounding_whitespace(self):
+        """Test that surrounding whitespace is stripped from the result."""
+        assert StrippingUtils.strip_label_from_text("  Bl. 3r  ", "Bl.") == "3r"
+
+    def test_returns_empty_string_when_text_is_only_label(self):
+        """Test that an empty string is returned when the text consists only of the label."""
+        assert StrippingUtils.strip_label_from_text("Bl.", "Bl.") == ""
+
+    def test_returns_text_unchanged_when_label_not_present(self):
+        """Test that the text is returned unchanged when the label is not present."""
+        assert StrippingUtils.strip_label_from_text("1r", "Bl.") == "1r"
 
 
 class TestStripTagAndClean:
@@ -119,7 +159,9 @@ class TestStripTagAndClean:
         """Test replacing multiple <p> tags with <br />."""
         content = "<td><p><strong>First paragraph</strong></p><p><em>Second paragraph</em></p></td>"
         tag = "td"
-        expected_result = "<strong>First paragraph</strong> <br /> <em>Second paragraph</em>"
+        expected_result = (
+            "<strong>First paragraph</strong> <br /> <em>Second paragraph</em>"
+        )
         result = StrippingUtils.strip_tag_and_clean(content, tag)
         assert result == expected_result
 

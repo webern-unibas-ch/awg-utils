@@ -29,6 +29,27 @@ class StrippingUtils:
         return stripped_substring_list
 
     ############################################
+    # Public static method: strip_label_from_text
+    ############################################
+    @staticmethod
+    def strip_label_from_text(text: str, label: str) -> str:
+        """
+        Strips a label prefix (and any immediately following non-breaking space)
+        from the given text, also removing leading tabs and surrounding whitespace.
+
+        Args:
+            text (str): The text to strip the label from.
+            label (str): The label string to remove (e.g. 'Bl.' or 'S.').
+
+        Returns:
+            str: The text with the label removed and whitespace stripped.
+        """
+        text = text.lstrip("\t")
+        text = text.replace(label + "\xa0", "").strip()
+        text = text.replace(label, "").strip()
+        return text
+
+    ############################################
     # Public class function: strip_tag
     ############################################
     @staticmethod

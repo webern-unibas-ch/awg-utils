@@ -6,7 +6,7 @@ MX_SIGLE = "M* "
 MEASURE_STR = "T."
 PAGE_STR = "S."
 ROWTABLE_SHEET_ID = "SkRT"
-STAR_STR = "x"
+STAR_REPLACEMENT_STR = "x"
 SYSTEM_STR = "System"
 
 COLON = ":"

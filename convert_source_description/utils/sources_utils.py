@@ -25,7 +25,7 @@ from utils.constants import (
     SEMICOLON,
     SLASH,
     STAR,
-    STAR_STR,
+    STAR_REPLACEMENT_STR,
     STRONG_TAG,
     SYSTEM_STR,
     UNDERSCORE,
@@ -370,7 +370,7 @@ class SourcesUtils:  # pylint: disable=too-few-public-methods
             )  # Spaces to underscores (M 34 Sk1.1 -> M_34_Sk1.1)
             .replace(UNDERSCORE, "", 1)  # Remove first underscore (M_34 -> M34)
             .replace(FULL_STOP, UNDERSCORE)  # Dots to underscores (Sk1.1 -> Sk1_1)
-            .replace(STAR, STAR_STR)  # Replace * with "x" (M*414 -> Mx414)
+            .replace(STAR, STAR_REPLACEMENT_STR)  # Replace * with "x" (M*414 -> Mx414)
         )
 
         # Lowercased first part of the sheet ID as complexId

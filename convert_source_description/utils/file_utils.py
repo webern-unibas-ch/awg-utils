@@ -23,16 +23,15 @@ class FileUtils:
         Reads a Word file in .docx format and returns its content as an HTML string.
 
         Args:
-            filePath (str): The name of the Word file to be read, without the .docx extension.
+            file_path (str): The path to the Word file, including the .docx extension.
 
         Returns:
             str: The content of the Word file as an HTML string.
         """
-        docx_file_name = file_path + ".docx"
-        if not os.path.exists(docx_file_name):
-            raise FileNotFoundError("File not found: " + file_path + ".docx")
+        if not os.path.exists(file_path):
+            raise FileNotFoundError("File not found: " + file_path)
 
-        with open(docx_file_name, "rb") as docx_file:
+        with open(file_path, "rb") as docx_file:
             try:
                 style_map = """
                 u => u

@@ -1,0 +1,23 @@
+"""Shared string and parsing constants for convert_source_description utilities."""
+
+FOLIO_STR = "Bl."
+M_SIGLE = "M "
+MX_SIGLE = "M* "
+MEASURE_STR = "T."
+PAGE_STR = "S."
+ROWTABLE_SHEET_ID = "SkRT"
+STAR_REPLACEMENT_STR = "x"
+SYSTEM_STR = "System"
+
+COLON = ":"
+COMMA = ","
+FULL_STOP = "."
+PARENTHESIS = "("
+SEMICOLON = ";"
+SLASH = "/"
+STAR = "*"
+UNDERSCORE = "_"
+
+P_TAG = "p"
+STRONG_TAG = "strong"
+SUP_TAG = "sup"

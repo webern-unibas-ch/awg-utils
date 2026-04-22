@@ -25,7 +25,9 @@ class IndexUtils:
     # Group 5: optional closing bracket ']'
     # Matches: A, [A], Ac, [Ac], AH, [AH], AF1–2, [AF1–2], etc.
     SIGLUM_PATTERN = re.compile(
-        r"^<p>\s*<strong>\s*(\[?[A-Z])(<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup>)?(\]?)\s*</strong>\s*</p>$"
+        r"^<p>\s*<strong>\s*(\[?[A-Z])"
+        r"(<sup>([a-zA-Z][0-9]?(–[0-9])?)?</sup>)?"
+        r"(\]?)\s*</strong>\s*</p>$"
     )
 
     ############################################

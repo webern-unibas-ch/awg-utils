@@ -57,7 +57,7 @@ from utils.typed_classes import (
 ############################################
 # Public class: SourcesUtils
 ############################################
-class SourcesUtils:
+class SourcesUtils:  # pylint: disable=too-few-public-methods
     """A class that contains utility functions for the conversion of source descriptions
     from Word to JSON."""
 
@@ -423,7 +423,7 @@ class SourcesUtils:
             List[Folio]: A list of dictionaries representing folios and their system groups.
         """
         folios = []
-        folio = None
+        folio: Optional[Folio] = None
 
         for para in sibling_paras:
             stripped_para_text = StrippingUtils.strip_by_delimiter(para.text, " \t")
@@ -437,8 +437,8 @@ class SourcesUtils:
             if folio_found or page_found:
                 folio = self._process_folio(para, stripped_para_text, page_found)
                 folios.append(folio)
-            elif folio is not None and system_found:
-                folio["systemGroups"].append(
+            elif system_found and folio is not None:
+                folio["systemGroups"].append(  # pylint: disable=unsubscriptable-object
                     self._process_system_group(stripped_para_text)
                 )
             else:

@@ -29,6 +29,7 @@ convert_source_description/
 │   ├── test_paragraph_utils.py
 │   ├── test_replacement_utils.py
 │   ├── test_sources_utils.py
+│   ├── test_sources_utils_folios.py
 │   ├── test_stripping_utils.py
 │   └── test_textcritics_utils.py
 ├── requirements.txt
@@ -130,10 +131,16 @@ The test module validates text replacement behavior on various glyph types (acci
 
 ### Sources Utils Tests (`test_sources_utils.py`)
 
-Tests for `sources_utils.py` currently cover:
-- `create_source_list()`: full source list construction and empty input behavior
+Tests for `sources_utils.py` covering source list and item processing currently cover:
+- `create_source_list()`: full source list construction, duplicate detection, and warning output
 
-The test module uses inline HTML fixtures built with BeautifulSoup to validate parser behavior against realistic source-description fragments.
+The module defines a local `helper` fixture returning a `SourcesUtils` instance.
+
+### Sources Utils Folios Tests (`test_sources_utils_folios.py`)
+
+Tests for `sources_utils.py` covering folio and system processing. Currently no public methods.
+
+The module defines its own local `helper` fixture returning a `SourcesUtils` instance.
 
 ### Stripping Utils Tests (`test_stripping_utils.py`)
 

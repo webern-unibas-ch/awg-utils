@@ -43,7 +43,7 @@ class TestCreateTextcritics:
         soup = BeautifulSoup("<table><tr><td>T</td></tr></table>", "html.parser")
         utils = TextcriticsUtils()
 
-        def add_to_corrections(textcritics_list, table, table_index):
+        def add_to_corrections(textcritics_list, _table, _table_index):
             textcritics_list["corrections"].append({"dummy": True})
 
         with patch.object(utils, "_process_table", side_effect=add_to_corrections):
@@ -57,7 +57,7 @@ class TestCreateTextcritics:
         soup = BeautifulSoup("<table><tr><td>T</td></tr></table>", "html.parser")
         utils = TextcriticsUtils()
 
-        def add_to_textcritics(textcritics_list, table, table_index):
+        def add_to_textcritics(textcritics_list, _table, _table_index):
             textcritics_list["textcritics"].append({"dummy": True})
 
         with patch.object(utils, "_process_table", side_effect=add_to_textcritics):
@@ -115,7 +115,7 @@ class TestProcessTable:
             utils._process_table(textcritics_list, table, table_index=0)
 
         mock_corrections.assert_called_once()
-        assert textcritics_list["textcritics"] == []
+        assert not textcritics_list["textcritics"]
         assert len(textcritics_list["corrections"]) == 1
 
     def test_process_table_appends_to_textcritics_for_tkk_table(self):
@@ -134,7 +134,7 @@ class TestProcessTable:
         TextcriticsUtils()._process_table(textcritics_list, table, table_index=0)
 
         assert len(textcritics_list["textcritics"]) == 1
-        assert textcritics_list["corrections"] == []
+        assert not textcritics_list["corrections"]
 
     def test_process_table_result_has_default_textcritics_structure(self):
         """Test that the appended textcritics entry has the expected top-level keys."""
@@ -163,9 +163,9 @@ class TestProcessTable:
 class TestProcessCorrections:
     """Tests for the _process_corrections helper method."""
 
-    def test_process_corrections_removes_linkboxes_and_comment_svg_group_ids(self):
-        """Test _process_corrections strips linkBoxes and svgGroupId in place."""
-        textcritics = {
+    def _make_textcritics(self):
+        """Return a minimal textcritics dict with linkBoxes and svgGroupId."""
+        return {
             "id": "",
             "label": "",
             "evaluations": [],
@@ -189,9 +189,16 @@ class TestProcessCorrections:
             "linkBoxes": [],
         }
 
+    def test_process_corrections_removes_link_boxes(self):
+        """Test that _process_corrections removes the linkBoxes key in place."""
+        textcritics = self._make_textcritics()
         TextcriticsUtils()._process_corrections(textcritics)
-
         assert "linkBoxes" not in textcritics
+
+    def test_process_corrections_removes_svg_group_id_from_block_comments(self):
+        """Test that _process_corrections removes svgGroupId from each blockComment in place."""
+        textcritics = self._make_textcritics()
+        TextcriticsUtils()._process_corrections(textcritics)
         assert (
             "svgGroupId"
             not in textcritics["commentary"]["comments"][0]["blockComments"][0]
@@ -290,7 +297,7 @@ class TestProcessTableRows:
             block_index=-1,
         )
 
-        assert result["commentary"]["comments"] == []
+        assert not result["commentary"]["comments"]
 
     def test_process_table_rows_assigns_incrementing_svg_group_ids(self):
         """Test that svgGroupId values increment for each data-row comment."""

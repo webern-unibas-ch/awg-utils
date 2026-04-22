@@ -359,18 +359,24 @@ class SourcesUtils:  # pylint: disable=too-few-public-methods
         Builds the itemLinkTo dictionary from a sketch item label.
 
         Args:
-            item_label (str): The item label string, e.g. 'M 34 Sk1' or 'M* 414 Sk1'.
+            item_label (str): The item label string, e.g. 'M 34 Sk1.1' or 'M* 414 Sk2'.
 
         Returns:
             dict: A dictionary with 'complexId' and 'sheetId' keys.
         """
         sheet_id = (
-            item_label.replace(" ", UNDERSCORE)
-            .replace(UNDERSCORE, "", 1)  # Remove first underscore (Mx_414 -> Mx414)
-            .replace(FULL_STOP, UNDERSCORE)
-            .replace(STAR, STAR_STR)
+            item_label.replace(
+                " ", UNDERSCORE
+            )  # Spaces to underscores (M 34 Sk1.1 -> M_34_Sk1.1)
+            .replace(UNDERSCORE, "", 1)  # Remove first underscore (M_34 -> M34)
+            .replace(FULL_STOP, UNDERSCORE)  # Dots to underscores (Sk1.1 -> Sk1_1)
+            .replace(STAR, STAR_STR)  # Replace * with "x" (M*414 -> Mx414)
         )
+
+        # Lowercased first part of the sheet ID as complexId
+        # (M34_Sk1_1 -> m34; Mx414_Sk2 -> mx414)
         complex_id = sheet_id.split(UNDERSCORE)[0].lower()
+
         return {
             "complexId": complex_id,
             "sheetId": ROWTABLE_SHEET_ID if SLASH in item_label else sheet_id,

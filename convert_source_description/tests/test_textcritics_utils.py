@@ -159,6 +159,35 @@ class TestProcessTable:
         assert "commentary" in result
         assert "comments" in result["commentary"]
 
+    def test_skips_table_with_no_rows(self, capsys):
+        """Test that a table with no <tr> rows is skipped with a warning."""
+        table = BeautifulSoup("<table></table>", "html.parser").find("table")
+        textcritics_list = {"textcritics": [], "corrections": []}
+
+        TextcriticsUtils()._process_table(textcritics_list, table, table_index=0)
+
+        assert not textcritics_list["textcritics"]
+        assert not textcritics_list["corrections"]
+        assert (
+            "--- Potential error? Table 1 has no rows or no header columns, skipped."
+            in capsys.readouterr().out
+        )
+
+    def test_skips_table_whose_first_row_has_no_td(self, capsys):
+        """Test that a table whose first row contains only <th> cells is skipped."""
+        html = "<table><tr><th>Takt</th><th>System</th></tr></table>"
+        table = BeautifulSoup(html, "html.parser").find("table")
+        textcritics_list = {"textcritics": [], "corrections": []}
+
+        TextcriticsUtils()._process_table(textcritics_list, table, table_index=0)
+
+        assert not textcritics_list["textcritics"]
+        assert not textcritics_list["corrections"]
+        assert (
+            "--- Potential error? Table 1 has no rows or no header columns, skipped."
+            in capsys.readouterr().out
+        )
+
 
 class TestProcessCorrections:
     """Tests for the _process_corrections helper method."""
@@ -330,6 +359,72 @@ class TestProcessTableRows:
         assert block_comments[0]["svgGroupId"] == "g-tkk-1"
         assert block_comments[1]["svgGroupId"] == "g-tkk-2"
         assert mock_process_comment.call_count == 2
+
+    def test_skips_empty_rows(self):
+        """Test that rows with no <td> elements (e.g. empty or <th>-only rows) are skipped."""
+        html = """
+            <table>
+                <tr>
+                    <td>Takt</td><td>System</td><td>Position</td><td>Kommentar</td>
+                </tr>
+                <tr></tr>
+                <tr><td>4</td><td>S4</td><td>Pos 4</td><td>Comment 4.</td></tr>
+            </table>
+        """
+        rows_in_table = BeautifulSoup(html, "html.parser").find("table").find_all("tr")
+        textcritics = {
+            "commentary": {"comments": [{"blockHeader": "", "blockComments": []}]}
+        }
+        utils = TextcriticsUtils()
+
+        with patch.object(
+            utils,
+            "_process_comment",
+            return_value={
+                "measure": "4",
+                "system": "S4",
+                "position": "Pos 4",
+                "comment": "Comment 4.",
+            },
+        ) as mock_process_comment:
+            utils._process_table_rows(textcritics, rows_in_table, block_index=0)
+
+        mock_process_comment.assert_called_once()
+
+    def test_skips_rows_with_fewer_than_four_columns(self, capsys):
+        """Test that data rows with fewer than 4 <td> cells are skipped with a warning."""
+        html = """
+            <table>
+                <tr>
+                    <td>Takt</td><td>System</td><td>Position</td><td>Kommentar</td>
+                </tr>
+                <tr><td>4</td><td>S4</td></tr>
+                <tr><td>5</td><td>S5</td><td>Pos 5</td><td>Comment 5.</td></tr>
+            </table>
+        """
+        rows_in_table = BeautifulSoup(html, "html.parser").find("table").find_all("tr")
+        textcritics = {
+            "commentary": {"comments": [{"blockHeader": "", "blockComments": []}]}
+        }
+        utils = TextcriticsUtils()
+
+        with patch.object(
+            utils,
+            "_process_comment",
+            return_value={
+                "measure": "5",
+                "system": "S5",
+                "position": "Pos 5",
+                "comment": "Comment 5.",
+            },
+        ) as mock_process_comment:
+            utils._process_table_rows(textcritics, rows_in_table, block_index=0)
+
+        mock_process_comment.assert_called_once()
+        assert (
+            "--- Potential error? Table row with fewer than 4 columns skipped:"
+            in capsys.readouterr().out
+        )
 
 
 class TestProcessComment:

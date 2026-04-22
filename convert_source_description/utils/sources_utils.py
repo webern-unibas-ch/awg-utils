@@ -397,7 +397,11 @@ class SourcesUtils:  # pylint: disable=too-few-public-methods
             sibling_para = sibling_para.next_sibling
 
         # Stop if no real <p> sibling exists or it contains a <strong> tag
-        if sibling_para is None or sibling_para.name != P_TAG or sibling_para.find(STRONG_TAG):
+        if (
+            sibling_para is None
+            or sibling_para.name != P_TAG
+            or sibling_para.find(STRONG_TAG)
+        ):
             return paras
 
         # Strip the text of the current paragraph
@@ -433,6 +437,12 @@ class SourcesUtils:  # pylint: disable=too-few-public-methods
             stripped_para_text = StrippingUtils.strip_by_delimiter(para.text, " \t")
             if len(stripped_para_text) != 2:
                 stripped_para_text = StrippingUtils.strip_by_delimiter(para.text, "\t")
+            if len(stripped_para_text) < 2:
+                print(
+                    f"--- Potential error? Paragraph has fewer than 2 parts, skipped: "
+                    f"{para.text.strip()!r}"
+                )
+                continue
 
             folio_found = FOLIO_STR in para.text
             page_found = PAGE_STR in para.text
@@ -447,8 +457,8 @@ class SourcesUtils:  # pylint: disable=too-few-public-methods
                 )
             else:
                 print(
-                    "--- Potential error? Unexpected paragraph in folios:",
-                    para.text.strip(),
+                    f"--- Potential error? Unexpected paragraph in folios: "
+                    f"{para.text.strip()!r}"
                 )
 
         return folios

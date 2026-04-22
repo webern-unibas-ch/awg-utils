@@ -59,6 +59,16 @@ class TestProcessFolios:
         assert result[0]["folio"] == "1r"
         assert result[1]["folio"] == "2v"
 
+    def test_skips_folio_row_with_no_tab_delimiter(self, helper, capsys):
+        """Test that a paragraph without a tab delimiter is skipped with a warning."""
+        para = BeautifulSoup("<p>Bl. 1r</p>", "html.parser").p
+        result = helper._process_folios([para])
+        assert result == []
+        assert (
+            "--- Potential error? Paragraph has fewer than 2 parts, skipped:"
+            in capsys.readouterr().out
+        )
+
     def test_triggers_process_folio_with_page_found_false_for_folio_str(self, helper):
         """Test that _process_folio is triggered with page_found=False for a FOLIO_STR paragraph."""
         para = BeautifulSoup("<p>Bl. 1r\tsome description.</p>", "html.parser").p
@@ -116,7 +126,7 @@ class TestProcessFolios:
     def test_unexpected_paragraph_after_folio_prints_warning(self, helper, capsys):
         """Test that a paragraph that is neither folio/page nor system prints a warning."""
         para_folio = BeautifulSoup("<p>Bl. 1r\tsome description.</p>", "html.parser").p
-        para_unexpected = BeautifulSoup("<p>unexpected content</p>", "html.parser").p
+        para_unexpected = BeautifulSoup("<p>unexpected\tcontent</p>", "html.parser").p
         helper._process_folios([para_folio, para_unexpected])
         captured = capsys.readouterr()
         assert "--- Potential error? Unexpected paragraph in folios:" in captured.out

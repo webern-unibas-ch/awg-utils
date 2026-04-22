@@ -66,6 +66,16 @@ class TextcriticsUtils:  # pylint: disable=too-few-public-methods
         textcritics["commentary"]["comments"] = []
 
         rows_in_table = table.find_all("tr")
+        header_columns = rows_in_table[0].find_all("td") if rows_in_table else []
+
+        # Skip empty tables or tables whose first row has no <td> cells
+        if not header_columns:
+            print(
+                f"--- Potential error? Table {table_index + 1} has no rows or "
+                f"no header columns, skipped."
+            )
+            return textcritics_list
+
         block_index = -1
 
         # Create a default comment block with an empty blockHeader
@@ -79,9 +89,7 @@ class TextcriticsUtils:  # pylint: disable=too-few-public-methods
         print(f"Appending textcritics for table {table_index + 1}...")
 
         # Determine if the table is for corrections based on the presence of "Korrektur"
-        is_corrections = "Korrektur" in rows_in_table[0].find_all("td")[-1].get_text(
-            strip=True
-        )
+        is_corrections = "Korrektur" in header_columns[-1].get_text(strip=True)
 
         # Adjust textcritics output based on the presence of corrections
         if is_corrections:
@@ -132,6 +140,10 @@ class TextcriticsUtils:  # pylint: disable=too-few-public-methods
         for row in rows_in_table[1:]:
             columns_in_row = row.find_all("td")
 
+            # Skip empty rows and header-only rows (<th> cells produce no <td> results)
+            if not columns_in_row:
+                continue
+
             # Check if the first td has a colspan attribute
             if "colspan" in columns_in_row[0].attrs:
                 # If the default comment block is empty, remove it
@@ -149,6 +161,12 @@ class TextcriticsUtils:  # pylint: disable=too-few-public-methods
                 continue
 
             if block_index >= 0:
+                if len(columns_in_row) < 4:
+                    print(
+                        f"--- Potential error? Table row with fewer than 4 columns skipped: "
+                        f"{[c.get_text(strip=True) for c in columns_in_row]}"
+                    )
+                    continue
                 comment = self._process_comment(columns_in_row)
                 comment["svgGroupId"] = f"g-tkk-{comment_id}"
                 textcritics["commentary"]["comments"][block_index][

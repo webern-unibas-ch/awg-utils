@@ -22,9 +22,9 @@ convert_source_description/
 │   ├── __init__.py
 │   ├── TEST_README.md
 │   ├── conftest.py
-│   ├── fixtures.py
 │   ├── test_convert_source_description.py
 │   ├── test_file_utils.py
+│   ├── test_fixtures.py
 │   ├── test_index_utils.py
 │   ├── test_paragraph_utils.py
 │   ├── test_replacement_utils.py
@@ -79,7 +79,7 @@ Coverage reports are generated in `htmlcov/`.
 
 ### Shared Test Fixtures
 
-The current shared fixtures are defined in `fixtures.py`:
+The current shared fixtures are defined in `test_fixtures.py`:
 - `sample_soup`: provides representative parsed HTML
 - `sample_soup_paras`: provides a reusable list of paragraph tags
 

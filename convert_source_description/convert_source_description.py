@@ -50,27 +50,28 @@ import argparse
 from bs4 import BeautifulSoup
 
 from utils.file_utils import FileUtils
+from utils.sources_utils import SourcesUtils
 from utils.textcritics_utils import TextcriticsUtils
-from utils.utils import ConversionUtils
 
 
-def convert_source_description(directory: str, file_name: str):
+def convert_source_description(file_path: str):
     """Convert a source description from Word to JSON.
 
     Args:
-        directory (str): The directory where the Word file is located.
-        inputFile (str): The Word file to extract the source description from.
+        file_path (str): The path to the Word file, including the .docx extension.
+
+    Raises:
+        ValueError: If file_path does not end with '.docx'.
 
     Returns
         A JSON file with the source description.
     """
+    if not file_path.endswith(".docx"):
+        raise ValueError(f"Expected a .docx file, got: {file_path}")
 
-    conversion_utils = ConversionUtils()
+    sources_utils = SourcesUtils()
     file_utils = FileUtils()
     textcritics_utils = TextcriticsUtils()
-
-    # Define file path
-    file_path = directory + file_name
 
     # Get HTML from Word file
     html = file_utils.read_html_from_word_file(file_path)
@@ -79,30 +80,28 @@ def convert_source_description(directory: str, file_name: str):
     soup = BeautifulSoup(html, "html.parser")
 
     # Create the full sourceList object
-    source_list = conversion_utils.create_source_list(soup)
+    source_list = sources_utils.create_source_list(soup)
 
     # Create the full textcritics object
     textcritics = textcritics_utils.create_textcritics(soup)
 
     # Output
-    file_utils.write_json(source_list, file_path + "_source-description")
-    file_utils.write_json(textcritics, file_path + "_textcritics")
+    stem = file_path.removesuffix(".docx")
+    file_utils.write_json(source_list, stem + "_source-description")
+    file_utils.write_json(textcritics, stem + "_textcritics")
 
 
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "directory", type=str, help="The directory where the Word file is located."
-    )
-    parser.add_argument(
-        "file_name",
+        "file_path",
         type=str,
-        help="The Word file to extract the source description from (without the .docx extension).",
+        help="The path to the Word file to convert (including the .docx extension).",
     )
     args = parser.parse_args()
-    convert_source_description(args.directory, args.file_name)
+    convert_source_description(args.file_path)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

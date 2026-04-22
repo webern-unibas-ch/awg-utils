@@ -24,14 +24,13 @@ Now you're good to run the conversion script.
 ### Conversion
 
 * In the terminal, type `pip install --require-hashes -r requirements.txt` to install the latest library versions with verified hashes.
-* In the terminal, type `python convert_source_description.py <SOURCEDESC_DIRECTORY> <SOURCEDESC_FILENAME>`.
-* Replace `<SOURCEDESC_DIRECTORY>` with the path to your local directory that contains the source-description (with `/` at the end).
-* Replace `<SOURCEDESC_FILENAME>` with the file name without the file type ending `.docx`.
+* In the terminal, type `python convert_source_description.py <SOURCEDESC_FILEPATH>`.
+* Replace `<SOURCEDESC_FILEPATH>` with the full path to your source-description file, including the `.docx` extension.
 
 > [!TIP]
-> If you have the source-description in the same directory as the python script, use `./` as `<SOURCEDESC_DIRECTORY>`.
+> If you have the source-description in the same directory as the python script, use `./` at the start of the path.
 
 #### Examples (using **Git Bash** syntax):
 
-* External directory: `python convert_source_description.py /c/Users/<USERNAME>/AWG/SourceDescriptions/ AWG_op19_B`
-* Same directory: `python convert_source_description.py ./ AWG_op19_B`
+* External directory: `python convert_source_description.py /c/Users/<USERNAME>/AWG/SourceDescriptions/AWG_op19_B.docx`
+* Same directory: `python convert_source_description.py ./AWG_op19_B.docx`

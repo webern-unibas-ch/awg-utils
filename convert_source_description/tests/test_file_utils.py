@@ -14,16 +14,15 @@ class TestReadHtmlFromWordFile:
     def test_raises_when_docx_missing(self, tmp_path):
         """Raise FileNotFoundError when the .docx file does not exist."""
         file_utils = FileUtils()
-        base_path = str(tmp_path / "missing_file")
+        docx_path = str(tmp_path / "missing_file.docx")
 
         with pytest.raises(FileNotFoundError, match="File not found"):
-            file_utils.read_html_from_word_file(base_path)
+            file_utils.read_html_from_word_file(docx_path)
 
     def test_returns_html_when_conversion_succeeds(self, tmp_path, monkeypatch):
         """Return mammoth generated HTML on successful conversion."""
         file_utils = FileUtils()
-        base_path = tmp_path / "source"
-        docx_path = Path(str(base_path) + ".docx")
+        docx_path = tmp_path / "source.docx"
         docx_path.write_bytes(b"dummy-docx-content")
 
         def mock_convert_to_html(file_obj, style_map):
@@ -35,15 +34,14 @@ class TestReadHtmlFromWordFile:
             "utils.file_utils.mammoth.convert_to_html", mock_convert_to_html
         )
 
-        actual = file_utils.read_html_from_word_file(str(base_path))
+        actual = file_utils.read_html_from_word_file(str(docx_path))
 
         assert actual == "<p>converted html</p>"
 
     def test_raises_value_error_when_conversion_fails(self, tmp_path, monkeypatch):
         """Wrap mammoth ValueError with conversion context."""
         file_utils = FileUtils()
-        base_path = tmp_path / "source"
-        docx_path = Path(str(base_path) + ".docx")
+        docx_path = tmp_path / "source.docx"
         docx_path.write_bytes(b"dummy-docx-content")
 
         def mock_convert_to_html(_file_obj, style_map):
@@ -55,7 +53,7 @@ class TestReadHtmlFromWordFile:
         )
 
         with pytest.raises(ValueError, match="Error converting file: bad docx"):
-            file_utils.read_html_from_word_file(str(base_path))
+            file_utils.read_html_from_word_file(str(docx_path))
 
 
 class TestWriteJson:

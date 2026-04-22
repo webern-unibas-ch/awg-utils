@@ -845,3 +845,33 @@ class TestFindSiblings:
         assert len(result) == 2
         assert result[0] is existing
         assert result[1] is paras[0]
+
+    def test_returns_paras_unchanged_when_sibling_is_none(self, helper):
+        """Test that paras is returned unchanged when the sibling is None (last element)."""
+        result = helper._find_siblings(None, [])
+        assert result == []
+
+    def test_skips_navigable_string_and_collects_next_p_tag(self, helper):
+        """Test that NavigableStrings (whitespace between tags) are skipped
+        and the next <p> tag is still collected."""
+        soup = BeautifulSoup(
+            "<div>\n"
+            "<p>Bl. 1r\tSystem 1: T. 1–3</p>\n"
+            "<p>\tSystem 2: T. 4–6.</p>\n"
+            "</div>",
+            "html.parser",
+        )
+        paras = soup.find_all("p")
+        result = helper._find_siblings(paras[0].next_sibling, [])
+        assert len(result) == 1
+        assert result[0] is paras[1]
+
+    def test_returns_paras_unchanged_when_sibling_is_not_p_tag(self, helper):
+        """Test that paras is returned unchanged when the next real sibling is not a <p> tag."""
+        soup = BeautifulSoup(
+            "<div><p>Bl. 1r\tSystem 1: T. 1–3</p><div>other</div></div>",
+            "html.parser",
+        )
+        para = soup.find("p")
+        result = helper._find_siblings(para.next_sibling, [])
+        assert result == []

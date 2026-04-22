@@ -392,8 +392,12 @@ class SourcesUtils:  # pylint: disable=too-few-public-methods
         Returns:
             List[BeautifulSoup.Tag]: A list of all sibling paragraphs.
         """
-        # Check if the current paragraph contains a <strong> tag
-        if sibling_para.find(STRONG_TAG):
+        # Skip NavigableStrings (whitespace/newlines) and advance to the next real sibling
+        while sibling_para is not None and not isinstance(sibling_para, Tag):
+            sibling_para = sibling_para.next_sibling
+
+        # Stop if no real <p> sibling exists or it contains a <strong> tag
+        if sibling_para is None or sibling_para.name != P_TAG or sibling_para.find(STRONG_TAG):
             return paras
 
         # Strip the text of the current paragraph

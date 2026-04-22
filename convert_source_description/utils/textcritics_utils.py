@@ -31,7 +31,7 @@ class TextcriticsUtils:  # pylint: disable=too-few-public-methods
             soup (BeautifulSoup): A BeautifulSoup object representing the document.
 
         Returns:
-            A SourceList object containing a list of SourceDescription objects.
+            A TextCritics dict containing textcritics and/or corrections lists.
         """
         textcritics_list = copy.deepcopy(DEFAULT_TEXTCRITICS_LIST)
 

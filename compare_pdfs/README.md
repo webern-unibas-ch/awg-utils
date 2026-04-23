@@ -16,12 +16,17 @@ Comparing PDF files manually to find differences can be time-consuming and error
 * In your file explorer, navigate to your local folder `awg-utils`, right-click on it, and open it with **VSCode** editor.
 * Open a new terminal in **VSCode** editor (preferably **Git Bash**, following paths and directions are using Git Bash syntax).
 * In the terminal, change directory to the subfolder `compare_pdfs` by typing: `cd compare_pdfs` (it should be sufficient to type `cd comp` + `TAB` key, the console autocompletes the name on its own). This subfolder is where the comparison script lives.
+* In the terminal, create and activate a virtual environment (see [Virtual Environments](../README.md#virtual-environments) in the main README for details):
+  ```bash
+  python -m venv .venv   # skip if already created
+  source .venv/Scripts/activate
+  ```
+* In the terminal, type `pip install --require-hashes -r requirements.txt` to install the latest library versions with verified hashes.
 
 Now you're good to run the comparison script.
 
 ### Comparison
 
-* In the terminal, type `pip install --require-hashes -r requirements.txt` to install the latest library versions with verified hashes.
 * In the terminal, type `python compare_pdfs.py <PDF1_PATH> <PDF2_PATH> <OUTPUT_DIRECTORY> [--dpi <DPI>] [--threshold <THRESHOLD>]`.
 * Replace `<PDF1_PATH>` with the path to your first PDF file.
 * Replace `<PDF2_PATH>` with the path to your second PDF file.

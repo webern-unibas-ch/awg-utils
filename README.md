@@ -64,6 +64,12 @@ The python script in this folder compares the pages of two pdfs and highlights a
 
 See [HOW TO ... compare two PDF files and highlight differences?](compare_pdfs/README.md)
 
+## [SCRIPT]: unify_ids
+
+The python scripts in this folder unify SVG group IDs for TKK and link-box elements across JSON textcritics and SVG files.
+
+See [HOW TO ... unify IDs in SVG and JSON files?](unify_ids/README.md)
+
 ## Repository structure
 
 ![Visualization of the codebase](./diagram.svg)

@@ -4,8 +4,8 @@
 
 SVG files generated from music notation and/or image software may contain auto-generated, non-descriptive group IDs (e.g. `g6407`). To make those IDs consistent and meaningful across the online edition, they need to be replaced with standardised IDs that follow the AWG naming convention. The two Python scripts automate this process:
 
-* `unify_tkk_ids.py` — replaces SVG group IDs for textkritical comment (TKK) elements with IDs of the form `awg-tkk-<entryId>`.
-* `unify_link_box_ids.py` — replaces SVG group IDs for link-box elements with IDs of the form `awg-lb-<entryId>-to-<sheetId>`.
+* `unify_tkk_ids.py` — replaces SVG group IDs for textcritical comment (TKK) elements with IDs of the form `awg-tkk-<entryId>-001`, where `<entryId>` is lowercased and the final segment is a zero-padded counter to support multiple comments per entry.
+* `unify_link_box_ids.py` — replaces SVG group IDs for link-box elements with IDs of the form `awg-lb-<entryId>-to-<sheetId>`. In the generated ID, the relevant parts are lowercased. Additionally, if the SVG filename contains an `-NvonM-` pattern, the script may append a per-SVG suffix to `<entryId>` (for example, resulting in IDs ending in `...sk1a...` or `...sk1b...`).
 
 Both scripts update the IDs in the JSON textcritics file and in the corresponding SVG files at the same time.
 

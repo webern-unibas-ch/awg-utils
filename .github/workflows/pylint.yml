@@ -3,6 +3,11 @@ name: Pylint
 on:
   pull_request:
     branches: ["main"]
+    paths-ignore:
+      - '.gitignore'
+      - '.prettierrc'
+      - '**/*.svg'
+      - '**/*.md'
 
 permissions:
   contents: read

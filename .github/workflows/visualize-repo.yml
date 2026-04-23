@@ -27,4 +27,6 @@ jobs:
       - name: Update diagram
         uses: githubocto/repo-visualizer@a999615bdab757559bf94bda1fe6eef232765f85 # v0.9.1
         with:
+          branch: "feature/diagram"
+          commit_message: "docs(utils): update repo diagram"
           excluded_paths: ".github"

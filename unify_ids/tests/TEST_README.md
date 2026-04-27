@@ -38,12 +38,13 @@ unify_ids/
 
 ## Setup
 
-1. Install dependencies (including test dependencies):
-```bash
-pip install -r requirements.txt
-```
+See the [Virtual Environments](../README.md#virtual-environments) section in the repo-level README for how to create and activate a virtual environment.
 
-2. Ensure you have Python 3.7+ installed.
+Once the virtual environment is active, install dependencies:
+
+```bash
+pip install -r requirements.txt --require-hashes
+```
 
 ## Running Tests
 

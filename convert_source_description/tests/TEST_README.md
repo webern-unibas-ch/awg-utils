@@ -38,10 +38,12 @@ convert_source_description/
 
 ## Setup
 
-Install the project dependencies from the project root:
+See the [Virtual Environments](../README.md#virtual-environments) section in the repo-level README for how to create and activate a virtual environment.
+
+Once the virtual environment is active, install dependencies:
 
 ```bash
-pip install --require-hashes -r requirements.txt
+pip install -r requirements.txt --require-hashes
 ```
 
 ## Running Tests

@@ -52,6 +52,12 @@ To deactivate the currently active virtual environment, simply run:
 deactivate
 ```
 
+## [SCRIPT]: convert_intro_to_md
+
+The python script in this folder converts an AWG intro JSON file (with HTML block content) to Markdown, producing one output file per locale.
+
+See [HOW TO ... convert an AWG intro JSON to Markdown?](convert_intro_to_md/README.md)
+
 ## [SCRIPT]: convert_source_description
 
 The python script in this folder converts a source description given in Word format from .docx to .json. 

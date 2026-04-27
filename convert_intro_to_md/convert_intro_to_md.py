@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Convert AWG intro JSON (HTML block_content) to Markdown.
+"""Convert AWG intro JSON (HTML block_content) to Markdown.
 
 Produces one output file per locale found in the intro array,
 named after the input file with the locale appended (e.g. intro_de.md, intro_en.md).
@@ -8,7 +7,7 @@ named after the input file with the locale appended (e.g. intro_de.md, intro_en.
 Usage:
     python convert_intro_to_md.py <path>/<to>/intro.json
 
-Requires: markdownify (pip install markdownify)
+Requires: markdownify (pip install -r requirements.txt --require-hashes)
 """
 
 import sys

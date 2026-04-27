@@ -14,6 +14,10 @@ convert_intro_to_md/
 │   ├── processing_utils.py   # Block content, notes, and Markdown assembly pipeline
 │   └── replacement_utils.py  # Tokenization and detokenization of special HTML constructs
 ├── tests/
+│   ├── data/
+│   │   ├── intro.json
+│   │   ├── intro_de.md
+│   │   └── intro_en.md
 │   ├── __init__.py
 │   ├── test_convert_intro_to_md.py
 │   ├── test_file_utils.py

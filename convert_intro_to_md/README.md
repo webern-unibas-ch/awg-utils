@@ -23,7 +23,7 @@ The Python script `convert_intro_to_md.py` reads an `intro.json` file and produc
   python -m venv .venv   # skip if already created
   source .venv/Scripts/activate
   ```
-* In the terminal, type `pip install --require-hashes -r requirements.txt` to install the latest library versions with verified hashes.
+* In the terminal, type `pip install -r requirements.txt --require-hashes` to install the latest library versions with verified hashes.
 
 Now you're good to run the conversion script.
 

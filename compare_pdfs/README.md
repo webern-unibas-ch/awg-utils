@@ -21,7 +21,7 @@ Comparing PDF files manually to find differences can be time-consuming and error
   python -m venv .venv   # skip if already created
   source .venv/Scripts/activate
   ```
-* In the terminal, type `pip install --require-hashes -r requirements.txt` to install the latest library versions with verified hashes.
+* In the terminal, type `pip install -r requirements.txt --require-hashes` to install the latest library versions with verified hashes.
 
 Now you're good to run the comparison script.
 

@@ -23,7 +23,7 @@ The python script `convert_source_description.py` will create a JSON file `sourc
   python -m venv .venv   # skip if already created
   source .venv/Scripts/activate
   ```
-* In the terminal, type `pip install --require-hashes -r requirements.txt` to install the latest library versions with verified hashes.
+* In the terminal, type `pip install -r requirements.txt --require-hashes` to install the latest library versions with verified hashes.
 
 Now you're good to run the conversion script.
 

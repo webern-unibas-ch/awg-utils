@@ -121,8 +121,10 @@ Tests for `read_json(file_path)`:
 - Nested JSON structures are parsed correctly.
 - `sys.exit` is called when the file does not exist.
 - `sys.exit` is called when the file contains invalid JSON.
+- `sys.exit` is called when the top-level JSON value is not a dict.
 - An error message is printed to stderr on file-not-found.
 - An error message is printed to stderr on invalid JSON.
+- An error message is printed to stderr when the JSON is not a dict.
 
 #### `TestWriteMd`
 

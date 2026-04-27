@@ -26,7 +26,7 @@ convert_intro_to_md/
 
 ## Setup
 
-See the [Virtual Environments](../README.md#virtual-environments) section in the repo-level README for how to create and activate a virtual environment.
+See the [Virtual Environments](../../README.md#virtual-environments) section in the repo-level README for how to create and activate a virtual environment.
 
 Once the virtual environment is active, install dependencies:
 

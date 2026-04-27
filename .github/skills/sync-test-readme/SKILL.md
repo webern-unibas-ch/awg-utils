@@ -71,7 +71,7 @@ After running this skill, `tests/TEST_README.md` must:
 - Do **not** document private functions (names starting with `_`) in test section bullet lists; only document public API functions.
 - When documenting what a test class covers beyond function names (e.g. edge cases), verify those scenarios actually exist in the test file before writing them down. Remove or replace any inherited descriptions that no longer match the actual tests.
 - The `## Setup` section must follow this exact pattern:
-  1. A sentence linking to [`../README.md#virtual-environments`] for venv setup.
+  1. A sentence linking to [`../../README.md#virtual-environments`] for venv setup (two levels up from `tests/`, pointing to the repo root README).
   2. "Once the virtual environment is active, install dependencies:" followed by:
   ```bash
   pip install -r requirements.txt --require-hashes

@@ -21,10 +21,19 @@ class FileUtils:
         """
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error reading {file_path}: {e}", file=sys.stderr)
             sys.exit(1)
+
+        if not isinstance(data, dict):
+            print(
+                f"Error reading {file_path}: expected a JSON object, got {type(data).__name__}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        return data
 
     @staticmethod
     def write_md(file_path: Path, content: str) -> None:

@@ -51,6 +51,21 @@ class TestReadJson:
             FileUtils.read_json(file)
         assert "Error reading" in capsys.readouterr().err
 
+    def test_exits_on_non_dict_json(self, tmp_path):
+        """Test that sys.exit is called when the top-level JSON value is not a dict."""
+        file = tmp_path / "list.json"
+        file.write_text(json.dumps([1, 2, 3]), encoding="utf-8")
+        with pytest.raises(SystemExit):
+            FileUtils.read_json(file)
+
+    def test_prints_error_on_non_dict_json(self, tmp_path, capsys):
+        """Test that an error message is printed to stderr when the JSON is not a dict."""
+        file = tmp_path / "list.json"
+        file.write_text(json.dumps([1, 2, 3]), encoding="utf-8")
+        with pytest.raises(SystemExit):
+            FileUtils.read_json(file)
+        assert "Error reading" in capsys.readouterr().err
+
 
 class TestWriteMd:
     """Tests for the write_md function."""

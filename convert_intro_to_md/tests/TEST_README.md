@@ -27,7 +27,8 @@ convert_intro_to_md/
 │   ├── test_html_parser.py
 │   ├── test_md_renderer.py
 │   ├── test_replacement_utils.py
-│   └── test_tei_renderer.py
+│   ├── test_tei_renderer.py
+│   └── test_tei_renderer_nodes.py
 ├── requirements.txt
 └── pytest.ini
 ```
@@ -249,8 +250,14 @@ Tests for `render(blocks, intro_id, intro_locale)`:
 - The root element is `<TEI>` in the TEI namespace.
 - The blocks list is forwarded to the notes lookup builder.
 - `intro_id` and `intro_locale` are forwarded to the TEI header builder.
-- The blocks list and locale are forwarded to the TEI body builder.
-- The notes lookup is reset to an empty dict after render completes.
+- The blocks list, locale, and lookup are forwarded to the TEI body builder.
+
+---
+
+### TEI Renderer Node Tests (`test_tei_renderer_nodes.py`)
+
+Tests for all node-rendering functions in `utils/tei_renderer.py`. All functions
+under test are private (`_render_*`).
 
 ## Example Test Run Output
 
@@ -264,7 +271,8 @@ tests/test_file_utils.py .............
 tests/test_html_parser.py ....................................................
 tests/test_md_renderer.py ......
 tests/test_replacement_utils.py ..............................
-tests/test_tei_renderer.py .............
+tests/test_tei_renderer.py .............................
+tests/test_tei_renderer_nodes.py ...............................................
 
 ========================== N passed in Xs ============================
 ```

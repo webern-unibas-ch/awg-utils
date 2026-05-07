@@ -12,7 +12,7 @@ class ReplacementUtils:
         re.IGNORECASE,
     )
     _NOTE_REF_ID_RE = re.compile(r"^note-ref-(\d+)$")
-    _ADJACENT_TABLES_RE = re.compile(r"(\|[^\n]*)\n\n(\|)")
+    _ADJACENT_TABLES_RE = re.compile(r"(\|[^\n]*\|)\n\n(\|)")
 
     @staticmethod
     def normalize_whitespace(text: str) -> str:

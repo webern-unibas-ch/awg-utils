@@ -45,7 +45,7 @@ def load_json_file(json_path):
         json_path (str): Path to the JSON file.
 
     Returns:
-        dict: Parsed JSON data.
+        dict | list: Parsed JSON data.
 
     Raises:
         FileNotFoundError: If the JSON file does not exist.
@@ -112,6 +112,7 @@ def create_svg_loader(svg_folder, svg_file_cache):
 
     return get_svg_data
 
+
 def save_json_file(data, json_path):
     """Save JSON data to file with proper formatting.
 
@@ -125,6 +126,7 @@ def save_json_file(data, json_path):
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
         f.write("\n")
+
 
 def save_results(data, svg_file_cache, json_path):
     """Save all modified files.

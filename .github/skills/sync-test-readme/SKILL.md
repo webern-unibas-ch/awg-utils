@@ -68,7 +68,11 @@ After running this skill, `tests/TEST_README.md` must:
 - For `## Example Test Run Output` blocks, prefer illustrative placeholder output (random sample counts) and keep it clearly example-only.
 - Do not replace illustrative example output with live run numbers unless the user explicitly asks for real numbers.
 - Preserve existing README style and formatting.
-- Do **not** document private functions (names starting with `_`) in test section bullet lists; only document public API functions.
+- Do **not** document private functions (names starting with `_`) anywhere in `TEST_README.md`:
+  - Do not add or retain `####` subsections for test classes whose header says `Tests for _name(...)`.
+  - Do not list private function names in bullet points inside any section.
+  - Do not mention private functions in module-level intro sentences (e.g. "Tests for public and private functions…").
+  - When cleaning up an existing README that violates this, remove the offending subsections entirely and rewrite any intro sentences to reference only public functions.
 - When documenting what a test class covers beyond function names (e.g. edge cases), verify those scenarios actually exist in the test file before writing them down. Remove or replace any inherited descriptions that no longer match the actual tests.
 - The `## Setup` section must follow this exact pattern:
   1. A sentence linking to [`../../README.md#virtual-environments`] for venv setup (two levels up from `tests/`, pointing to the repo root README).
@@ -85,7 +89,7 @@ Before finishing:
 - Removed/renamed tests are no longer documented.
 - Newly added test files have matching section(s) if they represent a distinct category.
 - No stale references remain.
-- No private functions (`_name`) are listed in any test section.
+- No private functions (`_name`) are referenced anywhere: no `####` subsection headers, no bullet list entries, no module-level intro sentences.
 - Scenario/edge-case descriptions in each section were verified against actual test code, not carried over from a previous version.
 
 ## Example Delta

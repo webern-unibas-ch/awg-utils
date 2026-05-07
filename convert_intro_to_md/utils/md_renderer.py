@@ -101,7 +101,7 @@ def _render_notes(notes: dict[int, Note], locale: str) -> list[str]:
     """
     if not notes:
         return []
-    header = "Notes" if locale == "en" else "Anmerkungen"
+    header = "Anmerkungen" if locale == "de" else "Notes"
     lines: list[str] = ["---", "", f"## {header}", ""]
     for n in sorted(notes):
         content = _render_inline_children(notes[n].children)
@@ -216,8 +216,6 @@ def _render_table(node: Table) -> str:
     if not rows:
         return ""
     num_cols = max(sum(c.colspan or 1 for c in r.cells) for r in rows)
-    if num_cols == 0:
-        return ""
     rendered_rows = [_render_table_row(r, num_cols) for r in rows]
     empty_row = "|" + "|".join(" " for _ in range(num_cols)) + "|"
     output_rows: list[str] = []

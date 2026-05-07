@@ -27,6 +27,16 @@ from utils.nodes import (
 _TEI_NS = "http://www.tei-c.org/ns/1.0"
 _XML_NS = "http://www.w3.org/XML/1998/namespace"
 
+# Maps inline node types to (tei-tag, rend-or-None); mirrors md_renderer._INLINE_WRAP.
+_INLINE_WRAP: dict[type, tuple[str, str | None]] = {
+    Italic: ("hi", "italic"),
+    Bold: ("hi", "bold"),
+    Strikethrough: ("del", None),
+    Underline: ("hi", "underline"),
+    Superscript: ("hi", "sup"),
+    Paragraph: ("p", None),
+}
+
 # Module-level notes lookup; populated by render() before walking the tree.
 _notes_lookup: dict[int, Note] = {}
 
@@ -53,32 +63,13 @@ def render(blocks: list[Block], intro_id: str, intro_locale: str) -> str:
     ET.register_namespace("", _TEI_NS)
     ET.register_namespace("xml", _XML_NS)
 
-    _notes_lookup = {}
-    for block in blocks:
-        for note in block.notes:
-            try:
-                _notes_lookup[int(note.id.split("-")[-1])] = note
-            except (ValueError, IndexError):
-                pass
+    _notes_lookup = _build_notes_lookup(blocks)
 
     root = ET.Element(_tei("TEI"))
 
     _build_tei_header(root, intro_id, intro_locale)
 
-    text_el = ET.SubElement(root, _tei("text"))
-    text_el.set(_xml("lang"), intro_locale)
-    body = ET.SubElement(text_el, _tei("body"))
-
-    for block in blocks:
-        div = ET.SubElement(body, _tei("div"))
-        if block.id:
-            div.set(_xml("id"), block.id)
-        if block.heading:
-            head_el = ET.SubElement(div, _tei("head"))
-            for node in block.heading:
-                _render_node(node, head_el)
-        for node in block.content:
-            _render_node(node, div)
+    _build_tei_body(root, blocks, intro_locale)
 
     _notes_lookup = {}
 
@@ -90,8 +81,31 @@ def render(blocks: list[Block], intro_id: str, intro_locale: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# teiHeader builder
+# Builder helpers
 # ---------------------------------------------------------------------------
+
+
+def _build_notes_lookup(blocks: list[Block]) -> dict[int, Note]:
+    """Build a mapping from note number to :class:`~utils.nodes.Note` for *blocks*.
+
+    Iterates every block's ``notes`` list and indexes each note by the integer
+    suffix of its ``id`` (e.g. ``'note-3'`` → ``3``).  Notes whose ``id``
+    cannot be parsed are silently skipped.
+
+    Args:
+        blocks (list[Block]): The IR blocks whose notes should be indexed.
+
+    Returns:
+        dict[int, Note]: Mapping from note number to Note.
+    """
+    lookup: dict[int, Note] = {}
+    for block in blocks:
+        for note in block.notes:
+            try:
+                lookup[int(note.id.split("-")[-1])] = note
+            except (ValueError, IndexError):
+                pass
+    return lookup
 
 
 def _build_tei_header(root: ET.Element, intro_id: str, intro_locale: str) -> None:
@@ -115,12 +129,39 @@ def _build_tei_header(root: ET.Element, intro_id: str, intro_locale: str) -> Non
     ET.SubElement(lang_usage, _tei("language")).set("ident", intro_locale)
 
 
+def _build_tei_body(root: ET.Element, blocks: list[Block], intro_locale: str) -> None:
+    """Append a ``<text><body>`` subtree to *root*.
+
+    Creates one ``<div>`` per block.  Each div receives an optional
+    ``xml:id``, an optional ``<head>``, and then its content nodes.
+
+    Args:
+        root (ET.Element): The ``<TEI>`` root element.
+        blocks (list[Block]): The IR blocks to render.
+        intro_locale (str): Written as the ``xml:lang`` attribute on ``<text>``.
+    """
+    text_el = ET.SubElement(root, _tei("text"))
+    text_el.set(_xml("lang"), intro_locale)
+    body = ET.SubElement(text_el, _tei("body"))
+
+    for block in blocks:
+        div = ET.SubElement(body, _tei("div"))
+        if block.id:
+            div.set(_xml("id"), block.id)
+        if block.heading:
+            head_el = ET.SubElement(div, _tei("head"))
+            for node in block.heading:
+                _render_node(node, head_el)
+        for node in block.content:
+            _render_node(node, div)
+
+
 # ---------------------------------------------------------------------------
 # Node renderers
 # ---------------------------------------------------------------------------
 
 
-def _render_node(node: Node, parent: ET.Element) -> None:  # pylint: disable=too-many-branches,too-many-statements
+def _render_node(node: Node, parent: ET.Element) -> None:
     """Render a single IR node as a child of *parent*.
 
     Args:
@@ -130,67 +171,110 @@ def _render_node(node: Node, parent: ET.Element) -> None:  # pylint: disable=too
     if isinstance(node, Text):
         _append_text(parent, node.value)
     elif isinstance(node, FootnoteRef):
-        note_el = ET.SubElement(parent, _tei("note"))
-        note_el.set("place", "end")
-        note_el.set("n", str(node.n))
-        note_el.set(_xml("id"), f"note-{node.n}")
-        note = _notes_lookup.get(node.n)
-        if note:
-            for child in note.children:
-                _render_node(child, note_el)
+        _render_footnote_ref(node, parent)
     elif isinstance(node, CrossRef):
-        el = ET.SubElement(parent, _tei("ref"))
-        el.set("target", f"#note-{node.n}")
-        el.text = str(node.n)
+        _render_cross_ref(node, parent)
     elif isinstance(node, Ref):
-        el = ET.SubElement(parent, _tei("ref"))
-        el.set("target", node.target)
-        for child in node.children:
-            _render_node(child, el)
-    elif isinstance(node, Italic):
-        el = ET.SubElement(parent, _tei("hi"))
-        el.set("rend", "italic")
-        for child in node.children:
-            _render_node(child, el)
-    elif isinstance(node, Bold):
-        el = ET.SubElement(parent, _tei("hi"))
-        el.set("rend", "bold")
-        for child in node.children:
-            _render_node(child, el)
-    elif isinstance(node, Strikethrough):
-        el = ET.SubElement(parent, _tei("del"))
-        for child in node.children:
-            _render_node(child, el)
-    elif isinstance(node, Underline):
-        el = ET.SubElement(parent, _tei("hi"))
-        el.set("rend", "underline")
-        for child in node.children:
-            _render_node(child, el)
-    elif isinstance(node, Superscript):
-        el = ET.SubElement(parent, _tei("hi"))
-        el.set("rend", "sup")
-        for child in node.children:
-            _render_node(child, el)
-    elif isinstance(node, Paragraph):
-        el = ET.SubElement(parent, _tei("p"))
-        for child in node.children:
-            _render_node(child, el)
+        _render_ref(node, parent)
+    elif type(node) in _INLINE_WRAP:
+        _render_inline_node(node, parent)
     elif isinstance(node, Blockquote):
-        quote_el = ET.SubElement(parent, _tei("quote"))
-        for para in node.paragraphs:
-            el = ET.SubElement(quote_el, _tei("l"))
-            for child in para.children:
-                _render_node(child, el)
+        _render_blockquote(node, parent)
     elif isinstance(node, ListBlock):
-        list_el = ET.SubElement(parent, _tei("list"))
-        if node.ordered:
-            list_el.set("rend", "ordered")
-        for item in node.items:
-            item_el = ET.SubElement(list_el, _tei("item"))
-            for child in item.children:
-                _render_node(child, item_el)
+        _render_list_block(node, parent)
     elif isinstance(node, Table):
         _render_table(node, parent)
+
+
+def _render_inline_node(node: Node, parent: ET.Element) -> None:
+    """Render an inline wrapper node from :data:`_INLINE_WRAP` as a child of *parent*.
+
+    Looks up the TEI tag name and optional ``rend`` attribute from
+    :data:`_INLINE_WRAP`, creates the sub-element, and recurses into
+    ``node.children``.
+
+    Args:
+        node (Node): An inline IR node whose type is a key in :data:`_INLINE_WRAP`.
+        parent (ET.Element): The ET element to attach the rendered element to.
+    """
+    tag, rend = _INLINE_WRAP[type(node)]
+    el = ET.SubElement(parent, _tei(tag))
+    if rend:
+        el.set("rend", rend)
+    for child in node.children:  # type: ignore[union-attr]
+        _render_node(child, el)
+
+
+def _render_blockquote(node: Blockquote, parent: ET.Element) -> None:
+    """Render a :class:`~utils.nodes.Blockquote` IR node as a TEI ``<quote>``.
+
+    Args:
+        node (Blockquote): The blockquote IR node.
+        parent (ET.Element): The ET element to attach the ``<quote>`` to.
+    """
+    quote_el = ET.SubElement(parent, _tei("quote"))
+    for para in node.paragraphs:
+        el = ET.SubElement(quote_el, _tei("l"))
+        for child in para.children:
+            _render_node(child, el)
+
+
+def _render_cross_ref(node: CrossRef, parent: ET.Element) -> None:
+    """Render a :class:`~utils.nodes.CrossRef` IR node as a TEI ``<ref>``.
+
+    Args:
+        node (CrossRef): The cross-reference IR node.
+        parent (ET.Element): The ET element to attach the ``<ref>`` to.
+    """
+    el = ET.SubElement(parent, _tei("ref"))
+    el.set("target", f"#note-{node.n}")
+    el.text = str(node.n)
+
+
+def _render_footnote_ref(node: FootnoteRef, parent: ET.Element) -> None:
+    """Render a :class:`~utils.nodes.FootnoteRef` IR node as a TEI ``<note>``.
+
+    Args:
+        node (FootnoteRef): The footnote-reference IR node.
+        parent (ET.Element): The ET element to attach the ``<note>`` to.
+    """
+    note_el = ET.SubElement(parent, _tei("note"))
+    note_el.set("place", "end")
+    note_el.set("n", str(node.n))
+    note_el.set(_xml("id"), f"note-{node.n}")
+    note = _notes_lookup.get(node.n)
+    if note:
+        for child in note.children:
+            _render_node(child, note_el)
+
+
+def _render_list_block(node: ListBlock, parent: ET.Element) -> None:
+    """Render a :class:`~utils.nodes.ListBlock` IR node as a TEI ``<list>``.
+
+    Args:
+        node (ListBlock): The list IR node.
+        parent (ET.Element): The ET element to attach the ``<list>`` to.
+    """
+    list_el = ET.SubElement(parent, _tei("list"))
+    if node.ordered:
+        list_el.set("rend", "ordered")
+    for item in node.items:
+        item_el = ET.SubElement(list_el, _tei("item"))
+        for child in item.children:
+            _render_node(child, item_el)
+
+
+def _render_ref(node: Ref, parent: ET.Element) -> None:
+    """Render a :class:`~utils.nodes.Ref` IR node as a TEI ``<ref>``.
+
+    Args:
+        node (Ref): The hyperlink IR node.
+        parent (ET.Element): The ET element to attach the ``<ref>`` to.
+    """
+    el = ET.SubElement(parent, _tei("ref"))
+    el.set("target", node.target)
+    for child in node.children:
+        _render_node(child, el)
 
 
 def _render_table(node: Table, parent: ET.Element) -> None:
@@ -236,6 +320,22 @@ def _render_cell(node: Cell, parent: ET.Element) -> None:
 # ---------------------------------------------------------------------------
 # ET helpers
 # ---------------------------------------------------------------------------
+def _append_text(parent: ET.Element, text: str) -> None:
+    """Append *text* to *parent*, correctly handling mixed content.
+
+    If *parent* already has child elements the text is appended to the
+    ``tail`` of the last child; otherwise it is appended to ``parent.text``.
+
+    Args:
+        parent (ET.Element): The element to append text to.
+        text (str): The text string to append.
+    """
+    children = list(parent)
+    if children:
+        last = children[-1]
+        last.tail = (last.tail or "") + text
+    else:
+        parent.text = (parent.text or "") + text
 
 
 def _fix_mixed_content_indent(elem: ET.Element) -> None:
@@ -287,21 +387,3 @@ def _xml(attr: str) -> str:
         str: ``{http://www.w3.org/XML/1998/namespace}attr``.
     """
     return f"{{{_XML_NS}}}{attr}"
-
-
-def _append_text(parent: ET.Element, text: str) -> None:
-    """Append *text* to *parent*, correctly handling mixed content.
-
-    If *parent* already has child elements the text is appended to the
-    ``tail`` of the last child; otherwise it is appended to ``parent.text``.
-
-    Args:
-        parent (ET.Element): The element to append text to.
-        text (str): The text string to append.
-    """
-    children = list(parent)
-    if children:
-        last = children[-1]
-        last.tail = (last.tail or "") + text
-    else:
-        parent.text = (parent.text or "") + text

@@ -6,7 +6,12 @@ from unittest.mock import patch
 
 import pytest
 
-from convert_intro_to_md import convert_intro_to_md, convert_intro_to_tei, get_intro_context, main
+from convert_intro_to_md import (
+    convert_intro_to_md,
+    convert_intro_to_tei,
+    get_intro_context,
+    main,
+)
 from utils import md_renderer, tei_renderer
 
 
@@ -116,16 +121,17 @@ class TestMain:
         assert "No intro array" in capsys.readouterr().err
 
     def test_writes_output_file(self, tmp_path):
-        """Test that main writes an output file for a given intro."""
+        """Test that main writes both .md and .tei output files for a given intro."""
         data = {"intro": [{"id": "de-awg-I-5", "content": []}]}
         f = tmp_path / "intro.json"
         f.write_text(json.dumps(data), encoding="utf-8")
         with patch("sys.argv", ["prog", str(f)]):
             main()
         assert (tmp_path / "intro_de.md").exists()
+        assert (tmp_path / "intro_de.tei").exists()
 
     def test_writes_one_file_per_locale(self, tmp_path):
-        """Test that main writes separate files for each locale in the intro array."""
+        """Test that main writes separate .md and .tei files for each locale."""
         data = {
             "intro": [
                 {"id": "de-awg-I-5", "content": []},
@@ -137,7 +143,9 @@ class TestMain:
         with patch("sys.argv", ["prog", str(f)]):
             main()
         assert (tmp_path / "intro_de.md").exists()
+        assert (tmp_path / "intro_de.tei").exists()
         assert (tmp_path / "intro_en.md").exists()
+        assert (tmp_path / "intro_en.tei").exists()
 
     def test_prints_converted_and_written_lines(self, tmp_path, capsys):
         """Test that main prints 'Converted' and 'Written' lines for each intro."""

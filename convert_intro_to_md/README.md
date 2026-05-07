@@ -4,7 +4,7 @@
 
 The online edition stores introductory texts in a JSON format where content is represented as HTML fragments inside a `blockContent` array. To make these texts usable outside the Angular application — for example for editing, reviewing, or archiving — they need to be converted to plain Markdown.
 
-The Python script `convert_intro_to_md.py` reads an `intro.json` file and produces one Markdown output file per locale found in the `intro` array (e.g. `intro_de.md`, `intro_en.md`). Angular-specific HTML attributes are stripped, footnote references and cross-references are converted to Markdown footnote syntax, and footnotes are appended as a numbered section at the end.
+The Python script `convert_intro_to_md.py` reads an `intro.json` file and produces one Markdown (`.md`) and one TEI XML (`.tei`) output file per locale found in the `intro` array (e.g. `intro_de.md` / `intro_de.tei`, `intro_en.md` / `intro_en.tei`). Angular-specific HTML attributes are stripped, footnote references and cross-references are converted to Markdown footnote syntax and TEI note elements respectively, and footnotes are appended at the end of each output.
 
 ## HOW?
 
@@ -46,13 +46,22 @@ The script writes one Markdown file per locale next to the input file, named aft
 
 ```
 intro_de.md
+intro_de.tei
 intro_en.md
+intro_en.tei
 ```
 
-Each file contains the converted Markdown text, with:
+Each Markdown file contains the converted Markdown text, with:
 - Section headers rendered as `## <header>`
 - Consecutive small-text paragraphs (`<p class="small">`, except list variants) combined into a single blockquote (`> ...`)
 - HTML tables converted to Markdown tables
 - Footnote references converted to `[^N]`
-- Footnote back-references (cross-references within the text) converted to inline links `[N](#fnN)`
+- Footnote back-references (cross-references within the text) converted to inline links `[N](#fn:N)`
 - Footnotes appended as a `## Notes` / `## Anmerkungen` section at the end
+
+Each TEI file contains a stand-alone TEI XML document, with:
+- A minimal `<teiHeader>` carrying the intro id and language
+- A `<text><body>` where each block becomes a `<div>`, with an optional `<head>` for block headers
+- Inline formatting mapped to `<hi rend="...">`, `<del>`, etc.
+- Cross-references rendered as `<ref target="#note-N">N</ref>` elements
+- Footnote references rendered inline as `<note place="end" n="N" xml:id="note-N">` elements with their full note content

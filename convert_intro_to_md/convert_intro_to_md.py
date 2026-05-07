@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Convert AWG intro JSON (HTML block_content) to Markdown.
+"""Convert AWG intro JSON (HTML block_content) to Markdown and TEI XML.
 
-Produces one output file per locale found in the intro array,
-named after the input file with the locale appended (e.g. intro_de.md, intro_en.md).
+Produces two output files per locale found in the intro array,
+named after the input file with the locale appended
+(e.g. intro_de.md / intro_de.tei, intro_en.md / intro_en.tei).
 
 Usage:
     python convert_intro_to_md.py <path>/<to>/intro.json
 
-Requires: markdownify (pip install -r requirements.txt --require-hashes)
+Requires: beautifulsoup4 (pip install -r requirements.txt --require-hashes)
 """
 
 import sys

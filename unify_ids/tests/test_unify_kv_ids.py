@@ -140,7 +140,7 @@ class TestProcessKvIdsPerCorrection(unittest.TestCase):
         comments_list = [{"blockHeader": "", "blockComments": [bc]}]
         logger = self._run(comments_list)
         self.assertEqual(bc["svgGroupId"], expected_id)
-        self.assertEqual(logger.stats["svg_unchanged"], 1)
+        self.assertEqual(logger.stats["ids_unchanged"], 1)
         self.assertEqual(logger.stats["ids_changed"], 0)
 
     def test_second_run_is_noop(self):
@@ -150,7 +150,7 @@ class TestProcessKvIdsPerCorrection(unittest.TestCase):
         self._run(comments_list)
         logger2 = self._run(comments_list)
         self.assertEqual(logger2.stats["ids_changed"], 0)
-        self.assertEqual(logger2.stats["svg_unchanged"], 1)
+        self.assertEqual(logger2.stats["ids_unchanged"], 1)
 
     def test_dry_run_does_not_mutate_block_comment(self):
         """In dry-run mode the blockComment dict is not modified."""
@@ -369,6 +369,42 @@ class TestUnifyKvIds(unittest.TestCase):
         unify_kv_ids(self.json_path, "op25", _logger(dry_run=True))
 
         self.assertEqual(raw_before, self._read_raw())
+
+    def test_verbose_prints_no_changes_message_when_all_ids_already_correct(self):
+        """Verbose mode prints 'No changes detected' when nothing needs updating."""
+        bc = {"svgGroupId": f"{KV.prefix}op25_E_corr_1-001", "measure": "1"}
+        data = _make_source_json([_make_correction("source_E_corr_1", [[bc]])])
+        self._write_json(data)
+
+        with patch("builtins.print") as mock_print:
+            unify_kv_ids(self.json_path, "op25", Logger(verbose=True))
+
+        printed = [c[0][0] for c in mock_print.call_args_list if c[0]]
+        self.assertTrue(any("No changes detected" in msg for msg in printed))
+
+    def test_verbose_prints_dry_run_skip_message(self):
+        """Verbose dry-run mode prints '[DRY-RUN] Skipping write.'."""
+        bc = _make_block_comment()
+        data = _make_source_json([_make_correction("source_E_corr_1", [[bc]])])
+        self._write_json(data)
+
+        with patch("builtins.print") as mock_print:
+            unify_kv_ids(self.json_path, "op25", Logger(verbose=True, dry_run=True))
+
+        printed = [c[0][0] for c in mock_print.call_args_list if c[0]]
+        self.assertTrue(any("DRY-RUN" in msg and "Skipping write" in msg for msg in printed))
+
+    def test_verbose_prints_stats_summary(self):
+        """Verbose mode prints a stats summary line after processing."""
+        bc = _make_block_comment()
+        data = _make_source_json([_make_correction("source_E_corr_1", [[bc]])])
+        self._write_json(data)
+
+        with patch("builtins.print") as mock_print:
+            unify_kv_ids(self.json_path, "op25", Logger(verbose=True))
+
+        printed = [c[0][0] for c in mock_print.call_args_list if c[0]]
+        self.assertTrue(any("Summary:" in msg for msg in printed))
 
     def test_second_run_is_noop(self):
         """Running unify_kv_ids twice yields identical JSON."""

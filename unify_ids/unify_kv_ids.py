@@ -64,7 +64,7 @@ def process_kv_ids_per_correction(correction_id, entry_part, comments_list, logg
             new_id = f"{KV.prefix}{entry_part}-{counter:03d}"
 
             if old_id == new_id:
-                logger.bump_stats("svg_unchanged")
+                logger.bump_stats("ids_unchanged")
                 logger.log(
                     "info",
                     "unchanged",

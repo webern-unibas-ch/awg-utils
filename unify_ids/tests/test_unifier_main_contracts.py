@@ -1,7 +1,7 @@
 """
-Contract tests for the unifier modules (TKK + LinkBox).
+Contract tests for the unifier modules (TKK, LinkBox, and KV).
 
-This file verifies shared external behavior across both unifiers:
+This file verifies shared external behavior across all unifiers:
 1) each module exports its expected public entry function, and
 2) the CLI-style `main()` path handles missing files consistently
    by exiting with status code 1.

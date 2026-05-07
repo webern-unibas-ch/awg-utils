@@ -24,7 +24,10 @@ def load_and_validate_inputs(json_path, svg_folder):
         tuple: (data, all_svg_files) - loaded JSON data and list of SVG files
 
     Raises:
-        FileNotFoundError: If JSON file or SVG folder doesn't exist
+        FileNotFoundError: If the JSON file or SVG folder does not exist.
+        json.JSONDecodeError: If the JSON file contains malformed JSON.
+        PermissionError: If the SVG folder cannot be listed.
+        ValueError: If no SVG files are found in the folder.
     """
     data = load_json_file(json_path)
     all_svg_files = _load_svg_files(svg_folder)

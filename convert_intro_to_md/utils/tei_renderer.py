@@ -1,0 +1,476 @@
+"""Render a list of Block IR nodes to a TEI XML string."""
+
+import io
+import sys
+import xml.etree.ElementTree as ET
+
+from utils.nodes import (
+    Block,
+    Blockquote,
+    Bold,
+    Cell,
+    CrossRef,
+    FootnoteRef,
+    Italic,
+    ListBlock,
+    Node,
+    Note,
+    Paragraph,
+    Ref,
+    Row,
+    Strikethrough,
+    Superscript,
+    Table,
+    Text,
+    Underline,
+)
+
+_TEI_NS = "http://www.tei-c.org/ns/1.0"
+_XML_NS = "http://www.w3.org/XML/1998/namespace"
+
+# U+2060 WORD JOINER: invisible, not whitespace, so ET.indent() won't overwrite it.
+_WS_SENTINEL = "\u2060"
+
+# Maps inline node types to (tei-tag, rend-or-None); mirrors md_renderer._INLINE_WRAP.
+_INLINE_WRAP: dict[type, tuple[str, str | None]] = {
+    Italic: ("hi", "italic"),
+    Bold: ("hi", "bold"),
+    Strikethrough: ("del", None),
+    Underline: ("hi", "underline"),
+    Superscript: ("hi", "sup"),
+    Paragraph: ("p", None),
+}
+
+
+def render(blocks: list[Block], intro_id: str, intro_locale: str) -> str:
+    """Render a list of Block IR nodes to a stand-alone TEI XML string.
+
+    Produces a minimal TEI document with:
+
+    - A ``<teiHeader>`` carrying the intro id and language.
+    - A ``<text><body>`` where each block becomes a ``<div>``.
+    - Footnotes rendered inline as ``<note place="end" n="N">`` elements.
+
+    Args:
+        blocks (List[Block]): The parsed IR blocks (from
+            :func:`utils.html_parser.parse_intro`).
+        intro_id (str): The intro identifier, used as the document title.
+        intro_locale (str): The BCP-47 locale string (e.g. ``'de'`` or ``'en'``).
+
+    Returns:
+        str: A serialized TEI XML string with an XML declaration, UTF-8 encoded.
+    """
+    ET.register_namespace("", _TEI_NS)
+    ET.register_namespace("xml", _XML_NS)
+
+    lookup = _build_notes_lookup(blocks)
+
+    root = ET.Element(_tei("TEI"))
+
+    _build_tei_header(root, intro_id, intro_locale)
+
+    _build_tei_body(root, blocks, intro_locale, lookup)
+
+    _indent_tree(root)
+
+    buf = io.BytesIO()
+    ET.ElementTree(root).write(buf, encoding="utf-8", xml_declaration=True)
+    return buf.getvalue().decode("utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Builder helpers
+# ---------------------------------------------------------------------------
+
+
+def _build_notes_lookup(blocks: list[Block]) -> dict[int, Note]:
+    """Build a mapping from note number to :class:`~utils.nodes.Note` for *blocks*.
+
+    Iterates every block's ``notes`` list and indexes each note by the integer
+    suffix of its ``id`` (e.g. ``'note-3'`` → ``3``).  Notes whose ``id``
+    cannot be parsed are silently skipped.  When two notes share the same
+    integer suffix the first occurrence is kept and a warning is printed to
+    ``stderr``.
+
+    Args:
+        blocks (list[Block]): The IR blocks whose notes should be indexed.
+
+    Returns:
+        dict[int, Note]: Mapping from note number to Note.
+    """
+    lookup: dict[int, Note] = {}
+    for block in blocks:
+        for note in block.notes:
+            try:
+                n = int(note.id.split("-")[-1])
+            except (ValueError, IndexError):
+                pass
+            else:
+                if n in lookup:
+                    print(
+                        f"Duplicate note number {n!r} encountered; keeping first.",
+                        file=sys.stderr,
+                    )
+                else:
+                    lookup[n] = note
+    return lookup
+
+
+def _build_tei_header(root: ET.Element, intro_id: str, intro_locale: str) -> None:
+    """Append a minimal ``<teiHeader>`` to *root*.
+
+    Args:
+        root (ET.Element): The ``<TEI>`` root element.
+        intro_id (str): Used as the document title.
+        intro_locale (str): Used as the ``ident`` of the ``<language>`` element.
+    """
+    header = ET.SubElement(root, _tei("teiHeader"))
+    file_desc = ET.SubElement(header, _tei("fileDesc"))
+    title_stmt = ET.SubElement(file_desc, _tei("titleStmt"))
+    ET.SubElement(title_stmt, _tei("title")).text = intro_id
+    pub_stmt = ET.SubElement(file_desc, _tei("publicationStmt"))
+    ET.SubElement(pub_stmt, _tei("p")).text = "AWG Online Edition"
+    src_desc = ET.SubElement(file_desc, _tei("sourceDesc"))
+    ET.SubElement(src_desc, _tei("p")).text = "Converted from AWG intro JSON"
+    profile = ET.SubElement(header, _tei("profileDesc"))
+    lang_usage = ET.SubElement(profile, _tei("langUsage"))
+    ET.SubElement(lang_usage, _tei("language")).set("ident", intro_locale)
+
+
+def _build_tei_body(
+    root: ET.Element,
+    blocks: list[Block],
+    intro_locale: str,
+    lookup: dict[int, Note],
+) -> None:
+    """Append a ``<text><body>`` subtree to *root*.
+
+    Creates one ``<div>`` per block.  Each div receives an optional
+    ``xml:id``, an optional ``<head>``, and then its content nodes.
+
+    Args:
+        root (ET.Element): The ``<TEI>`` root element.
+        blocks (list[Block]): The IR blocks to render.
+        intro_locale (str): Written as the ``xml:lang`` attribute on ``<text>``.
+        lookup (dict[int, Note]): Mapping from note number to Note, passed to
+            :func:`_render_node`.
+    """
+    text_el = ET.SubElement(root, _tei("text"))
+    text_el.set(_xml("lang"), intro_locale)
+    body = ET.SubElement(text_el, _tei("body"))
+
+    for block in blocks:
+        div = ET.SubElement(body, _tei("div"))
+        if block.id:
+            div.set(_xml("id"), block.id)
+        if block.heading:
+            head_el = ET.SubElement(div, _tei("head"))
+            for node in block.heading:
+                _render_node(node, head_el, lookup)
+        for node in block.content:
+            _render_node(node, div, lookup)
+
+
+# ---------------------------------------------------------------------------
+# Node renderers
+# ---------------------------------------------------------------------------
+
+
+def _render_node(node: Node, parent: ET.Element, lookup: dict[int, Note]) -> None:
+    """Render a single IR node as a child of *parent*.
+
+    Args:
+        node (Node): The IR node to render.
+        parent (ET.Element): The ET element to attach rendered output to.
+        lookup (dict[int, Note]): Mapping from note number to Note, forwarded
+            to footnote and recursive renderers.
+    """
+    if isinstance(node, Text):
+        _append_text(parent, node.value)
+    elif isinstance(node, FootnoteRef):
+        _render_footnote_ref(node, parent, lookup)
+    elif isinstance(node, CrossRef):
+        _render_cross_ref(node, parent)
+    elif isinstance(node, Ref):
+        _render_ref(node, parent, lookup)
+    elif type(node) in _INLINE_WRAP:
+        _render_inline_node(node, parent, lookup)
+    elif isinstance(node, Blockquote):
+        _render_blockquote(node, parent, lookup)
+    elif isinstance(node, ListBlock):
+        _render_list_block(node, parent, lookup)
+    elif isinstance(node, Table):
+        _render_table(node, parent, lookup)
+
+
+def _render_inline_node(
+    node: Node, parent: ET.Element, lookup: dict[int, Note]
+) -> None:
+    """Render an inline wrapper node from :data:`_INLINE_WRAP` as a child of *parent*.
+
+    Looks up the TEI tag name and optional ``rend`` attribute from
+    :data:`_INLINE_WRAP`, creates the sub-element, and recurses into
+    ``node.children``.
+
+    Args:
+        node (Node): An inline IR node whose type is a key in :data:`_INLINE_WRAP`.
+        parent (ET.Element): The ET element to attach the rendered element to.
+        lookup (dict[int, Note]): Forwarded to :func:`_render_node`.
+    """
+    tag, rend = _INLINE_WRAP[type(node)]
+    el = ET.SubElement(parent, _tei(tag))
+    if rend:
+        el.set("rend", rend)
+    for child in node.children:  # type: ignore[union-attr]
+        _render_node(child, el, lookup)
+
+
+def _render_blockquote(
+    node: Blockquote, parent: ET.Element, lookup: dict[int, Note]
+) -> None:
+    """Render a :class:`~utils.nodes.Blockquote` IR node as a TEI ``<quote>``.
+
+    Args:
+        node (Blockquote): The blockquote IR node.
+        parent (ET.Element): The ET element to attach the ``<quote>`` to.
+        lookup (dict[int, Note]): Forwarded to :func:`_render_node`.
+    """
+    quote_el = ET.SubElement(parent, _tei("quote"))
+    for para in node.paragraphs:
+        el = ET.SubElement(quote_el, _tei("l"))
+        for child in para.children:
+            _render_node(child, el, lookup)
+
+
+def _render_cross_ref(node: CrossRef, parent: ET.Element) -> None:
+    """Render a :class:`~utils.nodes.CrossRef` IR node as a TEI ``<ref>``.
+
+    Args:
+        node (CrossRef): The cross-reference IR node.
+        parent (ET.Element): The ET element to attach the ``<ref>`` to.
+    """
+    el = ET.SubElement(parent, _tei("ref"))
+    el.set("target", f"#note-{node.n}")
+    el.text = str(node.n)
+
+
+def _render_footnote_ref(
+    node: FootnoteRef, parent: ET.Element, lookup: dict[int, Note]
+) -> None:
+    """Render a :class:`~utils.nodes.FootnoteRef` IR node as a TEI ``<note>``.
+
+    Args:
+        node (FootnoteRef): The footnote-reference IR node.
+        parent (ET.Element): The ET element to attach the ``<note>`` to.
+        lookup (dict[int, Note]): Mapping from note number to Note used to
+            populate the inline note content.
+    """
+    note_el = ET.SubElement(parent, _tei("note"))
+    note_el.set("place", "end")
+    note_el.set("n", str(node.n))
+    note_el.set(_xml("id"), f"note-{node.n}")
+    note = lookup.get(node.n)
+    if note:
+        for child in note.children:
+            _render_node(child, note_el, lookup)
+
+
+def _render_list_block(
+    node: ListBlock, parent: ET.Element, lookup: dict[int, Note]
+) -> None:
+    """Render a :class:`~utils.nodes.ListBlock` IR node as a TEI ``<list>``.
+
+    Args:
+        node (ListBlock): The list IR node.
+        parent (ET.Element): The ET element to attach the ``<list>`` to.
+        lookup (dict[int, Note]): Forwarded to :func:`_render_node`.
+    """
+    list_el = ET.SubElement(parent, _tei("list"))
+    if node.ordered:
+        list_el.set("rend", "ordered")
+    for item in node.items:
+        item_el = ET.SubElement(list_el, _tei("item"))
+        for child in item.children:
+            _render_node(child, item_el, lookup)
+
+
+def _render_ref(node: Ref, parent: ET.Element, lookup: dict[int, Note]) -> None:
+    """Render a :class:`~utils.nodes.Ref` IR node as a TEI ``<ref>``.
+
+    Args:
+        node (Ref): The hyperlink IR node.
+        parent (ET.Element): The ET element to attach the ``<ref>`` to.
+        lookup (dict[int, Note]): Forwarded to :func:`_render_node`.
+    """
+    el = ET.SubElement(parent, _tei("ref"))
+    el.set("target", node.target)
+    for child in node.children:
+        _render_node(child, el, lookup)
+
+
+def _render_table(node: Table, parent: ET.Element, lookup: dict[int, Note]) -> None:
+    """Render a :class:`~utils.nodes.Table` IR node as a TEI ``<table>``.
+
+    Args:
+        node (Table): The table IR node.
+        parent (ET.Element): The ET element to attach the ``<table>`` to.
+        lookup (dict[int, Note]): Forwarded to :func:`_render_row`.
+    """
+    table_el = ET.SubElement(parent, _tei("table"))
+    for row in node.rows:
+        _render_row(row, table_el, lookup)
+
+
+def _render_row(node: Row, parent: ET.Element, lookup: dict[int, Note]) -> None:
+    """Render a :class:`~utils.nodes.Row` IR node as a TEI ``<row>``.
+
+    Args:
+        node (Row): The row IR node.
+        parent (ET.Element): The ET element to attach the ``<row>`` to.
+        lookup (dict[int, Note]): Forwarded to :func:`_render_cell`.
+    """
+    row_el = ET.SubElement(parent, _tei("row"))
+    if node.is_header:
+        row_el.set("role", "label")
+    for cell in node.cells:
+        _render_cell(cell, row_el, lookup)
+
+
+def _render_cell(node: Cell, parent: ET.Element, lookup: dict[int, Note]) -> None:
+    """Render a :class:`~utils.nodes.Cell` IR node as a TEI ``<cell>``.
+
+    Args:
+        node (Cell): The cell IR node.
+        parent (ET.Element): The ET element to attach the ``<cell>`` to.
+        lookup (dict[int, Note]): Forwarded to :func:`_render_node`.
+    """
+    cell_el = ET.SubElement(parent, _tei("cell"))
+    if node.colspan is not None:
+        cell_el.set("cols", str(node.colspan))
+    for child in node.children:
+        _render_node(child, cell_el, lookup)
+
+
+# ---------------------------------------------------------------------------
+# ET helpers
+# ---------------------------------------------------------------------------
+def _append_text(parent: ET.Element, text: str) -> None:
+    """Append *text* to *parent*, correctly handling mixed content.
+
+    If *parent* already has child elements the text is appended to the
+    ``tail`` of the last child; otherwise it is appended to ``parent.text``.
+
+    Args:
+        parent (ET.Element): The element to append text to.
+        text (str): The text string to append.
+    """
+    children = list(parent)
+    if children:
+        last = children[-1]
+        last.tail = (last.tail or "") + text
+    else:
+        parent.text = (parent.text or "") + text
+
+
+def _indent_tree(root: ET.Element) -> None:
+    """Indent *root* in-place while preserving semantically significant whitespace.
+
+    Protects whitespace-only ``.text`` and ``.tail`` values from being
+    overwritten by :func:`xml.etree.ElementTree.indent`, then removes the
+    spurious indentation injected into mixed-content elements, and finally
+    restores the protected whitespace as a regular space.
+
+    Args:
+        root (ET.Element): The root of the element tree to indent.
+    """
+    _protect_ws_nodes(root)
+    ET.indent(root, space="  ")
+    _fix_mixed_content_indent(root)
+    _restore_ws_nodes(root)
+
+
+def _fix_mixed_content_indent(elem: ET.Element) -> None:
+    """Remove spurious whitespace-only text added by ET.indent() to inline elements.
+
+    ET.indent() unconditionally adds newline + spaces as the ``.tail`` of
+    every element, including inline ones (e.g. ``<hi>``, ``<ref>``, ``<ptr>``),
+    and as the ``.text`` of elements whose first child is an element rather than
+    text.  Inside mixed-content parents those injected newlines become visible
+    text.  This function walks the tree and resets whitespace-only ``.tail``
+    values from children, and the whitespace-only ``.text`` of the element
+    itself, for any element that contains mixed content.
+
+    Args:
+        elem (ET.Element): The root of the element tree to fix.
+    """
+    children = list(elem)
+    has_real_text = bool(elem.text and elem.text.strip())
+    has_tailed_child = any(c.tail and c.tail.strip() for c in children)
+    if has_real_text or has_tailed_child:
+        if elem.text and not elem.text.strip():
+            elem.text = None
+        for child in children:
+            if child.tail and not child.tail.strip():
+                child.tail = None
+    for child in children:
+        _fix_mixed_content_indent(child)
+
+
+def _protect_ws_nodes(elem: ET.Element) -> None:
+    """Replace whitespace-only .text/.tail with a sentinel before ET.indent().
+
+    ET.indent() treats any whitespace-only .text or .tail as replaceable with
+    indentation.  This includes semantically meaningful whitespace such as a
+    lone space or non-breaking space between inline elements.  Replacing those
+    values with a non-whitespace sentinel prevents ET.indent() from
+    overwriting them.
+
+    Args:
+        elem (ET.Element): The root of the element tree to walk.
+    """
+    if list(elem) and elem.text and not elem.text.strip():
+        elem.text = _WS_SENTINEL
+    if elem.tail and not elem.tail.strip():
+        elem.tail = _WS_SENTINEL
+    for child in elem:
+        _protect_ws_nodes(child)
+
+
+def _restore_ws_nodes(elem: ET.Element) -> None:
+    """Replace the whitespace sentinel with a regular space after ET.indent().
+
+    Restores the spaces that were protected by :func:`_protect_ws_nodes`.
+
+    Args:
+        elem (ET.Element): The root of the element tree to walk.
+    """
+    if elem.text == _WS_SENTINEL:
+        elem.text = " "
+    if elem.tail == _WS_SENTINEL:
+        elem.tail = " "
+    for child in elem:
+        _restore_ws_nodes(child)
+
+
+def _tei(tag: str) -> str:
+    """Return a Clark-notation qualified name in the TEI namespace.
+
+    Args:
+        tag (str): The local tag name.
+
+    Returns:
+        str: ``{http://www.tei-c.org/ns/1.0}tag``.
+    """
+    return f"{{{_TEI_NS}}}{tag}"
+
+
+def _xml(attr: str) -> str:
+    """Return a Clark-notation qualified name in the XML namespace.
+
+    Args:
+        attr (str): The local attribute name.
+
+    Returns:
+        str: ``{http://www.w3.org/XML/1998/namespace}attr``.
+    """
+    return f"{{{_XML_NS}}}{attr}"

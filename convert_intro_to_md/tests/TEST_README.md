@@ -6,24 +6,29 @@ This directory contains tests for `convert_intro_to_md.py` and its utility modul
 
 ```
 convert_intro_to_md/
-├── convert_intro_to_md.py    # Main script: orchestrates JSON → Markdown conversion
+├── convert_intro_to_md.py    # Main script: orchestrates JSON → Markdown/TEI conversion
 ├── utils/
 │   ├── __init__.py
-│   ├── file_utils.py         # File I/O: reading JSON, writing Markdown
-│   ├── html_utils.py         # HTML grouping, conversion, and note parsing
-│   ├── processing_utils.py   # Block content, notes, and Markdown assembly pipeline
-│   └── replacement_utils.py  # Tokenization and detokenization of special HTML constructs
+│   ├── file_utils.py         # File I/O: reading JSON, writing output files
+│   ├── html_parser.py        # HTML parser: converts JSON block content to IR nodes
+│   ├── md_renderer.py        # Markdown renderer: renders IR nodes to GFM Markdown
+│   ├── nodes.py              # IR node dataclasses (Text, Bold, Italic, Table, etc.)
+│   ├── replacement_utils.py  # Markdown post-processing: whitespace and table separation
+│   └── tei_renderer.py       # TEI renderer: renders IR nodes to TEI XML
 ├── tests/
 │   ├── data/
 │   │   ├── intro.json
 │   │   ├── intro_de.md
+│   │   ├── intro_de.tei
 │   │   └── intro_en.md
 │   ├── __init__.py
 │   ├── test_convert_intro_to_md.py
 │   ├── test_file_utils.py
-│   ├── test_html_utils.py
-│   ├── test_processing_utils.py
-│   └── test_replacement_utils.py
+│   ├── test_html_parser.py
+│   ├── test_md_renderer.py
+│   ├── test_replacement_utils.py
+│   ├── test_tei_renderer.py
+│   └── test_tei_renderer_nodes.py
 ├── requirements.txt
 └── pytest.ini
 ```
@@ -48,7 +53,7 @@ pytest .
 pytest . -v
 
 # Run a specific test module
-pytest tests/test_html_utils.py -v
+pytest tests/test_replacement_utils.py -v
 ```
 
 ## Coverage
@@ -68,21 +73,21 @@ Test modules are listed alphabetically.
 
 ### Main Script Tests (`test_convert_intro_to_md.py`)
 
-Tests for the three public functions in `convert_intro_to_md.py`.
+Tests for the public functions in `convert_intro_to_md.py`.
 
 #### `TestConvertIntroToMd`
 
-Tests for `convert_intro_to_md(intro, intro_locale)`:
+Tests for `convert_intro_to_md(blocks, intro_locale)`:
 
-- Returns a string for any valid intro dict.
-- An intro with no content blocks produces a bare newline.
-- Block headers are rendered as `## <header>` lines.
-- Null or whitespace-only block headers are skipped.
-- `blockContent` is routed through `ProcessingUtils.process_block_content`.
-- `blockNotes` are routed through `ProcessingUtils.process_block_notes`.
-- Collected notes are passed to `ProcessingUtils.process_end_notes` with the locale.
-- Final lines are assembled via `ProcessingUtils.assemble_markdown`.
-- A missing `content` key is handled gracefully.
+- Delegates to `md_renderer.render`.
+- The locale argument is forwarded unchanged to the renderer.
+
+#### `TestConvertIntroToTei`
+
+Tests for `convert_intro_to_tei(blocks, intro_id, intro_locale)`:
+
+- Delegates to `tei_renderer.render`.
+- `blocks`, `intro_id`, and `locale` are all forwarded to the renderer.
 
 #### `TestGetIntroContext`
 
@@ -126,114 +131,61 @@ Tests for `read_json(file_path)`:
 - An error message is printed to stderr on invalid JSON.
 - An error message is printed to stderr when the JSON is not a dict.
 
-#### `TestWriteMd`
+#### `TestWriteFile`
 
-Tests for `write_md(file_path, content)`:
+Tests for `write_file(file_path, content)`:
 
 - The given content is written to the specified file.
 - Missing parent directories are created automatically.
 - Writing to an existing file overwrites its content.
 - An empty string can be written without error.
-- Multiline Markdown content is written correctly.
+- Multiline content is written correctly.
 
 ---
 
-### HTML Utils Tests (`test_html_utils.py`)
+### HTML Parser Tests (`test_html_parser.py`)
 
-Tests for `HTMLUtils` in `utils/html_utils.py`.
-Uses `# pylint: disable=protected-access` to test private helpers directly.
+Tests for the public `parse_intro` function in `utils/html_parser.py`.
 
-#### `TestGroupBlockContent`
+#### `TestParseIntro`
 
-Tests for `group_block_content(block_content)`:
+Tests for `parse_intro(intro)`:
 
-- Regular paragraphs are passed through unchanged.
-- A single small paragraph is wrapped in a `<blockquote>`.
-- Consecutive small paragraphs are combined into one `<blockquote>`.
-- Two separate runs of small paragraphs produce two `<blockquote>` elements.
-- A `<p>` with both `small` and `list` classes is not treated as small.
-- An empty input list returns an empty list.
-- The order of items is preserved in the output.
-- Delegates detection to `_is_small_para` and grouping to `_combine_small_paras`.
-
-#### `TestHtmlToMd`
-
-Tests for `html_to_md(html)`:
-
-- Plain paragraphs, bold, and headings are converted to Markdown.
-- Angular event bindings are stripped before conversion.
-- Footnote reference anchors are converted to Markdown footnote refs `[^N]`.
-- Cross-reference anchors are converted to inline links `[N](#fnN)`.
-- Pipe characters in text are converted to escaped Markdown pipes `\|`.
-- Empty string and non-string input return an empty string.
-
-#### `TestParseBlockNote`
-
-Tests for `parse_block_note(note_html)`:
-
-- Returns a `(note_number, stripped_html)` tuple for a valid blockNote.
-- Both single-quoted and double-quoted id attributes are parsed.
-- Returns `None` when no note id is present.
-- The backlink anchor and pipe separator are stripped from the result.
-- Return value is a `tuple`, not a list.
-- Delegates to `_extract_note_number` and `_strip_note_html`.
+- An intro with no content returns an empty list.
+- One `Block` is produced for each entry in the content array.
+- The `blockId` value is forwarded as the `Block` id.
+- A missing `blockHeader` produces `heading=None`.
+- A `blockHeader` string is parsed into IR nodes.
+- Block content items are converted to IR nodes.
+- Block notes are converted to `Note` nodes.
+- Multiple blocks with all fields are assembled correctly.
 
 ---
 
-### Processing Utils Tests (`test_processing_utils.py`)
+### Markdown Renderer Tests (`test_md_renderer.py`)
 
-Tests for `ProcessingUtils` in `utils/processing_utils.py`.
+Tests for the public `render` function in `utils/md_renderer.py`.
 
-#### `TestAssembleMarkdown`
+#### `TestRender`
 
-Tests for `assemble_markdown(md_lines)`:
+Tests for `render(blocks, intro_locale)`:
 
-- Lines are joined with newline separators.
-- The result always ends with a trailing newline.
-- Three or more consecutive newlines are collapsed to two.
-- An empty line list produces a single newline.
-
-#### `TestProcessBlockContent`
-
-Tests for `process_block_content(block_content)`:
-
-- An empty input list produces an empty output list.
-- Items are routed through `HTMLUtils.group_block_content`.
-- Each grouped item is converted via `HTMLUtils.html_to_md`.
-- Each converted entry is followed by a blank line.
-- Items that convert to an empty string are omitted from output.
-
-#### `TestProcessBlockNotes`
-
-Tests for `process_block_notes(block_notes, notes)`:
-
-- An empty input list does not modify the notes dict.
-- Each note string is parsed via `HTMLUtils.parse_block_note`.
-- A successfully parsed note is added to the notes dict.
-- Multiple block notes are all parsed and added.
-- Notes for which `parse_block_note` returns `None` are ignored.
-- A duplicate note number preserves the first value.
-- A message is printed to stderr when a duplicate note number is encountered.
-
-#### `TestProcessEndNotes`
-
-Tests for `process_end_notes(notes, locale)`:
-
-- An empty notes dict produces no output.
-- The English locale produces a `## Notes` section header.
-- Non-English locales produce a `## Anmerkungen` header.
-- The section starts with a horizontal rule `---`.
-- Each note's HTML is converted via `HTMLUtils.html_to_md`.
-- Each note line is formatted as `[^N]: | <content>`.
-- Notes are output in ascending numeric order.
-- Each note entry is followed by a blank line.
+- An empty block list returns a single newline.
+- The output always ends with a newline.
+- A block heading is rendered as a level-2 Markdown heading.
+- A block with no heading produces no `##` line.
+- Rendered block content appears in the output.
+- A block rendering to an empty string is excluded from the output.
+- Block notes appear as footnote definitions in the output.
+- The locale is forwarded to the notes renderer.
+- `ReplacementUtils.normalize_whitespace` is applied to the output.
+- `ReplacementUtils.separate_adjacent_tables` is applied after normalization.
 
 ---
 
 ### Replacement Utils Tests (`test_replacement_utils.py`)
 
 Tests for `ReplacementUtils` in `utils/replacement_utils.py`.
-Uses `# pylint: disable=protected-access` to test private helpers directly.
 
 #### `TestNormalizeWhitespace`
 
@@ -241,30 +193,71 @@ Tests for `normalize_whitespace(text)`:
 
 - Non-breaking spaces (`\xa0`) are replaced with regular spaces.
 - Three or more consecutive newlines are collapsed to two.
+- Exactly two consecutive newlines are left unchanged.
 - Leading and trailing whitespace is stripped.
 - Plain text with no special whitespace is returned unchanged.
 
-#### `TestDetokenize`
+#### `TestParseNoteRefId`
 
-Tests for `detokenize(text)`:
+Tests for `parse_note_ref_id(anchor_id)`:
 
-- All token types are restored in a single call.
-- `FNREF` tokens are restored to Markdown footnote refs `[^N]`.
-- `FNCROSSREF` tokens are restored to inline links `[N](#fnN)`.
-- `PIPE` tokens are restored to escaped Markdown pipes `\|`.
-- Markdownify-escaped brackets `\[` and `\]` are unescaped.
-- `tokenize` followed by `detokenize` is a consistent roundtrip for pipes.
-- Plain text and empty strings are returned unchanged.
+- A valid `note-ref-N` id returns its integer note number.
+- A multi-digit number is parsed correctly.
+- A string not matching the pattern returns `None`.
+- An empty string returns `None`.
+- A string with extra characters returns `None`.
 
-#### `TestTokenize`
+#### `TestReplaceCrossrefs`
 
-Tests for `tokenize(html)`:
+Tests for `replace_crossrefs(html)`:
 
-- All tokenizations are applied in a single call.
-- Cross-reference anchors are tokenized to `FNCROSSREF` tokens.
-- Footnote anchors are tokenized to `FNREF` tokens.
-- Pipe characters are tokenized to `PIPE` tokens.
-- Plain text and empty strings are returned unchanged.
+- A cross-reference anchor is replaced by a synthetic `<awg-crossref>` tag.
+- Multiple cross-reference anchors are all replaced.
+- Anchors with `id="note-ref-N"` are not replaced.
+- Plain text without anchors is returned unchanged.
+
+#### `TestSeparateAdjacentTables`
+
+Tests for `separate_adjacent_tables(text)`:
+
+- A blank line is inserted between two adjacent Markdown tables.
+- A blank line is inserted for each adjacent table pair in a sequence.
+- Tables already separated by two blank lines are left unchanged.
+- Plain text without tables is returned unchanged.
+- A single table with no successor is returned unchanged.
+
+#### `TestStripAngularBindings`
+
+Tests for `strip_angular_bindings(html)`:
+
+- A `(click)="..."` attribute is removed from an element.
+- Multiple Angular event bindings are all removed.
+- HTML without Angular bindings is returned unchanged.
+- Plain text is returned unchanged.
+
+---
+
+### TEI Renderer Tests (`test_tei_renderer.py`)
+
+Tests for the public `render` function in `utils/tei_renderer.py`.
+
+#### `TestRender`
+
+Tests for `render(blocks, intro_id, intro_locale)`:
+
+- Returns a `str`.
+- The output begins with an XML declaration.
+- The root element is `<TEI>` in the TEI namespace.
+- The blocks list is forwarded to the notes lookup builder.
+- `intro_id` and `intro_locale` are forwarded to the TEI header builder.
+- The blocks list, locale, and lookup are forwarded to the TEI body builder.
+
+---
+
+### TEI Renderer Node Tests (`test_tei_renderer_nodes.py`)
+
+Tests for all node-rendering functions in `utils/tei_renderer.py`. All functions
+under test are private (`_render_*`).
 
 ## Example Test Run Output
 
@@ -273,11 +266,13 @@ Tests for `tokenize(html)`:
 platform ...
 collected N items
 
-tests/test_convert_intro_to_md.py ......................
-tests/test_file_utils.py ...........
-tests/test_html_utils.py .............................................
-tests/test_processing_utils.py ........................
-tests/test_replacement_utils.py ............................................
+tests/test_convert_intro_to_md.py ....
+tests/test_file_utils.py .............
+tests/test_html_parser.py ....................................................
+tests/test_md_renderer.py ......
+tests/test_replacement_utils.py ..............................
+tests/test_tei_renderer.py .............................
+tests/test_tei_renderer_nodes.py ...............................................
 
 ========================== N passed in Xs ============================
 ```

@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
-        dir: [convert_source_description, unify_ids]
+        dir: [convert_intro_to_md, convert_source_description, unify_ids]
     
     steps:
     - name: Harden Runner

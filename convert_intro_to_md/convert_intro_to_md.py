@@ -1,29 +1,31 @@
 #!/usr/bin/env python3
-"""Convert AWG intro JSON (HTML block_content) to Markdown.
+"""Convert AWG intro JSON (HTML block_content) to Markdown and TEI XML.
 
-Produces one output file per locale found in the intro array,
-named after the input file with the locale appended (e.g. intro_de.md, intro_en.md).
+Produces two output files per locale found in the intro array,
+named after the input file with the locale appended
+(e.g. intro_de.md / intro_de.tei, intro_en.md / intro_en.tei).
 
 Usage:
     python convert_intro_to_md.py <path>/<to>/intro.json
 
-Requires: markdownify (pip install -r requirements.txt --require-hashes)
+Requires: beautifulsoup4 (pip install -r requirements.txt --require-hashes)
 """
 
 import sys
 from pathlib import Path
-from typing import Dict, List
-
+from typing import Dict
 
 from utils.file_utils import FileUtils
-from utils.processing_utils import ProcessingUtils
+from utils.html_parser import parse_intro
+from utils.nodes import Block
+from utils import md_renderer, tei_renderer
 
 
-def convert_intro_to_md(intro: Dict, intro_locale: str) -> str:
-    """Convert a single intro entry to Markdown and return the content.
+def convert_intro_to_md(blocks: list[Block], intro_locale: str) -> str:
+    """Convert parsed intro blocks to Markdown and return the content.
 
     Args:
-        intro (Dict): A single intro object from the JSON ``intro`` array.
+        blocks (list[Block]): Parsed IR blocks from :func:`~utils.html_parser.parse_intro`.
         intro_locale (str): The locale string (e.g. ``'de'`` or ``'en'``) used to
             select the footnote section header.
 
@@ -31,26 +33,29 @@ def convert_intro_to_md(intro: Dict, intro_locale: str) -> str:
         str: The fully converted Markdown string, with normalised whitespace and a
         trailing newline.
     """
-    blocks = intro.get("content", [])
+    return md_renderer.render(blocks, intro_locale)
 
-    md_lines: List[str] = []
-    end_notes: Dict[str, str] = {}
 
-    for block in blocks:
-        header = (block.get("blockHeader") or "").strip()
-        block_content = block.get("blockContent", [])
-        block_notes = block.get("blockNotes", [])
+def convert_intro_to_tei(blocks: list[Block], intro_id: str, intro_locale: str) -> str:
+    """Convert parsed intro blocks to TEI XML and return the content as a string.
 
-        if header:
-            md_lines.append(f"## {header}")
-            md_lines.append("")
+    Produces a stand-alone TEI document with:
 
-        md_lines.extend(ProcessingUtils.process_block_content(block_content))
-        ProcessingUtils.process_block_notes(block_notes, end_notes)
+    - A minimal ``<teiHeader>`` carrying the intro id and language.
+    - A ``<text><body>`` where each block becomes a ``<div>``, with an optional
+      ``<head>`` for block headers and block content converted to TEI elements.
+    - Footnotes rendered inline as ``<note place="end" n="N">`` elements.
 
-    md_lines.extend(ProcessingUtils.process_end_notes(end_notes, intro_locale))
+    Args:
+        blocks (list[Block]): Parsed IR blocks from :func:`~utils.html_parser.parse_intro`.
+        intro_id (str): The id string from the intro object (e.g. ``'de-1'``).
+        intro_locale (str): The locale string (e.g. ``'de'`` or ``'en'``) used
+            to set ``xml:lang`` on the document root.
 
-    return ProcessingUtils.assemble_markdown(md_lines)
+    Returns:
+        str: A serialized TEI XML string with an XML declaration.
+    """
+    return tei_renderer.render(blocks, intro_id, intro_locale)
 
 
 def get_intro_context(intro: Dict, output_path: Path) -> tuple[str, str, Path]:
@@ -97,13 +102,17 @@ def main():
         intro_id, intro_locale, intro_output_path = get_intro_context(
             intro, output_path
         )
+        blocks = parse_intro(intro)
 
-        intro_md = convert_intro_to_md(intro, intro_locale)
+        intro_md = convert_intro_to_md(blocks, intro_locale)
+        intro_tei = convert_intro_to_tei(blocks, intro_id, intro_locale)
 
-        FileUtils.write_md(intro_output_path, intro_md)
+        FileUtils.write_file(intro_output_path.with_suffix(".md"), intro_md)
+        FileUtils.write_file(intro_output_path.with_suffix(".tei"), intro_tei)
 
         print(f"Converted: {input_path} [{intro_id}]")
-        print(f"Written:   {intro_output_path}")
+        print(f"Written:   {intro_output_path.with_suffix('.md')}")
+        print(f"Written:   {intro_output_path.with_suffix('.tei')}")
 
 
 if __name__ == "__main__":  # pragma: no cover

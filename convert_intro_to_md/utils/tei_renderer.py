@@ -71,10 +71,8 @@ def render(blocks: list[Block], intro_id: str, intro_locale: str) -> str:
 
     _build_tei_body(root, blocks, intro_locale, lookup)
 
-    _protect_ws_nodes(root)
-    ET.indent(root, space="  ")
-    _fix_mixed_content_indent(root)
-    _restore_ws_nodes(root)
+    _indent_tree(root)
+
     buf = io.BytesIO()
     ET.ElementTree(root).write(buf, encoding="utf-8", xml_declaration=True)
     return buf.getvalue().decode("utf-8")
@@ -372,6 +370,23 @@ def _append_text(parent: ET.Element, text: str) -> None:
         last.tail = (last.tail or "") + text
     else:
         parent.text = (parent.text or "") + text
+
+
+def _indent_tree(root: ET.Element) -> None:
+    """Indent *root* in-place while preserving semantically significant whitespace.
+
+    Protects whitespace-only ``.text`` and ``.tail`` values from being
+    overwritten by :func:`xml.etree.ElementTree.indent`, then removes the
+    spurious indentation injected into mixed-content elements, and finally
+    restores the protected whitespace as a regular space.
+
+    Args:
+        root (ET.Element): The root of the element tree to indent.
+    """
+    _protect_ws_nodes(root)
+    ET.indent(root, space="  ")
+    _fix_mixed_content_indent(root)
+    _restore_ws_nodes(root)
 
 
 def _fix_mixed_content_indent(elem: ET.Element) -> None:

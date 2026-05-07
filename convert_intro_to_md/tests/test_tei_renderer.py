@@ -10,6 +10,7 @@ from utils.tei_renderer import (
     _build_tei_body,
     _build_tei_header,
     _fix_mixed_content_indent,
+    _indent_tree,
     _protect_ws_nodes,
     _restore_ws_nodes,
     _tei,
@@ -18,7 +19,6 @@ from utils.tei_renderer import (
 )
 from utils.nodes import (
     Block,
-    Italic,
     Note,
     Text,
 )
@@ -68,23 +68,11 @@ class TestRender:
         assert actual_blocks is blocks
         assert intro_locale == "en"
 
-    def test_nbsp_between_inline_elements_preserved_as_space(self):
-        """A bare non-breaking space (\\xa0) between inline elements appears as a space."""
-        blocks = [
-            Block(
-                id="b1",
-                heading=None,
-                content=[
-                    Italic(children=[Text(value="foo")]),
-                    Text(value="\xa0"),
-                    Italic(children=[Text(value="bar")]),
-                ],
-            )
-        ]
-        result = render(blocks, "op1", "de")
-        root = ET.fromstring(result)
-        hi_elements = list(root.iter(_tei("hi")))
-        assert hi_elements[0].tail == " "
+    def test_delegates_to_indent_tree(self):
+        """Calls _indent_tree with the TEI root element."""
+        with patch("utils.tei_renderer._indent_tree") as mock:
+            render([], "op1", "de")
+        mock.assert_called_once()
 
 
 class TestBuildNotesLookup:
@@ -345,6 +333,69 @@ class TestAppendText:
         """Test that _append_text returns None on a successful append."""
         el = ET.Element("p")
         assert _append_text(el, "text") is None
+
+
+class TestIndentTree:
+    """Tests for the _indent_tree function."""
+
+    def test_delegates_to_protect_ws_nodes(self):
+        """Calls _protect_ws_nodes with the root element."""
+        el = ET.Element("div")
+        with patch("utils.tei_renderer._protect_ws_nodes") as mock:
+            _indent_tree(el)
+        mock.assert_called_once_with(el)
+
+    def test_delegates_to_fix_mixed_content_indent(self):
+        """Calls _fix_mixed_content_indent with the root element."""
+        el = ET.Element("div")
+        with patch("utils.tei_renderer._fix_mixed_content_indent") as mock:
+            _indent_tree(el)
+        mock.assert_called_once_with(el)
+
+    def test_delegates_to_restore_ws_nodes(self):
+        """Calls _restore_ws_nodes with the root element."""
+        el = ET.Element("div")
+        with patch("utils.tei_renderer._restore_ws_nodes") as mock:
+            _indent_tree(el)
+        mock.assert_called_once_with(el)
+
+    def test_protect_called_before_indent_called_before_fix_called_before_restore(self):
+        """Helpers are called in order: protect → indent → fix → restore."""
+        el = ET.Element("div")
+        call_order = []
+        with (
+            patch(
+                "utils.tei_renderer._protect_ws_nodes",
+                side_effect=lambda _: call_order.append("protect"),
+            ),
+            patch(
+                "utils.tei_renderer.ET.indent",
+                side_effect=lambda *a, **kw: call_order.append("indent"),
+            ),
+            patch(
+                "utils.tei_renderer._fix_mixed_content_indent",
+                side_effect=lambda _: call_order.append("fix"),
+            ),
+            patch(
+                "utils.tei_renderer._restore_ws_nodes",
+                side_effect=lambda _: call_order.append("restore"),
+            ),
+        ):
+            _indent_tree(el)
+        assert call_order == ["protect", "indent", "fix", "restore"]
+
+    def test_whitespace_only_tail_preserved_as_space(self):
+        """A whitespace-only .tail (\\xa0) survives the full indent pipeline as a space."""
+        parent = ET.Element("p")
+        child = ET.SubElement(parent, "hi")
+        child.tail = "\xa0"
+        _indent_tree(parent)
+        assert child.tail == " "
+
+    def test_returns_none(self):
+        """Returns None."""
+        el = ET.Element("p")
+        assert _indent_tree(el) is None
 
 
 class TestFixMixedContentIndent:

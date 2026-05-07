@@ -97,7 +97,7 @@ class FootnoteRef:
 class CrossRef:
     """An inline cross-reference to a footnote — from <a (click)="...fragmentId: 'note-N'...">N</a>.
 
-    Rendered as ``[N](#fnN)`` in Markdown and as ``<ref target="#note-N">N</ref>`` in TEI.
+    Rendered as ``[N](#fn:N)`` in Markdown and as ``<ref target="#note-N">N</ref>`` in TEI.
     """
 
     n: int

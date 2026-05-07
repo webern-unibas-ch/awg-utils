@@ -133,6 +133,7 @@ def _render_node(node: Node, parent: ET.Element) -> None:  # pylint: disable=too
         note_el = ET.SubElement(parent, _tei("note"))
         note_el.set("place", "end")
         note_el.set("n", str(node.n))
+        note_el.set(_xml("id"), f"note-{node.n}")
         note = _notes_lookup.get(node.n)
         if note:
             for child in note.children:

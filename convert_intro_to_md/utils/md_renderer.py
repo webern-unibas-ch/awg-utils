@@ -71,7 +71,14 @@ def _collect_note(note: Note, notes: dict[int, Note]) -> None:
         note (Note): The note node to collect.
         notes (dict[int, Note]): The accumulator mapping note number to Note.
     """
-    n = int(note.id.split("-")[-1])
+    try:
+        n = int(note.id.split("-")[-1])
+    except (ValueError, IndexError):
+        print(
+            f"Could not parse note number from id {note.id!r}; skipping.",
+            file=sys.stderr,
+        )
+        return
     if n in notes:
         print(
             f"Duplicate note number {n!r} encountered; keeping first.",

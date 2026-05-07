@@ -300,9 +300,10 @@ def _convert_sup(tag: Tag) -> list[Node]:
 def _convert_table(bs_tag: Tag) -> Table:
     """Convert a ``<table>`` BeautifulSoup tag to a :class:`Table` IR node.
 
-    Handles optional ``<thead>`` and ``<tbody>`` elements.  Rows inside
-    ``<thead>`` are marked ``is_header=True``; rows inside ``<tbody>`` (or
-    directly in the table when there is no ``<tbody>``) are data rows.
+    Handles optional ``<thead>`` and ``<tbody>`` elements.  A row is marked
+    ``is_header=True`` only when it is **outside** ``<thead>`` and contains
+    exclusively ``<th>`` cells (no ``<td>`` cells).  Rows inside ``<thead>``
+    and all mixed or ``<td>``-only rows are treated as data rows.
 
     Args:
         bs_tag (Tag): The ``<table>`` BeautifulSoup tag.

@@ -13,13 +13,45 @@ permissions:
   contents: read
 
 jobs:
+  detect_changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      changed_dirs: ${{ steps.filter.outputs.changes }}
+
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+      with:
+        egress-policy: audit
+    
+    - id: filter
+      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      with:
+        filters: |
+          compare_pdfs:
+            - 'compare_pdfs/**'
+            - '.github/workflows/pylint.yml'
+          convert_intro_to_md:
+            - 'convert_intro_to_md/**'
+            - '.github/workflows/pylint.yml'
+          convert_source_description:
+            - 'convert_source_description/**'
+            - '.github/workflows/pylint.yml'
+          unify_ids:
+            - 'unify_ids/**'
+            - '.github/workflows/pylint.yml'
+
   lint:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.changed_dirs != '[]' }}
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
-        dir: [compare_pdfs, convert_intro_to_md, convert_source_description, unify_ids]
+        dir: ${{ fromJSON(needs.detect_changes.outputs.changed_dirs) }}
     
     steps:
     - name: Harden Runner

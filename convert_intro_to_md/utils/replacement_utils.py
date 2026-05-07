@@ -7,6 +7,7 @@ class ReplacementUtils:
     """A class that contains utility functions for string replacement operations."""
 
     _ANG_RE = re.compile(r"""\s*\(\w+\)=(?:"[^"]*"|'[^']*')""")
+    _NGSP_RE = re.compile(r"&ngsp;")
     _CROSSREF_RE = re.compile(
         r"<a\b(?![^>]*\bid=['\"]note-ref-)[^>]*fragmentId:\s*'note-(\d+)'[^>]*>\s*\d+\s*</a>",
         re.IGNORECASE,
@@ -81,12 +82,16 @@ class ReplacementUtils:
 
     @staticmethod
     def strip_angular_bindings(html: str) -> str:
-        """Remove Angular event-binding attributes from an HTML string.
+        """Remove Angular event-binding attributes and entities from an HTML string.
+
+        Removes all ``(eventName)="..."`` attributes and replaces the Angular
+        non-breaking space entity ``&ngsp;`` with ``\\xa0``.
 
         Args:
             html (str): The HTML string to clean.
 
         Returns:
-            str: The HTML string with all ``(eventName)="..."`` attributes removed.
+            str: The HTML string with Angular-specific syntax removed.
         """
+        html = ReplacementUtils._NGSP_RE.sub("\xa0", html)
         return ReplacementUtils._ANG_RE.sub("", html)

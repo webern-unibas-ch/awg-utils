@@ -28,6 +28,9 @@ from utils.nodes import (
 _TEI_NS = "http://www.tei-c.org/ns/1.0"
 _XML_NS = "http://www.w3.org/XML/1998/namespace"
 
+# U+2060 WORD JOINER: invisible, not whitespace, so ET.indent() won't overwrite it.
+_WS_SENTINEL = "\u2060"
+
 # Maps inline node types to (tei-tag, rend-or-None); mirrors md_renderer._INLINE_WRAP.
 _INLINE_WRAP: dict[type, tuple[str, str | None]] = {
     Italic: ("hi", "italic"),
@@ -37,7 +40,6 @@ _INLINE_WRAP: dict[type, tuple[str, str | None]] = {
     Superscript: ("hi", "sup"),
     Paragraph: ("p", None),
 }
-
 
 
 def render(blocks: list[Block], intro_id: str, intro_locale: str) -> str:
@@ -69,8 +71,10 @@ def render(blocks: list[Block], intro_id: str, intro_locale: str) -> str:
 
     _build_tei_body(root, blocks, intro_locale, lookup)
 
+    _protect_ws_nodes(root)
     ET.indent(root, space="  ")
     _fix_mixed_content_indent(root)
+    _restore_ws_nodes(root)
     buf = io.BytesIO()
     ET.ElementTree(root).write(buf, encoding="utf-8", xml_declaration=True)
     return buf.getvalue().decode("utf-8")
@@ -201,7 +205,9 @@ def _render_node(node: Node, parent: ET.Element, lookup: dict[int, Note]) -> Non
         _render_table(node, parent, lookup)
 
 
-def _render_inline_node(node: Node, parent: ET.Element, lookup: dict[int, Note]) -> None:
+def _render_inline_node(
+    node: Node, parent: ET.Element, lookup: dict[int, Note]
+) -> None:
     """Render an inline wrapper node from :data:`_INLINE_WRAP` as a child of *parent*.
 
     Looks up the TEI tag name and optional ``rend`` attribute from
@@ -221,7 +227,9 @@ def _render_inline_node(node: Node, parent: ET.Element, lookup: dict[int, Note])
         _render_node(child, el, lookup)
 
 
-def _render_blockquote(node: Blockquote, parent: ET.Element, lookup: dict[int, Note]) -> None:
+def _render_blockquote(
+    node: Blockquote, parent: ET.Element, lookup: dict[int, Note]
+) -> None:
     """Render a :class:`~utils.nodes.Blockquote` IR node as a TEI ``<quote>``.
 
     Args:
@@ -269,7 +277,9 @@ def _render_footnote_ref(
             _render_node(child, note_el, lookup)
 
 
-def _render_list_block(node: ListBlock, parent: ET.Element, lookup: dict[int, Note]) -> None:
+def _render_list_block(
+    node: ListBlock, parent: ET.Element, lookup: dict[int, Note]
+) -> None:
     """Render a :class:`~utils.nodes.ListBlock` IR node as a TEI ``<list>``.
 
     Args:
@@ -389,6 +399,42 @@ def _fix_mixed_content_indent(elem: ET.Element) -> None:
                 child.tail = None
     for child in children:
         _fix_mixed_content_indent(child)
+
+
+def _protect_ws_nodes(elem: ET.Element) -> None:
+    """Replace whitespace-only .text/.tail with a sentinel before ET.indent().
+
+    ET.indent() treats any whitespace-only .text or .tail as replaceable with
+    indentation.  This includes semantically meaningful whitespace such as a
+    lone space or non-breaking space between inline elements.  Replacing those
+    values with a non-whitespace sentinel prevents ET.indent() from
+    overwriting them.
+
+    Args:
+        elem (ET.Element): The root of the element tree to walk.
+    """
+    if list(elem) and elem.text and not elem.text.strip():
+        elem.text = _WS_SENTINEL
+    if elem.tail and not elem.tail.strip():
+        elem.tail = _WS_SENTINEL
+    for child in elem:
+        _protect_ws_nodes(child)
+
+
+def _restore_ws_nodes(elem: ET.Element) -> None:
+    """Replace the whitespace sentinel with a regular space after ET.indent().
+
+    Restores the spaces that were protected by :func:`_protect_ws_nodes`.
+
+    Args:
+        elem (ET.Element): The root of the element tree to walk.
+    """
+    if elem.text == _WS_SENTINEL:
+        elem.text = " "
+    if elem.tail == _WS_SENTINEL:
+        elem.tail = " "
+    for child in elem:
+        _restore_ws_nodes(child)
 
 
 def _tei(tag: str) -> str:

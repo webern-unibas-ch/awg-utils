@@ -136,3 +136,16 @@ class TestStripAngularBindings:
     def test_plain_text_unchanged(self):
         """Test that plain text is returned unchanged."""
         assert ReplacementUtils.strip_angular_bindings("hello") == "hello"
+
+    def test_replaces_ngsp_entity(self):
+        """Test that &ngsp; is replaced with a non-breaking space."""
+        assert ReplacementUtils.strip_angular_bindings("a&ngsp;b") == "a\xa0b"
+
+    def test_replaces_multiple_ngsp_entities(self):
+        """Test that multiple &ngsp; occurrences are all replaced."""
+        assert ReplacementUtils.strip_angular_bindings("a&ngsp;b&ngsp;c") == "a\xa0b\xa0c"
+
+    def test_replaces_ngsp_alongside_binding(self):
+        """Test that &ngsp; replacement and binding removal both apply."""
+        html = '<em>7</em>&ngsp;<span (click)="x()">text</span>'
+        assert ReplacementUtils.strip_angular_bindings(html) == "<em>7</em>\xa0<span>text</span>"

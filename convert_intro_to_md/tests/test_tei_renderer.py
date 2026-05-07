@@ -10,11 +10,15 @@ from utils.tei_renderer import (
     _build_tei_body,
     _build_tei_header,
     _fix_mixed_content_indent,
+    _protect_ws_nodes,
+    _restore_ws_nodes,
     _tei,
+    _WS_SENTINEL,
     _xml,
 )
 from utils.nodes import (
     Block,
+    Italic,
     Note,
     Text,
 )
@@ -63,6 +67,24 @@ class TestRender:
         _, actual_blocks, intro_locale, _ = mock_body.call_args.args
         assert actual_blocks is blocks
         assert intro_locale == "en"
+
+    def test_nbsp_between_inline_elements_preserved_as_space(self):
+        """A bare non-breaking space (\\xa0) between inline elements appears as a space."""
+        blocks = [
+            Block(
+                id="b1",
+                heading=None,
+                content=[
+                    Italic(children=[Text(value="foo")]),
+                    Text(value="\xa0"),
+                    Italic(children=[Text(value="bar")]),
+                ],
+            )
+        ]
+        result = render(blocks, "op1", "de")
+        root = ET.fromstring(result)
+        hi_elements = list(root.iter(_tei("hi")))
+        assert hi_elements[0].tail == " "
 
 
 class TestBuildNotesLookup:
@@ -408,6 +430,110 @@ class TestFixMixedContentIndent:
         """Test that _fix_mixed_content_indent returns None."""
         el = ET.Element("p")
         assert _fix_mixed_content_indent(el) is None
+
+
+class TestProtectWsNodes:
+    """Tests for the _protect_ws_nodes function."""
+
+    def test_whitespace_only_tail_replaced_with_sentinel(self):
+        """A whitespace-only .tail on a child element is replaced with the sentinel."""
+        parent = ET.Element("p")
+        child = ET.SubElement(parent, "hi")
+        child.tail = "\xa0"
+        _protect_ws_nodes(parent)
+        assert child.tail == _WS_SENTINEL
+
+    def test_real_tail_not_replaced(self):
+        """A .tail containing non-whitespace is not modified."""
+        parent = ET.Element("p")
+        child = ET.SubElement(parent, "hi")
+        child.tail = "foo bar"
+        _protect_ws_nodes(parent)
+        assert child.tail == "foo bar"
+
+    def test_none_tail_not_modified(self):
+        """A None .tail is left as None."""
+        parent = ET.Element("p")
+        ET.SubElement(parent, "hi")
+        _protect_ws_nodes(parent)
+        assert list(parent)[0].tail is None
+
+    def test_whitespace_only_text_on_parent_with_children_replaced(self):
+        """A whitespace-only .text on a parent WITH children is replaced with the sentinel."""
+        parent = ET.Element("p")
+        parent.text = " "
+        ET.SubElement(parent, "hi")
+        _protect_ws_nodes(parent)
+        assert parent.text == _WS_SENTINEL
+
+    def test_whitespace_only_text_on_leaf_not_replaced(self):
+        """A whitespace-only .text on a leaf element (no children) is not replaced."""
+        leaf = ET.Element("p")
+        leaf.text = " "
+        _protect_ws_nodes(leaf)
+        assert leaf.text == " "
+
+    def test_applies_recursively(self):
+        """Sentinel replacement recurses into child elements."""
+        parent = ET.Element("p")
+        child = ET.SubElement(parent, "hi")
+        grandchild = ET.SubElement(child, "ref")
+        grandchild.tail = "\xa0"
+        _protect_ws_nodes(parent)
+        assert grandchild.tail == _WS_SENTINEL
+
+    def test_returns_none(self):
+        """Returns None."""
+        el = ET.Element("p")
+        assert _protect_ws_nodes(el) is None
+
+
+class TestRestoreWsNodes:
+    """Tests for the _restore_ws_nodes function."""
+
+    def test_sentinel_text_replaced_with_space(self):
+        """A .text equal to the sentinel is replaced with a regular space."""
+        el = ET.Element("p")
+        el.text = _WS_SENTINEL
+        _restore_ws_nodes(el)
+        assert el.text == " "
+
+    def test_sentinel_tail_replaced_with_space(self):
+        """A .tail equal to the sentinel is replaced with a regular space."""
+        parent = ET.Element("p")
+        child = ET.SubElement(parent, "hi")
+        child.tail = _WS_SENTINEL
+        _restore_ws_nodes(parent)
+        assert child.tail == " "
+
+    def test_non_sentinel_text_not_modified(self):
+        """A .text that is not the sentinel is left unchanged."""
+        el = ET.Element("p")
+        el.text = "hello"
+        _restore_ws_nodes(el)
+        assert el.text == "hello"
+
+    def test_non_sentinel_tail_not_modified(self):
+        """A .tail that is not the sentinel is left unchanged."""
+        parent = ET.Element("p")
+        child = ET.SubElement(parent, "hi")
+        child.tail = " foo"
+        _restore_ws_nodes(parent)
+        assert child.tail == " foo"
+
+    def test_applies_recursively(self):
+        """Sentinel restoration recurses into child elements."""
+        parent = ET.Element("p")
+        child = ET.SubElement(parent, "hi")
+        grandchild = ET.SubElement(child, "ref")
+        grandchild.tail = _WS_SENTINEL
+        _restore_ws_nodes(parent)
+        assert grandchild.tail == " "
+
+    def test_returns_none(self):
+        """Returns None."""
+        el = ET.Element("p")
+        assert _restore_ws_nodes(el) is None
 
 
 class TestTei:

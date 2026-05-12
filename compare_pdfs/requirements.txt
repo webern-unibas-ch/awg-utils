@@ -218,7 +218,7 @@ pymupdf==1.27.2.3 \
     --hash=sha256:d20f68ef15195e073071dbc4ae7455257c7889af7584e39df490c0a92728526e \
     --hash=sha256:fc1bc3cae6e9e150b0dbb0a9221bdfd411d65f0db2fe359eaa22467d7cc2a05f
     # via -r requirements.in
-tomlkit==0.14.0 \
-    --hash=sha256:592064ed85b40fa213469f81ac584f67a4f2992509a7c3ea2d632208623a3680 \
-    --hash=sha256:cf00efca415dbd57575befb1f6634c4f42d2d87dbba376128adb42c121b87064
+tomlkit==0.15.0 \
+    --hash=sha256:4dbc8f0fc024412b57ced8757ac7461305126a648ff8c2c807fcb8e133a78738 \
+    --hash=sha256:7d1a9ecba3086638211b13814ea79c90dd54dd11993564376f3aa92271f5c7a3
     # via pylint

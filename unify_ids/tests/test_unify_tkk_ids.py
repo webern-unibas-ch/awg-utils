@@ -370,7 +370,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         self.assertEqual(call_args[1][0][1].new_id, "awg-tkk-m143_tf1-002")
 
         # Should print processing message
-        mock_print.assert_any_call("\nProcessing textcritics entry ID: M143_TF1")
+        mock_print.assert_any_call("\nProcessing entry ID: M143_TF1")
 
     def test_process_textcritics_entry_with_skrt_detection(self):
         """Test SkRT entry returns early when no svgGroupIds present."""

@@ -173,9 +173,7 @@ class TestLoggerProcessing(unittest.TestCase):
         self.logger.verbose = True
         with unittest.mock.patch("builtins.print") as mock_print:
             self.logger.log_processing_entry_start("M143_TF1")
-            mock_print.assert_called_once_with(
-                "\nProcessing textcritics entry ID: M143_TF1"
-            )
+            mock_print.assert_called_once_with("\nProcessing entry ID: M143_TF1")
 
     def test_log_processing_entry_start_silent_when_not_verbose(self):
         """Test that log_processing_entry_start() prints nothing when verbose is False."""

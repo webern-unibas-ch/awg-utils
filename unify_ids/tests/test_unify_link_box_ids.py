@@ -288,7 +288,7 @@ class TestProcessTextcriticsEntry(unittest.TestCase):  # pylint: disable=too-man
         self.assertEqual(self.mock_process_single.call_args_list, expected_calls)
 
         output = self._stdout.getvalue()
-        self.assertIn("Processing textcritics entry ID: M143_TF1", output)
+        self.assertIn("Processing entry ID: M143_TF1", output)
         self.assertIn("Found 2 linkBoxes to process", output)
 
     def test_process_textcritics_entry_prints_skrt_anchor_and_no_link_boxes(self):

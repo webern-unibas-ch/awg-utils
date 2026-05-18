@@ -41,9 +41,9 @@ class Logger:
             print(msg)
 
     def log_processing_entry_start(self, entry_id):
-        """Log the start of processing for a textcritics entry in verbose mode."""
+        """Log the start of processing for an entry in verbose mode."""
         if self.verbose:
-            print(f"\nProcessing textcritics entry ID: {entry_id}")
+            print(f"\nProcessing entry ID: {entry_id}")
 
     def log_processing_start(self, process_label):
         """Log the process start banner and dry-run write notice in verbose mode."""

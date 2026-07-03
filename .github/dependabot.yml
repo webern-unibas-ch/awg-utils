@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: daily
+    groups:
+      github/codeql-action:
+          patterns:
+              - 'github/codeql-action/*'
 
   - package-ecosystem: pip
     directories:

@@ -1,0 +1,129 @@
+"""Tests for create_glyph_subset.py"""
+
+import json
+import shutil
+
+import pytest
+from fontTools.ttLib import TTFont
+
+from create_glyph_subset import create_glyph_subset, main, parse_args
+from utils.constants import (
+    DEFAULT_FONT_PATH,
+    FONT_FILENAME,
+    LICENSE_FILENAME,
+    MANIFEST_FILENAME,
+)
+
+
+class TestParseArgs:
+    """Tests for the parse_args function."""
+
+    def test_parses_input_and_out(self, tmp_path):
+        """Test that the input path and output folder are parsed as paths."""
+        args = parse_args(["glyphs.ts", "--out", str(tmp_path)])
+        assert args.glyphs_data.name == "glyphs.ts"
+        assert args.out == tmp_path
+
+    def test_uses_bundled_font_by_default(self, tmp_path):
+        """Test that the bundled Bravura is the default source font."""
+        assert parse_args(["glyphs.ts", "--out", str(tmp_path)]).font == DEFAULT_FONT_PATH
+
+    def test_bundled_font_exists(self):
+        """Test that the default font path points to an existing file."""
+        assert DEFAULT_FONT_PATH.is_file()
+
+    def test_requires_out(self, capsys):
+        """Test that the output folder is required."""
+        with pytest.raises(SystemExit):
+            parse_args(["glyphs.ts"])
+        assert "--out" in capsys.readouterr().err
+
+
+class TestCreateGlyphSubset:
+    """Tests for the create_glyph_subset function."""
+
+    def test_writes_exactly_three_files(self, subset_out_dir):
+        """Test that the font, manifest and license are written to the output folder."""
+        assert sorted(path.name for path in subset_out_dir.iterdir()) == sorted(
+            [FONT_FILENAME, MANIFEST_FILENAME, LICENSE_FILENAME]
+        )
+
+    def test_returns_codepoints_and_paths(self, glyphs_data_path, source_font_path, tmp_path,
+                                          expected_codepoints):
+        """Test that the codepoints and written paths are returned."""
+        codepoints, paths = create_glyph_subset(glyphs_data_path, source_font_path, tmp_path)
+        assert codepoints == expected_codepoints
+        assert paths == [
+            tmp_path / FONT_FILENAME,
+            tmp_path / MANIFEST_FILENAME,
+            tmp_path / LICENSE_FILENAME,
+        ]
+
+    def test_creates_missing_output_folder(self, subset_out_dir):
+        """Test that a missing (nested) output folder is created."""
+        assert subset_out_dir.parent.name == "nested"
+        assert (subset_out_dir / FONT_FILENAME).is_file()
+
+    def test_writes_no_font_without_license(self, glyphs_data_path, source_font_path, tmp_path):
+        """Test that no font is written when the OFL.txt next to the source font is missing."""
+        font_path = tmp_path / "font" / source_font_path.name
+        font_path.parent.mkdir()
+        shutil.copyfile(source_font_path, font_path)
+        out_dir = tmp_path / "out"
+        with pytest.raises(OSError):
+            create_glyph_subset(glyphs_data_path, font_path, out_dir)
+        assert not (out_dir / FONT_FILENAME).exists()
+        assert not (out_dir / MANIFEST_FILENAME).exists()
+
+    def test_manifest_matches_font_cmap(self, subset_out_dir):
+        """Test that the manifest lists exactly the codepoints mapped in the font."""
+        manifest = json.loads((subset_out_dir / MANIFEST_FILENAME).read_text(encoding="utf-8"))
+        cmap = TTFont(subset_out_dir / FONT_FILENAME).getBestCmap()
+        assert manifest["codepoints"] == [f"U+{codepoint:04X}" for codepoint in sorted(cmap)]
+        assert manifest["count"] == 26
+
+    def test_raises_for_codepoints_missing_in_font(self, source_font_path, tmp_path):
+        """Test that nothing is written when a codepoint is missing in the source font."""
+        glyphs_data = tmp_path / "glyphs.ts"
+        glyphs_data.write_text("A: { hex: '\\uE260' }, B: { hex: '\\u0041' },", encoding="utf-8")
+        out_dir = tmp_path / "out"
+        with pytest.raises(ValueError, match="U\\+0041"):
+            create_glyph_subset(glyphs_data, source_font_path, out_dir)
+        assert not out_dir.exists()
+
+
+class TestMain:
+    """Tests for the main function."""
+
+    def test_reports_written_files(self, glyphs_data_path, tmp_path, capsys):
+        """Test that the number of codepoints and all written files are reported."""
+        main([str(glyphs_data_path), "--out", str(tmp_path)])
+        output = capsys.readouterr().out
+        assert "26 codepoints" in output
+        for filename in (FONT_FILENAME, MANIFEST_FILENAME, LICENSE_FILENAME):
+            assert filename in output
+
+    def test_exits_on_missing_input(self, tmp_path, capsys):
+        """Test that a missing input file exits with an error message."""
+        with pytest.raises(SystemExit) as exc_info:
+            main([str(tmp_path / "missing.ts"), "--out", str(tmp_path / "out")])
+        assert exc_info.value.code == 1
+        assert "Error:" in capsys.readouterr().err
+
+    def test_exits_on_invalid_font(self, glyphs_data_path, tmp_path, capsys):
+        """Test that a source font that is not a font file exits with an error message."""
+        font_path = tmp_path / "invalid.woff2"
+        font_path.write_bytes(b"not a font")
+        with pytest.raises(SystemExit) as exc_info:
+            main([str(glyphs_data_path), "--out", str(tmp_path / "out"), "--font", str(font_path)])
+        assert exc_info.value.code == 1
+        assert "Error:" in capsys.readouterr().err
+
+    def test_exits_on_input_without_codepoints(self, tmp_path, capsys):
+        """Test that an input without hex escapes exits with an error message."""
+        glyphs_data = tmp_path / "empty.ts"
+        glyphs_data.write_text("export const EMPTY = {} as const;", encoding="utf-8")
+        with pytest.raises(SystemExit) as exc_info:
+            main([str(glyphs_data), "--out", str(tmp_path / "out")])
+        assert exc_info.value.code == 1
+        assert "No \\uXXXX escapes" in capsys.readouterr().err

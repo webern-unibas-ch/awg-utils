@@ -16,6 +16,7 @@ updates:
       - "/compare_pdfs"
       - "/convert_intro_to_md"
       - "/convert_source_description"
+      - "/create_glyph_subset"
       - "/unify_ids"
     schedule:
       interval: weekly

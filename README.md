@@ -52,6 +52,26 @@ To deactivate the currently active virtual environment, simply run:
 deactivate
 ```
 
+### Updating all Virtual Environments at once
+
+After dependency updates (e.g. merged Dependabot PRs), run from the repository root (with no virtual environment activated):
+
+```bash
+python update_venvs.py
+```
+
+For every script folder, this compiles `requirements.txt` from `requirements.in` (the source of truth), syncs the folder's `.venv` to it, and runs pylint and pytest. A summary table at the end shows the result per folder.
+
+Useful options:
+
+* `python update_venvs.py unify_ids`: update a single folder only.
+* `--upgrade`: upgrade all pinned versions to the newest ones allowed by `requirements.in`.
+* `--no-compile`: only sync the venvs to the existing `requirements.txt` files.
+* `--recreate`: delete and recreate the `.venv` folders from scratch.
+
+> [!NOTE]
+> If `requirements*.txt` files changed, the script shows a diff summary and a proposed commit message. Review and commit the changes yourself.
+
 ## [SCRIPT]: convert_intro_to_md
 
 The python script in this folder converts an AWG intro JSON file (with HTML block content) to Markdown, producing one output file per locale.

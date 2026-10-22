@@ -54,6 +54,9 @@ python create_glyph_subset.py ../../awg-app/src/app/views/edition-view/data/edit
 > Choose an output folder outside of `awg-utils` (or directly the target folder in awg-app), so the generated files don't end up in this repository.
 
 > [!TIP]
+> Add `--preview` to also write `AWGEditionGlyphs-preview.html` to the output folder (see [Preview](#preview) below).
+
+> [!TIP]
 > By default, the script uses the Bravura font bundled in [`fonts/bravura-1.380/`](fonts/bravura-1.380/). Use `--font <path>/Bravura.woff2` to take another source font. An `OFL.txt` must be placed in the same folder as that font.
 
 ### Input
@@ -79,3 +82,13 @@ OFL.txt                          the license of Bravura, which also applies to t
 The output is reproducible. Running the script again with the same input produces byte-identical files, so a regenerated font only shows up as a change in awg-app if the glyph list has changed.
 
 Copy all three files into awg-app. `OFL.txt` has to be distributed together with the font.
+
+### Preview
+
+With `--preview`, the script additionally writes `AWGEditionGlyphs-preview.html`. Open it in a browser (Git Bash: `start <output folder>/AWGEditionGlyphs-preview.html`) to check the subset visually:
+
+- The font names from the written font file, its size, and how many of the codepoints are mapped in the font (`26 / 26 in cmap`).
+- One card per entry of `EDITION_GLYPHS_DATA`, grouped by the section comments of the data file, with the glyph, its key (e.g. `DOUBLE_FLAT`), the alt text and the codepoint(s). Multi-glyph entries are shown as in the app (e.g. `SUBITO_PIANO` as two glyphs). A card whose glyph is missing in the font gets a red border.
+- An inline sample with dynamics glyphs next to running text, to check size and baseline.
+
+The font is embedded in the page, so it works when opened directly from disk. The preview is for checking only. Do **not** copy it into awg-app.

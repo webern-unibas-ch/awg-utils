@@ -12,6 +12,7 @@ from utils.constants import (
     FONT_FILENAME,
     LICENSE_FILENAME,
     MANIFEST_FILENAME,
+    PREVIEW_FILENAME,
 )
 
 
@@ -31,6 +32,11 @@ class TestParseArgs:
     def test_bundled_font_exists(self):
         """Test that the default font path points to an existing file."""
         assert DEFAULT_FONT_PATH.is_file()
+
+    def test_preview_is_off_by_default(self, tmp_path):
+        """Test that the preview is only written on request."""
+        assert parse_args(["glyphs.ts", "--out", str(tmp_path)]).preview is False
+        assert parse_args(["glyphs.ts", "--out", str(tmp_path), "--preview"]).preview is True
 
     def test_requires_out(self, capsys):
         """Test that the output folder is required."""
@@ -58,6 +64,13 @@ class TestCreateGlyphSubset:
             tmp_path / MANIFEST_FILENAME,
             tmp_path / LICENSE_FILENAME,
         ]
+
+    def test_writes_preview_on_request(self, glyphs_data_path, source_font_path, tmp_path):
+        """Test that the preview of the written subset is added as fourth file."""
+        _, paths = create_glyph_subset(glyphs_data_path, source_font_path, tmp_path, preview=True)
+        assert paths[-1] == tmp_path / PREVIEW_FILENAME
+        assert "26 / 26 in cmap" in paths[-1].read_text(encoding="utf-8")
+        assert len(list(tmp_path.iterdir())) == 4
 
     def test_creates_missing_output_folder(self, subset_out_dir):
         """Test that a missing (nested) output folder is created."""
@@ -96,11 +109,11 @@ class TestMain:
     """Tests for the main function."""
 
     def test_reports_written_files(self, glyphs_data_path, tmp_path, capsys):
-        """Test that the number of codepoints and all written files are reported."""
-        main([str(glyphs_data_path), "--out", str(tmp_path)])
+        """Test that the number of codepoints and all written files, incl. preview, are reported."""
+        main([str(glyphs_data_path), "--out", str(tmp_path), "--preview"])
         output = capsys.readouterr().out
         assert "26 codepoints" in output
-        for filename in (FONT_FILENAME, MANIFEST_FILENAME, LICENSE_FILENAME):
+        for filename in (FONT_FILENAME, MANIFEST_FILENAME, LICENSE_FILENAME, PREVIEW_FILENAME):
             assert filename in output
 
     def test_exits_on_missing_input(self, tmp_path, capsys):

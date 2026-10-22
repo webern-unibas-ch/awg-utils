@@ -1,2 +1,6 @@
+# Keep shared transitive pins identical to the main lock file
+-c requirements.txt
 ipykernel==7.4.0
 ipywidgets==8.1.9
+# Non-Windows-only dependency of ipython; pinned explicitly so lock files are identical on all platforms
+pexpect>=4.9.0

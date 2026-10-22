@@ -10,11 +10,12 @@ For each project, this script:
        (``requirements.in`` is the source of truth).
     4. Syncs the venv exactly to the lock files (hash-checked).
     5. Runs pylint on all Python files and pytest (if ``pytest.ini`` exists),
-       like the CI workflows do.
+       like the CI workflows do, but only if the sync changed the venv
+       (or with ``--force-checks``).
 
 Usage:
-    python update_venvs.py [project ...] [--upgrade] [--recreate]
-                           [--no-compile] [--no-checks] [--verbose]
+    python update_venvs.py [project ...] [--upgrade] [--recreate] [--no-compile]
+                           [--no-checks | --force-checks] [--verbose]
 
 Requires only the Python standard library. Missing venvs are created with the
 interpreter running this script, so run it without an activated venv.
@@ -215,6 +216,26 @@ def compile_requirements(project_dir: Path, venv_python: Path, args: argparse.Na
     return CHANGED if read_lock_files(lock_files) != before else OK
 
 
+def freeze_venv(project_dir: Path, venv_python: Path) -> str:
+    """List the packages installed in a venv to detect changes made by a sync.
+
+    Args:
+        project_dir (Path): The project folder.
+        venv_python (Path): The venv's Python executable.
+
+    Returns:
+        str: The output of 'pip freeze', or an empty string if it could not be run.
+    """
+    try:
+        result = subprocess.run(
+            [str(venv_python), "-m", "pip", "freeze"], cwd=project_dir, capture_output=True,
+            check=False, encoding="utf-8", errors="replace",
+        )
+    except OSError:
+        return ""
+    return result.stdout
+
+
 def sync_requirements(project_dir: Path, venv_python: Path, verbose: bool) -> str:
     """Sync the venv exactly to all requirements*.txt lock files of a project.
 
@@ -224,15 +245,22 @@ def sync_requirements(project_dir: Path, venv_python: Path, verbose: bool) -> st
         verbose (bool): Whether to always print the command output.
 
     Returns:
-        str: The step status (ok or FAIL).
+        str: The step status (ok, changed or FAIL).
     """
     lock_files = sorted(path.name for path in project_dir.glob("requirements*.txt"))
     cmd = [str(venv_python), "-m", "piptools", "sync", *lock_files]
-    return OK if run(cmd, project_dir, verbose) else FAILED
+
+    before = freeze_venv(project_dir, venv_python)
+    if not run(cmd, project_dir, verbose):
+        return FAILED
+    return CHANGED if freeze_venv(project_dir, venv_python) != before else OK
 
 
 def run_pylint(project_dir: Path, venv_python: Path, verbose: bool) -> str:
-    """Run pylint on every Python file of a project, as the CI workflow does.
+    """Run pylint on all Python files of a project in a single call.
+
+    The CI workflow lints file by file, so the cross-file duplicate-code check
+    never runs there; it is disabled here to get the same result.
 
     Args:
         project_dir (Path): The project folder.
@@ -247,11 +275,8 @@ def run_pylint(project_dir: Path, venv_python: Path, verbose: bool) -> str:
         for path in project_dir.rglob("*.py")
         if VENV_DIR_NAME not in path.relative_to(project_dir).parts
     )
-    status = OK
-    for py_file in py_files:
-        if not run([str(venv_python), "-m", "pylint", py_file], project_dir, verbose):
-            status = FAILED
-    return status
+    cmd = [str(venv_python), "-m", "pylint", "--disable=duplicate-code", *py_files]
+    return OK if run(cmd, project_dir, verbose) else FAILED
 
 
 def run_pytest(project_dir: Path, venv_python: Path, verbose: bool) -> str:
@@ -299,7 +324,7 @@ def update_project(project: str, args: argparse.Namespace) -> dict[str, str]:
             return results
 
     results["sync"] = sync_requirements(project_dir, venv_python, args.verbose)
-    if results["sync"] == FAILED or args.no_checks:
+    if args.no_checks or not (results["sync"] == CHANGED or args.force_checks):
         return results
 
     results["pylint"] = run_pylint(project_dir, venv_python, args.verbose)
@@ -361,7 +386,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--no-compile", action="store_true",
         help="Skip compiling; only sync the venvs to the existing lock files.",
     )
-    parser.add_argument("--no-checks", action="store_true", help="Skip pylint and pytest.")
+    checks = parser.add_mutually_exclusive_group()
+    checks.add_argument("--no-checks", action="store_true", help="Skip pylint and pytest.")
+    checks.add_argument(
+        "--force-checks", action="store_true",
+        help="Run pylint and pytest even if the venv did not change.",
+    )
     parser.add_argument(
         "--verbose", action="store_true", help="Always print the output of every command."
     )

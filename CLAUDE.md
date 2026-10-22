@@ -40,7 +40,7 @@ pip-compile --generate-hashes --strip-extras requirements.in
 
 `unify_ids` has a second pair, `requirements-notebook.in`/`.txt`, for `unify_ids.ipynb`; it constrains itself with `-c requirements.txt`.
 
-All projects at once, from the repo root, using the stdlib-only `update_venvs.py` (compiles each `requirements*.in`, then `pip-sync`s the `.venv` and runs pylint and pytest, ending with a summary table):
+All projects at once, from the repo root, using the stdlib-only `update_venvs.py` (compiles each `requirements*.in`, then `pip-sync`s the `.venv`, runs pylint and pytest only if the sync changed an installed package, and ends with a summary table):
 
 ```bash
 python update_venvs.py                  # all projects; keeps existing pins, picks up .in changes
@@ -49,7 +49,7 @@ python update_venvs.py --upgrade        # move all pins to newest versions
 python update_venvs.py --no-compile     # only sync venvs to the existing lock files
 ```
 
-Further flags: `--recreate` (rebuild `.venv` from scratch), `--no-checks`, `--verbose`. `requirements.in` is the source of truth. Lock files are compiled both locally (Windows) and by Dependabot (Linux), so platform-specific transitive dependencies (`colorama`, `pexpect`) are listed explicitly in the `.in` files to keep both outputs identical. When a recompile adds or removes a package only on one platform, add it to the `.in` file the same way.
+Further flags: `--recreate` (rebuild `.venv` from scratch), `--force-checks` (run checks even without package changes), `--no-checks`, `--verbose`. `requirements.in` is the source of truth. Lock files are compiled both locally (Windows) and by Dependabot (Linux), so platform-specific transitive dependencies (`colorama`, `pexpect`) are listed explicitly in the `.in` files to keep both outputs identical. When a recompile adds or removes a package only on one platform, add it to the `.in` file the same way.
 
 Tests (`pytest.ini` adds `-v`, coverage on the main script(s) plus `utils`, and an HTML report in `htmlcov/`):
 

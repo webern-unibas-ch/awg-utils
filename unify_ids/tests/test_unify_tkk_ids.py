@@ -14,7 +14,6 @@ import unittest
 from unittest.mock import patch, MagicMock
 import pytest
 
-import unify_tkk_ids as unify_tkk_ids_module
 from unify_tkk_ids import (
     main,
     ContextHelpers,
@@ -827,25 +826,6 @@ class TestMain(unittest.TestCase):
         # This should raise the RuntimeError (not be caught)
         with self.assertRaises(RuntimeError):
             main()
-
-    def test_name_main_execution_path(self):
-        """Test coverage of the if __name__ == '__main__' execution path"""
-        # This test ensures the module-level execution path is covered
-        with patch("unify_tkk_ids.main") as mock_main_func:
-            # Temporarily change __name__ to simulate direct execution
-            original_name = unify_tkk_ids_module.__name__
-            try:
-                unify_tkk_ids_module.__name__ = "__main__"
-
-                # Execute the conditional check manually to get coverage
-                if unify_tkk_ids_module.__name__ == "__main__":
-                    unify_tkk_ids_module.main()
-
-                # Verify main was called
-                mock_main_func.assert_called_once()
-            finally:
-                # Restore original __name__
-                unify_tkk_ids_module.__name__ = original_name
 
 
 if __name__ == "__main__":

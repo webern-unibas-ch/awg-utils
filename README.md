@@ -60,7 +60,7 @@ After dependency updates (e.g. merged Dependabot PRs), run from the repository r
 python update_venvs.py
 ```
 
-For every script folder, this compiles `requirements.txt` from `requirements.in` (the source of truth), syncs the folder's `.venv` to it, and runs pylint and pytest. A summary table at the end shows the result per folder.
+For every script folder, this compiles `requirements.txt` from `requirements.in` (the source of truth), syncs the folder's `.venv` to it, and runs pylint and pytest if the sync changed any installed package. A summary table at the end shows the result per folder.
 
 Useful options:
 
@@ -68,6 +68,7 @@ Useful options:
 * `--upgrade`: upgrade all pinned versions to the newest ones allowed by `requirements.in`.
 * `--no-compile`: only sync the venvs to the existing `requirements.txt` files.
 * `--recreate`: delete and recreate the `.venv` folders from scratch.
+* `--force-checks`: run pylint and pytest even if no package changed (`--no-checks` skips them).
 
 > [!NOTE]
 > If `requirements*.txt` files changed, the script shows a diff summary and a proposed commit message. Review and commit the changes yourself.

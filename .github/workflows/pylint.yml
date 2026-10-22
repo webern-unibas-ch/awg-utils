@@ -39,6 +39,9 @@ jobs:
           convert_source_description:
             - 'convert_source_description/**'
             - '.github/workflows/pylint.yml'
+          create_glyph_subset:
+            - 'create_glyph_subset/**'
+            - '.github/workflows/pylint.yml'
           unify_ids:
             - 'unify_ids/**'
             - '.github/workflows/pylint.yml'

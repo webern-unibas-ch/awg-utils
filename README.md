@@ -85,6 +85,12 @@ The python script in this folder converts a source description given in Word for
 
 See [HOW TO ... convert source-descriptions from WORD to JSON?](convert_source_description/README.md)
 
+## [SCRIPT]: create_glyph_subset
+
+The python script in this folder creates a renamed WOFF2 subset of the SMuFL font Bravura with the musical glyphs used in the AWG Online Edition.
+
+See [HOW TO ... create the glyph font subset for the AWG Online Edition?](create_glyph_subset/README.md)
+
 ## [SCRIPT]: compare_pdfs
 
 The python script in this folder compares the pages of two pdfs and highlights any diffs.

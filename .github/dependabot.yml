@@ -3,18 +3,29 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
+    cooldown:
+      default-days: 3
     groups:
-      github/codeql-action:
+      github-actions:
           patterns:
-              - 'github/codeql-action/*'
+              - '*'
 
   - package-ecosystem: pip
     directories:
       - "/compare_pdfs"
+      - "/convert_intro_to_md"
       - "/convert_source_description"
       - "/unify_ids"
     schedule:
-      interval: daily
+      interval: weekly
+    cooldown:
+      default-days: 3
     allow:
       - dependency-type: "all"
+    groups:
+      # One PR per dependency across all directories instead of one per directory
+      pip:
+          group-by: dependency-name
+          patterns:
+              - '*'

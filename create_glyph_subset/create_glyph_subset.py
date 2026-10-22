@@ -10,8 +10,11 @@ Writes three files to the output folder:
     AWGEditionGlyphs.json            a manifest with the list of codepoints
     OFL.txt                          the license of the source font
 
+With ``--preview``, it also writes AWGEditionGlyphs-preview.html, a self-contained page
+showing every glyph entry with the embedded subset (for checking only, not for awg-app).
+
 Usage:
-    python create_glyph_subset.py <path>/<to>/edition-glyphs.data.ts --out <output folder>
+    python create_glyph_subset.py <path>/<to>/edition-glyphs.data.ts --out <folder> [--preview]
 
 Requires: fonttools, brotli (pip install -r requirements.txt --require-hashes)
 """
@@ -28,9 +31,11 @@ from utils.constants import (
     FONT_FILENAME,
     LICENSE_FILENAME,
     MANIFEST_FILENAME,
+    PREVIEW_FILENAME,
 )
 from utils.file_utils import FileUtils
 from utils.font_utils import FontUtils
+from utils.preview_utils import PreviewUtils
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -40,7 +45,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         argv (list[str] | None): The arguments to parse, or None to use ``sys.argv``.
 
     Returns:
-        argparse.Namespace: The parsed arguments ``glyphs_data``, ``out`` and ``font``.
+        argparse.Namespace: The parsed arguments ``glyphs_data``, ``out``, ``font`` and ``preview``.
     """
     parser = argparse.ArgumentParser(
         description="Create a renamed WOFF2 subset of Bravura with the AWG edition glyphs."
@@ -57,18 +62,24 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=DEFAULT_FONT_PATH,
         help=f"Source font with {LICENSE_FILENAME} next to it (default: %(default)s).",
     )
+    parser.add_argument(
+        "--preview",
+        action="store_true",
+        help=f"Also write {PREVIEW_FILENAME} showing all glyphs (for checking, not for awg-app).",
+    )
     return parser.parse_args(argv)
 
 
 def create_glyph_subset(
-    glyphs_data_path: Path, font_path: Path, out_dir: Path
+    glyphs_data_path: Path, font_path: Path, out_dir: Path, preview: bool = False
 ) -> tuple[list[int], list[Path]]:
-    """Create the font subset, manifest and license in the output folder.
+    """Create the font subset, manifest and license (and optionally a preview) in the output folder.
 
     Args:
         glyphs_data_path (Path): Path to ``edition-glyphs.data.ts``.
         font_path (Path): Path to the source font, with ``OFL.txt`` in the same folder.
         out_dir (Path): The output folder.
+        preview (bool): Whether to also write the HTML preview of the written subset.
 
     Returns:
         tuple[list[int], list[Path]]: The subset codepoints and the paths of the written files.
@@ -87,8 +98,14 @@ def create_glyph_subset(
     manifest_out_path = out_dir / MANIFEST_FILENAME
     FontUtils.save_font(font, font_out_path)
     FileUtils.write_manifest(manifest_out_path, codepoints)
+    written_paths = [font_out_path, manifest_out_path, license_out_path]
 
-    return codepoints, [font_out_path, manifest_out_path, license_out_path]
+    if preview:
+        preview_out_path = out_dir / PREVIEW_FILENAME
+        PreviewUtils.write_preview(preview_out_path, glyphs_data_path, font_out_path)
+        written_paths.append(preview_out_path)
+
+    return codepoints, written_paths
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -100,7 +117,9 @@ def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
 
     try:
-        codepoints, written_paths = create_glyph_subset(args.glyphs_data, args.font, args.out)
+        codepoints, written_paths = create_glyph_subset(
+            args.glyphs_data, args.font, args.out, args.preview
+        )
     except (OSError, ValueError, TTLibError) as error:
         print(f"Error: {error}", file=sys.stderr)
         sys.exit(1)

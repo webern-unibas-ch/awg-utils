@@ -16,7 +16,9 @@ create_glyph_subset/
 │   ├── codepoint_utils.py    # Reading codepoints from edition-glyphs.data.ts
 │   ├── constants.py          # Font names, subset note, file names, default font path
 │   ├── file_utils.py         # Writing the manifest, copying the license
-│   └── font_utils.py         # Subsetting, renaming and saving the font
+│   ├── font_utils.py         # Subsetting, renaming and saving the font
+│   ├── preview_template.html # HTML template of the preview page
+│   └── preview_utils.py      # Parsing glyph entries, rendering the HTML preview
 ├── tests/
 │   ├── data/
 │   │   └── edition-glyphs.data.ts
@@ -25,7 +27,8 @@ create_glyph_subset/
 │   ├── test_codepoint_utils.py
 │   ├── test_create_glyph_subset.py
 │   ├── test_file_utils.py
-│   └── test_font_utils.py
+│   ├── test_font_utils.py
+│   └── test_preview_utils.py
 ├── requirements.txt
 └── pytest.ini
 ```
@@ -124,6 +127,7 @@ Tests for `parse_args(argv)`:
 
 - The input path and output folder are parsed as paths.
 - The bundled Bravura is the default source font, and the file exists.
+- `--preview` is off by default.
 - `--out` is required.
 
 #### `TestCreateGlyphSubset`
@@ -131,6 +135,7 @@ Tests for `parse_args(argv)`:
 Tests for `create_glyph_subset(glyphs_data_path, font_path, out_dir)`:
 
 - Exactly the font, manifest and license are written to the output folder.
+- With `preview=True`, the preview of the written subset is added as fourth file.
 - The codepoints and written paths are returned.
 - The manifest lists exactly the codepoints mapped in the font.
 - A codepoint missing in the source font raises a `ValueError` before anything is written.
@@ -141,7 +146,7 @@ Tests for `create_glyph_subset(glyphs_data_path, font_path, out_dir)`:
 
 Tests for `main(argv)`:
 
-- The number of codepoints and all written files are reported.
+- With `--preview`, the number of codepoints and all four written files are reported.
 - A missing input file exits with code 1 and an error message.
 - A source font that is not a font file exits with code 1 and an error message.
 - An input without `\uXXXX` escapes exits with code 1 and an error message.
@@ -230,3 +235,39 @@ Tests for `save_font(font, out_path)`:
 - The saved font is a WOFF2.
 - The subset is less than a tenth of the source font size.
 - Two runs produce byte-identical files.
+
+---
+
+### Preview Utils Tests (`test_preview_utils.py`)
+
+Tests for `PreviewUtils` in `utils/preview_utils.py`.
+
+#### `TestParseGlyphGroups`
+
+Tests for `parse_glyph_groups(content)`:
+
+- Entries are grouped by the section comments, in source order.
+- All 26 entries are parsed, in source order within a group.
+- A value with several escapes (`SUBITO_PIANO`) keeps all glyphs and codepoints in order.
+- Literal characters like the space in `NOTE_HALF_DOTTED` stay in the rendered text.
+- Entries before the first section comment are grouped as `Glyphs`.
+- Entries without `hex` value and sections without entries are left out.
+- Double-quoted values are parsed, and a missing alt text is empty.
+
+#### `TestRenderPreview`
+
+Tests for `render_preview(groups, font_path)`:
+
+- The font is embedded as base64 WOFF2 data URI.
+- Every entry gets a card with key, alt text and codepoints, and none is marked as missing.
+- The font names from the name table and the cmap status are shown.
+- The inline sample shows the first six dynamics glyphs, or all entries if there is no Dynamics group.
+- Entries with glyphs missing in the font are marked, and the status turns bad.
+- Keys, alt texts and titles are HTML-escaped.
+
+#### `TestWritePreview`
+
+Tests for `write_preview(preview_path, glyphs_data_path, font_path)`:
+
+- The preview is written as a complete HTML page.
+- An existing preview is replaced, not appended to.

@@ -13,6 +13,7 @@ colorama==0.4.6 \
     --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
     # via
     #   -c requirements.txt
+    #   -r requirements-notebook.in
     #   ipython
 comm==0.2.3 \
     --hash=sha256:2dc8048c10962d55d7ad693be1e7045d891b7ce8d999c97963a5e3e99c055971 \

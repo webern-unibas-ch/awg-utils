@@ -98,15 +98,23 @@ def run(cmd: list[str], cwd: Path, verbose: bool) -> bool:
     label = " ".join(["python" if Path(cmd[0]).stem == "python" else str(cmd[0]), *cmd[1:]])
     start = time.monotonic()
 
-    if verbose:
-        print(f"    $ {label}", flush=True)
-        returncode = subprocess.run(cmd, cwd=cwd, check=False).returncode
-        output = ""
-    else:
-        print(f"    $ {label} ...", end=" ", flush=True)
-        result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False)
-        returncode = result.returncode
-        output = result.stdout + result.stderr
+    try:
+        if verbose:
+            print(f"    $ {label}", flush=True)
+            returncode = subprocess.run(cmd, cwd=cwd, check=False).returncode
+            output = ""
+        else:
+            print(f"    $ {label} ...", end=" ", flush=True)
+            result = subprocess.run(
+                cmd, cwd=cwd, capture_output=True, check=False,
+                encoding="utf-8", errors="replace",
+            )
+            returncode = result.returncode
+            output = result.stdout + result.stderr
+    except OSError as error:
+        # e.g. the venv's python executable is missing
+        returncode = 1
+        output = f"{type(error).__name__}: {error}"
 
     status = OK if returncode == 0 else FAILED
     print(f"{status} ({time.monotonic() - start:.1f}s)", flush=True)
@@ -144,7 +152,14 @@ def prepare_venv(project_dir: Path, args: argparse.Namespace) -> Path | None:
 
     if args.recreate and venv_dir.exists():
         print(f"    removing {venv_dir}")
-        shutil.rmtree(venv_dir)
+        try:
+            shutil.rmtree(venv_dir)
+        except OSError as error:
+            print(
+                f"    ERROR: could not remove {venv_dir} ({error}). Close VS Code terminals, "
+                "Jupyter kernels or other processes using it and try again."
+            )
+            return None
 
     if not venv_dir.exists():
         if not run([sys.executable, "-m", "venv", VENV_DIR_NAME], project_dir, args.verbose):
@@ -356,8 +371,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main() -> None:
     """Update the venvs of the selected projects and print a summary."""
     args = parse_args()
+
+    if sys.prefix != sys.base_prefix:
+        print(
+            f"A virtual environment is active ({sys.prefix}). "
+            "Run 'deactivate' first, then start this script with the base Python."
+        )
+        sys.exit(2)
+
     available = find_projects()
-    projects = args.projects or available
+    # Accept tab-completed forms like 'unify_ids/' or './unify_ids'
+    projects = [Path(project).name for project in args.projects] or available
 
     unknown = [project for project in projects if project not in available]
     if unknown:

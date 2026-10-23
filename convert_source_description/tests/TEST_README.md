@@ -11,6 +11,7 @@ convert_source_description/
 │   ├── constants.py                   # Shared parsing and string constants
 │   ├── default_objects.py             # Default output object templates
 │   ├── file_utils.py                  # File loading and output helpers
+│   ├── glyph_utils.py                 # Glyph names and CSS classes from awg-app glyph data
 │   ├── index_utils.py                 # Paragraph index lookup helpers
 │   ├── paragraph_utils.py             # Paragraph extraction helpers
 │   ├── replacement_utils.py           # Text replacement and formatting utilities
@@ -22,9 +23,12 @@ convert_source_description/
 │   ├── __init__.py
 │   ├── TEST_README.md
 │   ├── conftest.py
+│   ├── data/
+│   │   └── edition-glyphs.data.ts     # Trimmed copy of the awg-app glyph data
 │   ├── test_convert_source_description.py
 │   ├── test_file_utils.py
 │   ├── test_fixtures.py
+│   ├── test_glyph_utils.py
 │   ├── test_index_utils.py
 │   ├── test_paragraph_utils.py
 │   ├── test_replacement_utils.py
@@ -84,6 +88,9 @@ Coverage reports are generated in `htmlcov/`.
 The current shared fixtures are defined in `test_fixtures.py`:
 - `sample_soup`: provides representative parsed HTML
 - `sample_soup_paras`: provides a reusable list of paragraph tags
+- `glyphs`: provides the glyph names and CSS classes read from `data/edition-glyphs.data.ts` (path also exported as `GLYPHS_DATA_PATH`)
+
+`data/edition-glyphs.data.ts` is a trimmed copy of the awg-app file `edition-glyphs.data.ts` (17 entries, all five sections), so the tests do not need a local awg-app.
 
 Fixtures are auto-loaded for tests via `conftest.py`.
 
@@ -93,10 +100,19 @@ Additional fixture in `test_sources_utils.py`:
 ### Main Script Tests (`test_convert_source_description.py`)
 
 Tests for `convert_source_description.py` currently cover:
-- `convert_source_description()`: extension validation, file path forwarding, collaborator call behavior, and JSON output path naming
-- `main()`: argument parsing and delegation to `convert_source_description()`
+- `check_file_path()`: `.docx` extension validation
+- `convert_source_description()`: extension validation, glyph forwarding to `TextcriticsUtils`, file path forwarding, collaborator call behavior, and JSON output path naming
+- `main()`: argument parsing (incl. `--glyphs-data` and its default path), delegation to `convert_source_description()`, error exit (code 1) for missing glyph data and wrong file extensions before converting, and uncaught errors during the conversion
 
-The test module uses mock patching to isolate all collaborators (`FileUtils`, `SourcesUtils`, `TextcriticsUtils`).
+The test module uses mock patching to isolate all collaborators (`GlyphUtils`, `FileUtils`, `SourcesUtils`, `TextcriticsUtils`).
+
+### Glyph Utils Tests (`test_glyph_utils.py`)
+
+Tests for `glyph_utils.py` currently cover:
+- `parse_glyphs()`: glyph names (`alt` values incl. brackets) and CSS classes per section (`ACCIDENTALS` → `glyph accid`, `NOTE VALUES` → `glyph note`, others → `glyph`), unknown sections, entries before the first section, quote styles, entries without `alt`, and empty content
+- `read_glyphs()`: reading the test glyph data in source order, missing file, and file without entries
+
+The test module uses the trimmed glyph data in `data/` and small inline TypeScript snippets.
 
 ### File Utils Tests (`test_file_utils.py`)
 
@@ -129,7 +145,7 @@ Tests for `replacement_utils.py` currently cover:
 - `escape_curly_brackets()`: escaping curly brackets for template rendering
 - `replace_glyphs()`: replacing musical notation glyphs with styled span elements
 
-The test module validates text replacement behavior on various glyph types (accidentals, notes) and edge cases (partial matches, hyphen exclusions).
+The test module validates text replacement behavior with the shared `glyphs` fixture on various glyph types (accidentals, notes, dynamics) and edge cases (HTML-escaped names like `[&gt;]`, partial matches, hyphen exclusions, names missing from the glyph data, empty glyph data).
 
 ### Sources Utils Tests (`test_sources_utils.py`)
 

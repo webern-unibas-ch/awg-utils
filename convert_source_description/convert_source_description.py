@@ -4,8 +4,15 @@ This script reads in a Word file (.docx) with source descriptions
 and converts it to to a JSON file (.json).
 
 This script requires that `bs4` (BeautifulSoup) and `mammoth` be installed within the Python
-environment you are running this script in. It also requires the `utils.py` file with the
-`ConversionUtils` class to be in the same directory.
+environment you are running this script in. It also requires the `utils` package to be in the
+same directory.
+
+Glyph names in square brackets (e.g. [f], [Halbe Note]) are read from the `alt` values of
+`EDITION_GLYPHS_DATA` in the awg-app file `edition-glyphs.data.ts`. By default, awg-app is
+expected next to awg-utils; otherwise, pass the path with `--glyphs-data`.
+
+Usage:
+    python convert_source_description.py <path>/<to>/file.docx [--glyphs-data <path>]
 
 The script expects a Word file input structured in the following way:
 
@@ -47,18 +54,38 @@ The script expects a Word file input structured in the following way:
 """
 
 import argparse
+import sys
+from pathlib import Path
+
 from bs4 import BeautifulSoup
 
+from utils.constants import DEFAULT_GLYPHS_DATA_PATH
 from utils.file_utils import FileUtils
+from utils.glyph_utils import GlyphUtils
 from utils.sources_utils import SourcesUtils
 from utils.textcritics_utils import TextcriticsUtils
 
 
-def convert_source_description(file_path: str):
+def check_file_path(file_path: str) -> None:
+    """Check that the given path points to a Word file.
+
+    Args:
+        file_path (str): The path to the Word file, including the .docx extension.
+
+    Raises:
+        ValueError: If file_path does not end with '.docx'.
+    """
+    if not file_path.endswith(".docx"):
+        raise ValueError(f"Expected a .docx file, got: {file_path}")
+
+
+def convert_source_description(file_path: str, glyphs: dict[str, str]):
     """Convert a source description from Word to JSON.
 
     Args:
         file_path (str): The path to the Word file, including the .docx extension.
+        glyphs (dict[str, str]): The CSS class for each glyph name,
+            as read by `GlyphUtils.read_glyphs`.
 
     Raises:
         ValueError: If file_path does not end with '.docx'.
@@ -66,12 +93,11 @@ def convert_source_description(file_path: str):
     Returns
         A JSON file with the source description.
     """
-    if not file_path.endswith(".docx"):
-        raise ValueError(f"Expected a .docx file, got: {file_path}")
+    check_file_path(file_path)
 
     sources_utils = SourcesUtils()
     file_utils = FileUtils()
-    textcritics_utils = TextcriticsUtils()
+    textcritics_utils = TextcriticsUtils(glyphs)
 
     # Get HTML from Word file
     html = file_utils.read_html_from_word_file(file_path)
@@ -99,8 +125,24 @@ def main():
         type=str,
         help="The path to the Word file to convert (including the .docx extension).",
     )
+    parser.add_argument(
+        "--glyphs-data",
+        type=Path,
+        default=DEFAULT_GLYPHS_DATA_PATH,
+        help="The path to edition-glyphs.data.ts of awg-app (default: %(default)s).",
+    )
     args = parser.parse_args()
-    convert_source_description(args.file_path)
+
+    # Check the inputs first, so a wrong path or missing awg-app fails before the conversion;
+    # errors during the conversion itself keep their traceback
+    try:
+        check_file_path(args.file_path)
+        glyphs = GlyphUtils.read_glyphs(args.glyphs_data)
+    except (OSError, ValueError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        sys.exit(1)
+
+    convert_source_description(args.file_path, glyphs)
 
 
 if __name__ == "__main__":  # pragma: no cover

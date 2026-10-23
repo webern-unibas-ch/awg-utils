@@ -7,6 +7,7 @@ This package contains utility modules for converting source descriptions:
 - constants: Shared string and parsing constants
 - default_objects: Default typed dictionary templates
 - file_utils: Word/JSON file input and output helpers
+- glyph_utils: Glyph name and CSS class lookup from awg-app's edition glyph data
 - index_utils: Paragraph index lookup helpers
 - paragraph_utils: Paragraph lookup and labeled-content extraction helpers
 - replacement_utils: Text replacement and glyph formatting helpers
@@ -18,10 +19,14 @@ This package contains utility modules for converting source descriptions:
 
 # Import commonly used objects to make them available at package level.
 from .constants import (
+    AWG_APP_DIR,
     COLON,
     COMMA,
+    DEFAULT_GLYPHS_DATA_PATH,
     FOLIO_STR,
     FULL_STOP,
+    GLYPH_CLASS,
+    GLYPH_SECTION_CLASSES,
     M_SIGLE,
     MX_SIGLE,
     MEASURE_STR,
@@ -53,6 +58,7 @@ from .default_objects import (
     DEFAULT_TEXTCRITICS_LIST,
 )
 from .file_utils import FileUtils
+from .glyph_utils import GlyphUtils
 from .index_utils import IndexUtils
 from .paragraph_utils import ParagraphUtils
 from .replacement_utils import ReplacementUtils
@@ -79,10 +85,14 @@ from .typed_classes import (
 
 __all__ = [
     # constants
+    "AWG_APP_DIR",
     "COLON",
     "COMMA",
+    "DEFAULT_GLYPHS_DATA_PATH",
     "FOLIO_STR",
     "FULL_STOP",
+    "GLYPH_CLASS",
+    "GLYPH_SECTION_CLASSES",
     "M_SIGLE",
     "MX_SIGLE",
     "MEASURE_STR",
@@ -113,6 +123,8 @@ __all__ = [
     "DEFAULT_TEXTCRITICS_LIST",
     # file_utils
     "FileUtils",
+    # glyph_utils
+    "GlyphUtils",
     # index_utils
     "IndexUtils",
     # paragraph_utils

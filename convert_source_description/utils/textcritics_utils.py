@@ -20,6 +20,15 @@ class TextcriticsUtils:  # pylint: disable=too-few-public-methods
     """A class that contains utility functions for the conversion
     of textcritics content from Word to JSON."""
 
+    def __init__(self, glyphs: dict[str, str] | None = None):
+        """Initializes the textcritics utils with the glyphs to replace in comments.
+
+        Args:
+            glyphs (dict[str, str] | None): The CSS class for each glyph name,
+                as read by ``GlyphUtils.read_glyphs``. No glyphs are replaced if omitted.
+        """
+        self._glyphs = glyphs or {}
+
     ############################################
     # Public class function: create_textcritics
     ############################################
@@ -202,7 +211,7 @@ class TextcriticsUtils:  # pylint: disable=too-few-public-methods
         comment_text = StrippingUtils.strip_tag_and_clean(columns_in_row[3], "td")
         comment_text = ReplacementUtils.escape_curly_brackets(comment_text)
         comment_text = ReplacementUtils.add_report_fragment_links(comment_text)
-        comment_text = ReplacementUtils.replace_glyphs(comment_text)
+        comment_text = ReplacementUtils.replace_glyphs(comment_text, self._glyphs)
         comment["comment"] = comment_text
 
         return comment

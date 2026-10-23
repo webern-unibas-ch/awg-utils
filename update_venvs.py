@@ -275,7 +275,10 @@ def run_pylint(project_dir: Path, venv_python: Path, verbose: bool) -> str:
         for path in project_dir.rglob("*.py")
         if VENV_DIR_NAME not in path.relative_to(project_dir).parts
     )
-    cmd = [str(venv_python), "-m", "pylint", "--disable=duplicate-code", *py_files]
+    cmd = [
+        str(venv_python), "-m", "pylint",
+        "--disable=duplicate-code", "--expected-line-ending-format=LF", *py_files,
+    ]
     return OK if run(cmd, project_dir, verbose) else FAILED
 
 

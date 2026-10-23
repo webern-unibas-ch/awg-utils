@@ -142,7 +142,9 @@ class PreviewUtils:
             font_path (Path): Path to the WOFF2 subset.
         """
         groups = PreviewUtils.parse_glyph_groups(glyphs_data_path.read_text(encoding="utf-8"))
-        preview_path.write_text(PreviewUtils.render_preview(groups, font_path), encoding="utf-8")
+        preview_path.write_text(
+            PreviewUtils.render_preview(groups, font_path), encoding="utf-8", newline="\n"
+        )
 
     @staticmethod
     def _render_group(group: GlyphGroup, cmap: dict[int, str]) -> str:

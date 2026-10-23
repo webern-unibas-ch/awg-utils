@@ -74,6 +74,16 @@ class TestWriteJson:
         assert content.endswith("\n")
         assert '"hello": "world"' in content
 
+    def test_writes_lf_line_endings(self, tmp_path):
+        """Write the indented JSON with LF line endings, not CRLF, on every platform."""
+        base_path = tmp_path / "out"
+
+        FileUtils().write_json({"hello": "world", "value": 1}, str(base_path))
+
+        content = Path(str(base_path) + ".json").read_bytes()
+        assert b"\n" in content
+        assert b"\r\n" not in content
+
     def test_prints_error_when_io_write_fails(self, monkeypatch, capsys):
         """Print an error message if writing the output file fails."""
         file_utils = FileUtils()

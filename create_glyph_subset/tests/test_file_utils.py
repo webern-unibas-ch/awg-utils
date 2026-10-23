@@ -53,16 +53,30 @@ class TestWriteManifest:
         assert text.startswith('{\n    "family"')
         assert text.endswith("}\n")
 
+    def test_writes_lf_line_endings(self, tmp_path):
+        """Test that the manifest is written with LF, not CRLF, on every platform."""
+        manifest_path = tmp_path / MANIFEST_FILENAME
+        FileUtils.write_manifest(manifest_path, [0xE260, 0xE262])
+        assert b"\r\n" not in manifest_path.read_bytes()
+
 
 class TestCopyLicense:
     """Tests for the copy_license function."""
 
-    def test_copies_license_unchanged(self, tmp_path):
-        """Test that the OFL is copied byte for byte into the output folder."""
+    def test_copies_license_text(self, tmp_path):
+        """Test that the OFL text is copied unchanged into the output folder."""
         source = DEFAULT_FONT_DIR / LICENSE_FILENAME
         copied = FileUtils.copy_license(source, tmp_path)
         assert copied == tmp_path / LICENSE_FILENAME
-        assert copied.read_bytes() == source.read_bytes()
+        assert copied.read_text(encoding="utf-8") == source.read_text(encoding="utf-8")
+
+    def test_normalizes_crlf_to_lf(self, tmp_path):
+        """Test that a license checked out with CRLF line endings is copied with LF."""
+        source = tmp_path / "src" / LICENSE_FILENAME
+        source.parent.mkdir()
+        source.write_bytes(b"Copyright line\r\n\r\nLicense text\r\n")
+        copied = FileUtils.copy_license(source, tmp_path)
+        assert copied.read_bytes() == b"Copyright line\n\nLicense text\n"
 
     def test_bundled_license_names_reserved_font_name(self):
         """Test that the bundled license is the Bravura OFL with its Reserved Font Name."""

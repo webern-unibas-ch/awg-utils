@@ -66,7 +66,7 @@ class FileUtils:
         # Writing to target file
         target_file_name = file_path + ".json"
         try:
-            with open(target_file_name, "w", encoding='utf-8') as target_file:
+            with open(target_file_name, "w", encoding='utf-8', newline="\n") as target_file:
                 target_file.write(json_object)
                 target_file.write("\n")
             print(f"Data written to {target_file_name} successfully.")

@@ -399,6 +399,34 @@ class TestSaveOperations(unittest.TestCase):
         self.assertIn('    "textcritics"', content)  # Should be indented
         self.assertIn("        {", content)  # Nested indentation
 
+    def test_save_json_file_writes_lf_line_endings(self):
+        """Test that the indented JSON is written with LF, not CRLF, line endings"""
+        save_json_file({"textcritics": [{"id": "M143_TF1"}]}, self.json_file)
+
+        with open(self.json_file, "rb") as f:
+            content = f.read()
+        self.assertIn(b"\n", content)
+        self.assertNotIn(b"\r\n", content)
+
+    def test_save_svg_files_writes_lf_line_endings(self):
+        """Test that multi-line SVG files are written with LF, not CRLF, line endings"""
+        svg_root, _ = _parse_svg_xml('<svg>\n    <g id="new-id" class="tkk"/>\n</svg>')
+        loaded_svg_texts = {
+            "test.svg": {
+                "svg_root": svg_root,
+                "path": self.svg_file,
+                "has_xml_declaration": True,
+                "dirty": True,
+            }
+        }
+
+        _save_svg_files(loaded_svg_texts)
+
+        with open(self.svg_file, "rb") as f:
+            content = f.read()
+        self.assertIn(b"\n", content)
+        self.assertNotIn(b"\r\n", content)
+
     def test_save_results_integration(self):
         """Test the save_results function integration"""
         # Prepare test data

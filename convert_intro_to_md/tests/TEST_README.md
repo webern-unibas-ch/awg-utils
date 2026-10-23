@@ -109,6 +109,7 @@ Tests for `main()`:
 - Exits when the JSON has no `intro` key.
 - Prints an error message to stderr when the intro array is missing.
 - Writes an output file for each intro entry.
+- Writes the `.md` and `.tei` files without CRLF line endings.
 - Writes one file per locale for multi-locale input.
 - Prints `Converted:` and `Written:` lines for each processed intro.
 
@@ -136,6 +137,7 @@ Tests for `read_json(file_path)`:
 Tests for `write_file(file_path, content)`:
 
 - The given content is written to the specified file.
+- Newlines are written as LF, not CRLF, on every platform.
 - Missing parent directories are created automatically.
 - Writing to an existing file overwrites its content.
 - An empty string can be written without error.

@@ -81,5 +81,5 @@ jobs:
       run: |
         find . -name "*.py" -not -path "./.venv/*" | while read file; do
           echo "Running pylint on $file"
-          pylint "$file" || exit 1
+          pylint --expected-line-ending-format=LF "$file" || exit 1
         done

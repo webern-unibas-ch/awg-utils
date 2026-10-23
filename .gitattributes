@@ -1,0 +1,11 @@
+# Normalize all text files to LF, in the repository and in the working tree
+* text=auto eol=lf
+
+# Jupyter notebooks are JSON text
+*.ipynb text eol=lf
+
+# Binary files: no line ending conversion, no textual diff
+*.pdf binary
+*.woff2 binary
+*.png binary
+*.jpg binary

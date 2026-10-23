@@ -1,7 +1,6 @@
 """Utility functions for file operations like writing the manifest and copying the license."""
 
 import json
-import shutil
 from pathlib import Path
 from typing import Any, Dict
 
@@ -44,18 +43,21 @@ class FileUtils:
 
     @staticmethod
     def write_manifest(manifest_path: Path, codepoints: list[int]) -> None:
-        """Write the manifest as JSON.
+        """Write the manifest as JSON with LF line endings.
 
         Args:
             manifest_path (Path): Path to the output JSON file.
             codepoints (list[int]): The codepoints contained in the subset.
         """
         content = json.dumps(FileUtils.create_manifest(codepoints), ensure_ascii=False, indent=4)
-        manifest_path.write_text(f"{content}\n", encoding="utf-8")
+        manifest_path.write_text(f"{content}\n", encoding="utf-8", newline="\n")
 
     @staticmethod
     def copy_license(license_path: Path, out_dir: Path) -> Path:
-        """Copy the license file into the output folder.
+        """Copy the license file into the output folder, normalized to LF line endings.
+
+        The text is read and written instead of copied byte for byte, so a source
+        checked out with CRLF (e.g. via ``core.autocrlf``) still yields an LF copy.
 
         Args:
             license_path (Path): Path to the source ``OFL.txt``.
@@ -64,4 +66,7 @@ class FileUtils:
         Returns:
             Path: Path to the copied license file.
         """
-        return Path(shutil.copyfile(license_path, out_dir / LICENSE_FILENAME))
+        out_path = out_dir / LICENSE_FILENAME
+        license_text = license_path.read_text(encoding="utf-8")
+        out_path.write_text(license_text, encoding="utf-8", newline="\n")
+        return out_path

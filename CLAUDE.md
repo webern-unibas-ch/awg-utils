@@ -61,10 +61,10 @@ pytest tests/test_svg_utils.py::TestClass::test_name      # single test
 pytest -m "not slow"                                      # unify_ids only: markers unit/integration/slow (--strict-markers)
 ```
 
-Lint (CI runs pylint per file and fails on anything below 10.00/10):
+Lint (CI runs pylint per file with `--expected-line-ending-format=LF` and fails on anything below 10.00/10):
 
 ```bash
-find . -name "*.py" -not -path "./.venv/*" -exec pylint {} \;
+find . -name "*.py" -not -path "./.venv/*" -exec pylint --expected-line-ending-format=LF {} \;
 ```
 
 Running the tools:
@@ -101,6 +101,7 @@ Code style rules come from `.github/skills/check-consistency/SKILL.md`. Read the
 - Class docstrings (class-based utils) start with `"A class that contains utility functions for ..."`.
 - Pylint must stay at 10.00/10. If a disable is unavoidable, put a per-file `# pylint: disable=…` on line 1 (e.g. `protected-access` in tests) rather than inline.
 - Mark `if __name__ == "__main__":` blocks with `# pragma: no cover`.
+- LF line endings everywhere (`.gitattributes`: `* text=auto eol=lf`, plus `.editorconfig`). Tools open text output with `newline="\n"` (`open(..., "w", encoding="utf-8", newline="\n")` / `write_text(..., newline="\n")`). Copied text files are read and rewritten instead of copied byte for byte, so a CRLF checkout can't leak into outputs. Each tool has a test that its generated text files contain no `\r\n`.
 
 Related workflows in `.github/skills/`:
 - `sync-test-readme`: each tested tool has a `tests/TEST_README.md` that must list the current test files and describe what each covers. Update it when test files are added, removed, or renamed.

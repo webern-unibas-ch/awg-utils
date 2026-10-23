@@ -54,6 +54,11 @@ class TestCreateGlyphSubset:
             [FONT_FILENAME, MANIFEST_FILENAME, LICENSE_FILENAME]
         )
 
+    def test_writes_text_files_with_lf_line_endings(self, subset_out_dir):
+        """Test that the manifest and the license contain no CRLF line endings."""
+        for filename in (MANIFEST_FILENAME, LICENSE_FILENAME):
+            assert b"\r\n" not in (subset_out_dir / filename).read_bytes()
+
     def test_returns_codepoints_and_paths(self, glyphs_data_path, source_font_path, tmp_path,
                                           expected_codepoints):
         """Test that the codepoints and written paths are returned."""

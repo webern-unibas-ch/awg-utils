@@ -466,7 +466,7 @@ class TestProcessComment:
 
         mock_escape.assert_called_once()
 
-    def test_process_comment_triggers_replace_glyphs(self):
+    def test_process_comment_triggers_replace_glyphs(self, glyphs):
         """Test that replace_glyphs is triggered in _process_comment."""
         row_html = """
             <tr>
@@ -481,9 +481,40 @@ class TestProcessComment:
             "replace_glyphs",
             wraps=ReplacementUtils.replace_glyphs,
         ) as mock_replace_glyphs:
-            TextcriticsUtils()._process_comment(columns)
+            TextcriticsUtils(glyphs)._process_comment(columns)
 
-        mock_replace_glyphs.assert_called_once()
+        mock_replace_glyphs.assert_called_once_with("[a]", glyphs)
+
+    def test_process_comment_replaces_html_escaped_glyphs(self, glyphs):
+        """Test that glyphs escaped by the HTML serialization are replaced."""
+        row_html = """
+            <tr>
+                <td>10</td><td>S4</td><td>left</td>
+                <td><p>[&gt;] und [#]</p></td>
+            </tr>
+        """
+        columns = BeautifulSoup(row_html, "html.parser").find_all("td")
+
+        comment = TextcriticsUtils(glyphs)._process_comment(columns)
+
+        assert comment["comment"] == (
+            "<span class='glyph'>{{ref.getGlyph('[>]')}}</span> und "
+            "<span class='glyph accid'>{{ref.getGlyph('[#]')}}</span>"
+        )
+
+    def test_process_comment_without_glyphs_keeps_glyph_names(self):
+        """Test that glyph names are kept if no glyphs are given."""
+        row_html = """
+            <tr>
+                <td>10</td><td>S4</td><td>left</td>
+                <td><p>[a]</p></td>
+            </tr>
+        """
+        columns = BeautifulSoup(row_html, "html.parser").find_all("td")
+
+        comment = TextcriticsUtils()._process_comment(columns)
+
+        assert comment["comment"] == "[a]"
 
     def test_process_comment_triggers_add_report_fragment_links(self):
         """Test that add_report_fragment_links is triggered in _process_comment."""

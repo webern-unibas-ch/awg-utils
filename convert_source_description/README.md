@@ -15,6 +15,7 @@ The python script `convert_source_description.py` will create a JSON file `sourc
 
 * Make sure that you have a source description file in WORD (`.docx`) formatted according to these [style guidelines](how_to/word-formatting.md).
 * Make sure that you have created a fork from this GitHub repository `awg-utils` and you have a local copy of this fork on your machine.
+* Make sure that you have a local copy of [`awg-app`](https://github.com/webern-unibas-ch/awg-app) **next to** `awg-utils` (both folders in the same parent folder, e.g. `.../webern-unibas-ch/awg-app` and `.../webern-unibas-ch/awg-utils`). The converter reads the glyph names from there (see [Glyphs](#glyphs)). If `awg-app` lives somewhere else, pass the path with `--glyphs-data` (see below).
 * In your file explorer, navigate to your local folder `awg-utils`, right-click on it, and open it with **VSCode** editor.
 * Open new terminal in **VSCode** editor (preferably **Git Bash**, following paths and directions are using Git Bash syntax).
 * In the terminal, change directory to the subfolder `convert_source_description` by typing: `cd convert_source_description` (it should be sufficient to type `cd conv` + `TAB` key, the console autocompletes the name on its own). This subfolder is where the conversion script lives.
@@ -39,3 +40,18 @@ Now you're good to run the conversion script.
 
 * External directory: `python convert_source_description.py /c/Users/<USERNAME>/AWG/SourceDescriptions/AWG_op19_B.docx`
 * Same directory: `python convert_source_description.py ./AWG_op19_B.docx`
+* `awg-app` in another place: `python convert_source_description.py ./AWG_op19_B.docx --glyphs-data /c/Users/<USERNAME>/awg-app/src/app/views/edition-view/data/edition-glyphs.data.ts`
+
+### Glyphs
+
+Glyph names in square brackets in the textcritical comments (e.g. `[f]`, `[#]`, `[Halbe Note]`) are converted to `<span class='glyph …'>{{ref.getGlyph('[f]')}}</span>`. A name directly followed by a hyphen (e.g. `[b]-Vorzeichen`) is left as it is.
+
+The list of glyph names is not kept in this tool. It is read from the `alt` values of `EDITION_GLYPHS_DATA` in `awg-app/src/app/views/edition-view/data/edition-glyphs.data.ts`, so a glyph added there is converted here as well. The CSS class comes from the section comment of the entry in that file:
+
+| Section in `edition-glyphs.data.ts` | CSS class     |
+| ----------------------------------- | ------------- |
+| `ACCIDENTALS`                       | `glyph accid` |
+| `NOTE VALUES`                       | `glyph note`  |
+| any other section                   | `glyph`       |
+
+If the file is missing or contains no glyph entry, the converter stops with an error message.

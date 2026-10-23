@@ -1,6 +1,8 @@
 """Utility functions for text replacement and formatting."""
 
+import html
 import re
+from functools import lru_cache
 
 
 ############################################
@@ -14,8 +16,7 @@ class ReplacementUtils:
     ############################################
     @staticmethod
     def add_report_fragment_links(text: str) -> str:
-        """
-        Adds report fragment links to bold formatted characters in a given text.
+        """Adds report fragment links to bold formatted characters in a given text.
 
         Args:
             text (str): The given text.
@@ -40,8 +41,7 @@ class ReplacementUtils:
     ############################################
     @staticmethod
     def escape_curly_brackets(text: str) -> str:
-        """
-        Escapes curly brackets in a given text.
+        """Escapes curly brackets in a given text.
 
         Args:
             text (str): The given text.
@@ -63,67 +63,45 @@ class ReplacementUtils:
     # Public static method: replace_glyphs
     ############################################
     @staticmethod
-    def replace_glyphs(text: str) -> str:
-        """
-        Replaces glyph strings in a given text.
+    def replace_glyphs(text: str, glyphs: dict[str, str]) -> str:
+        """Replaces glyph strings in a given text.
+
+        The text is HTML-serialized, so glyph names arrive escaped
+        (e.g. ``[&gt;]`` for ``[>]``) and are matched in that form.
 
         Args:
             text (str): The given text.
+            glyphs (dict[str, str]): The CSS class for each glyph name in square brackets,
+                as read by ``GlyphUtils.read_glyphs``.
 
         Returns:
             str: The replaced text.
         """
-        glyphs = [
-            "a",
-            "b",
-            "bb",
-            "#",
-            "x",
-            "f",
-            "ff",
-            "fff",
-            "ffff",
-            "mf",
-            "mp",
-            "p",
-            "pp",
-            "ppp",
-            "pppp",
-            "ped",
-            "sf",
-            "sfz",
-            "sp",
-            "Achtelnote",
-            "Ganze Note",
-            "Halbe Note",
-            "Punktierte Halbe Note",
-            "Sechzehntelnote",
-            "Viertelnote",
-        ]
-        glyph_pattern = "|".join(re.escape(glyph) for glyph in glyphs)
-
-        # Match pattern for glyphs in square brackets, but not followed by a hyphen
-        match_pattern = rf"\[({glyph_pattern})\](?!-)"
-
-        accid_glyphs = {"a", "b", "bb", "#", "x"}
-        note_glyphs = {
-            "Achtelnote",
-            "Ganze Note",
-            "Halbe Note",
-            "Punktierte Halbe Note",
-            "Sechzehntelnote",
-            "Viertelnote",
-        }
+        if not glyphs:
+            return text
 
         def replace_glyph(match):
-            glyph = match.group(1)
-            css_class = (
-                "glyph accid"
-                if glyph in accid_glyphs
-                else "glyph note"
-                if glyph in note_glyphs
-                else "glyph"
-            )
-            return f"<span class='{css_class}'>{{{{ref.getGlyph('{glyph}')}}}}</span>"
+            glyph = html.unescape(match.group(1))
+            return f"<span class='{glyphs[glyph]}'>{{{{ref.getGlyph('{glyph}')}}}}</span>"
 
-        return re.sub(match_pattern, replace_glyph, text)
+        return ReplacementUtils._glyph_pattern(tuple(glyphs)).sub(replace_glyph, text)
+
+    ############################################
+    # Private static method: _glyph_pattern
+    ############################################
+    @staticmethod
+    @lru_cache
+    def _glyph_pattern(glyph_names: tuple[str, ...]) -> re.Pattern:
+        """Compiles the match pattern for the given glyph names, once per name tuple.
+
+        Args:
+            glyph_names (tuple[str, ...]): The glyph names in square brackets.
+
+        Returns:
+            re.Pattern: The pattern matching the HTML-escaped glyph names,
+                but not if followed by a hyphen.
+        """
+        glyph_pattern = "|".join(
+            re.escape(html.escape(glyph, quote=False)) for glyph in glyph_names
+        )
+        return re.compile(rf"({glyph_pattern})(?!-)")

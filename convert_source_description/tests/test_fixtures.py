@@ -1,7 +1,20 @@
 """Shared pytest fixtures for convert_source_description tests."""
 
+from pathlib import Path
+
 import pytest
 from bs4 import BeautifulSoup
+
+from utils.glyph_utils import GlyphUtils
+
+# Trimmed copy of awg-app's edition-glyphs.data.ts (17 entries in all five sections)
+GLYPHS_DATA_PATH = Path(__file__).resolve().parent / "data" / "edition-glyphs.data.ts"
+
+
+@pytest.fixture(name="glyphs")
+def fixture_glyphs():
+    """Return the glyph names and CSS classes of the test glyph data as fixture."""
+    return GlyphUtils.read_glyphs(GLYPHS_DATA_PATH)
 
 
 @pytest.fixture(name="sample_soup")

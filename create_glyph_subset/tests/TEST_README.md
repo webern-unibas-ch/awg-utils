@@ -139,6 +139,9 @@ Tests for `create_glyph_subset(glyphs_data_path, font_path, out_dir)`:
 - With `preview=True`, the preview of the written subset is added as fourth file.
 - The codepoints and written paths are returned.
 - The manifest lists exactly the codepoints mapped in the font.
+- The manifest `sha256` equals the SHA-256 of the written font file (64 lowercase hex characters).
+- A second run with the same input gives the same hash.
+- A different glyph list gives a different hash.
 - A codepoint missing in the source font raises a `ValueError` before anything is written.
 - A missing (nested) output folder is created.
 - No font or manifest is written when `OFL.txt` is missing next to the source font.
@@ -158,16 +161,24 @@ Tests for `main(argv)`:
 
 Tests for `FileUtils` in `utils/file_utils.py`.
 
+#### `TestHashFile`
+
+Tests for `hash_file(file_path)`:
+
+- The hash equals the SHA-256 of the bytes on disk.
+- An empty file gives the well-known SHA-256 of empty input.
+
 #### `TestCreateManifest`
 
-Tests for `create_manifest(codepoints)`:
+Tests for `create_manifest(codepoints, font_sha256)`:
 
 - The manifest names family, style, PostScript name, font file, license, source and note.
+- The font hash is taken over as `sha256`, directly after `file`.
 - Codepoints are listed as `U+XXXX` in the given order, together with their count.
 
 #### `TestWriteManifest`
 
-Tests for `write_manifest(manifest_path, codepoints)`:
+Tests for `write_manifest(manifest_path, codepoints, font_sha256)`:
 
 - The written JSON equals the created manifest.
 - The JSON uses a 4-space indent and ends with a newline.

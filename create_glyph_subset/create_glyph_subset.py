@@ -7,7 +7,7 @@ result to "AWG Edition Glyphs", because "Bravura" is a Reserved Font Name under 
 
 Writes three files to the output folder:
     AWGEditionGlyphs-Regular.woff2   the font subset
-    AWGEditionGlyphs.json            a manifest with the list of codepoints
+    AWGEditionGlyphs.json            a manifest with the font's SHA-256 and the list of codepoints
     OFL.txt                          the license of the source font
 
 With ``--preview``, it also writes AWGEditionGlyphs-preview.html, a self-contained page
@@ -97,7 +97,9 @@ def create_glyph_subset(
     font_out_path = out_dir / FONT_FILENAME
     manifest_out_path = out_dir / MANIFEST_FILENAME
     FontUtils.save_font(font, font_out_path)
-    FileUtils.write_manifest(manifest_out_path, codepoints)
+    # Hash the file on disk, after writing, so the manifest matches exactly what gets copied
+    font_sha256 = FileUtils.hash_file(font_out_path)
+    FileUtils.write_manifest(manifest_out_path, codepoints, font_sha256)
     written_paths = [font_out_path, manifest_out_path, license_out_path]
 
     if preview:

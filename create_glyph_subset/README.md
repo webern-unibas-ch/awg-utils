@@ -75,9 +75,11 @@ The script writes three files to the output folder:
 
 ```
 AWGEditionGlyphs-Regular.woff2   the font subset
-AWGEditionGlyphs.json            manifest: font names, source, note, count and list of codepoints (U+XXXX)
+AWGEditionGlyphs.json            manifest: font names, font file and its SHA-256, source, note, count and list of codepoints (U+XXXX)
 OFL.txt                          the license of Bravura, which also applies to the subset
 ```
+
+The manifest field `sha256` (right after `file`) is the SHA-256 hash of the written `AWGEditionGlyphs-Regular.woff2`, as 64 lowercase hex characters. It is computed from the file on disk after the font has been written, and the manifest is written only afterwards, so hash and font always belong together. `OFL.txt` and the preview are not part of the hash. awg-app (`yarn check:glyphs`) compares this hash with the font file it ships, so a stale font next to an up-to-date manifest is detected. Therefore always copy font and manifest together.
 
 The output is reproducible. Running the script again with the same input produces byte-identical files, so a regenerated font only shows up as a change in awg-app if the glyph list has changed.
 

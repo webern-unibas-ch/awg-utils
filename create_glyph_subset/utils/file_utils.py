@@ -1,5 +1,6 @@
-"""Utility functions for file operations like writing the manifest and copying the license."""
+"""Utility functions for file operations like hashing, writing the manifest, copying the license."""
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, Dict
@@ -20,20 +21,35 @@ class FileUtils:
     """A class that contains utility functions for file operations like writing or copying."""
 
     @staticmethod
-    def create_manifest(codepoints: list[int]) -> Dict[str, Any]:
+    def hash_file(file_path: Path) -> str:
+        """Compute the SHA-256 hash of a file from its bytes on disk.
+
+        Args:
+            file_path (Path): Path to the file to hash.
+
+        Returns:
+            str: The SHA-256 hash as 64 lowercase hex characters.
+        """
+        return hashlib.sha256(file_path.read_bytes()).hexdigest()
+
+    @staticmethod
+    def create_manifest(codepoints: list[int], font_sha256: str) -> Dict[str, Any]:
         """Create the manifest describing the glyph subset.
 
         Args:
             codepoints (list[int]): The codepoints contained in the subset.
+            font_sha256 (str): The SHA-256 hash of the written font file.
 
         Returns:
-            Dict[str, Any]: The manifest with font names, file names, source and codepoints.
+            Dict[str, Any]: The manifest with font names, file names, font hash, source and
+            codepoints.
         """
         return {
             "family": FAMILY_NAME,
             "style": STYLE_NAME,
             "postscriptName": POSTSCRIPT_NAME,
             "file": FONT_FILENAME,
+            "sha256": font_sha256,
             "license": LICENSE_FILENAME,
             "source": SOURCE_FONT_NAME,
             "note": SUBSET_NOTE,
@@ -42,14 +58,16 @@ class FileUtils:
         }
 
     @staticmethod
-    def write_manifest(manifest_path: Path, codepoints: list[int]) -> None:
+    def write_manifest(manifest_path: Path, codepoints: list[int], font_sha256: str) -> None:
         """Write the manifest as JSON with LF line endings.
 
         Args:
             manifest_path (Path): Path to the output JSON file.
             codepoints (list[int]): The codepoints contained in the subset.
+            font_sha256 (str): The SHA-256 hash of the written font file.
         """
-        content = json.dumps(FileUtils.create_manifest(codepoints), ensure_ascii=False, indent=4)
+        manifest = FileUtils.create_manifest(codepoints, font_sha256)
+        content = json.dumps(manifest, ensure_ascii=False, indent=4)
         manifest_path.write_text(f"{content}\n", encoding="utf-8", newline="\n")
 
     @staticmethod

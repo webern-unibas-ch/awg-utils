@@ -1,7 +1,10 @@
 """Tests for create_glyph_subset.py"""
 
+import hashlib
 import json
+import re
 import shutil
+from pathlib import Path
 
 import pytest
 from fontTools.ttLib import TTFont
@@ -14,6 +17,11 @@ from utils.constants import (
     MANIFEST_FILENAME,
     PREVIEW_FILENAME,
 )
+
+
+def read_manifest(out_dir: Path) -> dict:
+    """Return the parsed manifest JSON of an output folder."""
+    return json.loads((out_dir / MANIFEST_FILENAME).read_text(encoding="utf-8"))
 
 
 class TestParseArgs:
@@ -95,10 +103,32 @@ class TestCreateGlyphSubset:
 
     def test_manifest_matches_font_cmap(self, subset_out_dir):
         """Test that the manifest lists exactly the codepoints mapped in the font."""
-        manifest = json.loads((subset_out_dir / MANIFEST_FILENAME).read_text(encoding="utf-8"))
+        manifest = read_manifest(subset_out_dir)
         cmap = TTFont(subset_out_dir / FONT_FILENAME).getBestCmap()
         assert manifest["codepoints"] == [f"U+{codepoint:04X}" for codepoint in sorted(cmap)]
         assert manifest["count"] == 26
+
+    def test_manifest_hash_matches_written_font(self, subset_out_dir):
+        """Test that the manifest carries the SHA-256 of the written font file as lowercase hex."""
+        manifest = read_manifest(subset_out_dir)
+        font_bytes = (subset_out_dir / FONT_FILENAME).read_bytes()
+        assert manifest["sha256"] == hashlib.sha256(font_bytes).hexdigest()
+        assert re.fullmatch(r"[0-9a-f]{64}", manifest["sha256"])
+
+    def test_second_run_gives_same_hash(self, glyphs_data_path, source_font_path, tmp_path,
+                                        subset_out_dir):
+        """Test that a second run with the same input gives the same hash."""
+        create_glyph_subset(glyphs_data_path, source_font_path, tmp_path)
+        assert read_manifest(tmp_path)["sha256"] == read_manifest(subset_out_dir)["sha256"]
+
+    def test_different_glyphs_give_different_hash(self, source_font_path, tmp_path,
+                                                  subset_out_dir):
+        """Test that a different glyph list gives a different font hash."""
+        glyphs_data = tmp_path / "glyphs.ts"
+        glyphs_data.write_text("FLAT: { alt: '[b]', hex: '\\uE260' },", encoding="utf-8")
+        out_dir = tmp_path / "out"
+        create_glyph_subset(glyphs_data, source_font_path, out_dir)
+        assert read_manifest(out_dir)["sha256"] != read_manifest(subset_out_dir)["sha256"]
 
     def test_raises_for_codepoints_missing_in_font(self, source_font_path, tmp_path):
         """Test that nothing is written when a codepoint is missing in the source font."""

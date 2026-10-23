@@ -7,9 +7,18 @@ updates:
     cooldown:
       default-days: 3
     groups:
+      # the codeql sub-actions only work in matching versions, so always update them together
+      github/codeql-action:
+          patterns:
+              - 'github/codeql-action/*'
+      # minor and patch updates of all other actions in one PR, major updates separately
+      # (scorecards and visualize-repo only run on main, so PR checks don't cover them)
       github-actions:
           patterns:
               - '*'
+          update-types:
+              - 'minor'
+              - 'patch'
 
   - package-ecosystem: pip
     directories:

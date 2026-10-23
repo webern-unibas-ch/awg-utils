@@ -76,6 +76,12 @@ class TestWriteFile:
         FileUtils.write_file(file, "# Hello")
         assert file.read_text(encoding="utf-8") == "# Hello"
 
+    def test_writes_lf_line_endings(self, tmp_path):
+        """Test that newlines are written as LF, not as CRLF, on every platform."""
+        file = tmp_path / "output.md"
+        FileUtils.write_file(file, "line 1\nline 2\n")
+        assert file.read_bytes() == b"line 1\nline 2\n"
+
     def test_creates_parent_directories(self, tmp_path):
         """Test that missing parent directories are created automatically."""
         file = tmp_path / "a" / "b" / "output.md"

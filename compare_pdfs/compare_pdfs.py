@@ -204,7 +204,7 @@ def log_and_write_diff_results(pages_with_changes: list[int], diff_dir: str, set
             - threshold (int): Threshold value for difference detection.
     """
     diff_txt_path = os.path.join(diff_dir, "diff.txt")
-    with open(diff_txt_path, "w", encoding='utf-8') as diff_file:
+    with open(diff_txt_path, "w", encoding='utf-8', newline="\n") as diff_file:
         diff_file.write("PDF Comparison Results\n")
         diff_file.write("=" * 50 + "\n")
         diff_file.write(f"PDF 1: {settings['pdf1_path']}\n")

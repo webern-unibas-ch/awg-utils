@@ -135,6 +135,7 @@ Tests for `parse_args(argv)`:
 Tests for `create_glyph_subset(glyphs_data_path, font_path, out_dir)`:
 
 - Exactly the font, manifest and license are written to the output folder.
+- The manifest and the license contain no CRLF line endings.
 - With `preview=True`, the preview of the written subset is added as fourth file.
 - The codepoints and written paths are returned.
 - The manifest lists exactly the codepoints mapped in the font.
@@ -170,12 +171,14 @@ Tests for `write_manifest(manifest_path, codepoints)`:
 
 - The written JSON equals the created manifest.
 - The JSON uses a 4-space indent and ends with a newline.
+- The manifest is written with LF line endings.
 
 #### `TestCopyLicense`
 
 Tests for `copy_license(license_path, out_dir)`:
 
-- The OFL is copied byte for byte into the output folder.
+- The OFL text is copied unchanged into the output folder.
+- A license checked out with CRLF line endings is copied with LF.
 - The bundled license is the Bravura OFL with its Reserved Font Name.
 
 ---
@@ -271,3 +274,4 @@ Tests for `write_preview(preview_path, glyphs_data_path, font_path)`:
 
 - The preview is written as a complete HTML page.
 - An existing preview is replaced, not appended to.
+- The preview is written with LF line endings.

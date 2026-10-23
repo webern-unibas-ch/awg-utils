@@ -37,12 +37,12 @@ class FileUtils:
 
     @staticmethod
     def write_file(file_path: Path, content: str) -> None:
-        """Write text content to a file, creating parent directories as needed.
+        """Write text content to a file with LF line endings, creating parent directories as needed.
 
         Args:
             file_path (Path): Path to the output file.
             content (str): The text string to write.
         """
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as f:
+        with open(file_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(content)

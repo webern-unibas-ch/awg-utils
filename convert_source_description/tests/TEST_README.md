@@ -102,7 +102,7 @@ The test module uses mock patching to isolate all collaborators (`FileUtils`, `S
 
 Tests for `file_utils.py` currently cover:
 - `read_html_from_word_file()` success and error handling
-- `write_json()` file output and write-error handling
+- `write_json()` file output (with LF line endings) and write-error handling
 
 The test module uses monkeypatching to isolate Mammoth conversion behavior and I/O failure paths.
 

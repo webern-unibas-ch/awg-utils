@@ -130,6 +130,27 @@ class TestMain:
         assert (tmp_path / "intro_de.md").exists()
         assert (tmp_path / "intro_de.tei").exists()
 
+    def test_writes_output_files_with_lf_line_endings(self, tmp_path):
+        """Test that the generated .md and .tei files contain no CRLF line endings."""
+        data = {
+            "intro": [
+                {
+                    "id": "de-awg-I-5",
+                    "content": [
+                        {"blockHeader": "Header", "blockContent": ["<p>One</p>", "<p>Two</p>"]}
+                    ],
+                }
+            ]
+        }
+        f = tmp_path / "intro.json"
+        f.write_text(json.dumps(data), encoding="utf-8")
+        with patch("sys.argv", ["prog", str(f)]):
+            main()
+        for name in ("intro_de.md", "intro_de.tei"):
+            content = (tmp_path / name).read_bytes()
+            assert b"\n" in content
+            assert b"\r\n" not in content
+
     def test_writes_one_file_per_locale(self, tmp_path):
         """Test that main writes separate .md and .tei files for each locale."""
         data = {

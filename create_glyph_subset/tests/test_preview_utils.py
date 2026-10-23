@@ -168,3 +168,9 @@ class TestWritePreview:
         preview_path.write_text("old content", encoding="utf-8")
         PreviewUtils.write_preview(preview_path, glyphs_data_path, subset_font_path)
         assert "old content" not in preview_path.read_text(encoding="utf-8")
+
+    def test_writes_lf_line_endings(self, glyphs_data_path, subset_font_path, tmp_path):
+        """Test that the preview is written with LF, not CRLF, on every platform."""
+        preview_path = tmp_path / "preview.html"
+        PreviewUtils.write_preview(preview_path, glyphs_data_path, subset_font_path)
+        assert b"\r\n" not in preview_path.read_bytes()

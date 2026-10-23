@@ -130,7 +130,8 @@ Tests for `utils/file_utils.py`:
 - **`load_json_file()`**: JSON file loading and error handling
 - **`load_and_validate_inputs()`**: Composition of JSON and SVG loading with validation
 - **`create_svg_loader()`**: SVG file caching system
-- **`save_json_file()`**: JSON file writing with consistent formatting
+- **`save_json_file()`**: JSON file writing with consistent formatting and LF line endings
+- **`_save_svg_files()`**: SVG file writing with LF line endings
 - **`save_results()`**: Combined SVG and JSON save operation
 - Error handling for missing files and permissions
 

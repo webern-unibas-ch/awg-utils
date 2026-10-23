@@ -126,7 +126,7 @@ def save_json_file(data, json_path):
     Returns:
         None: Saves file directly to disk
     """
-    with open(json_path, "w", encoding="utf-8") as f:
+    with open(json_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
         f.write("\n")
 
@@ -180,7 +180,7 @@ def _save_svg_files(loaded_svg_texts):
             sdata["svg_root"],
             include_xml_declaration=sdata.get("has_xml_declaration", True),
         )
-        with open(sdata["path"], "w", encoding="utf-8") as f:
+        with open(sdata["path"], "w", encoding="utf-8", newline="\n") as f:
             f.write(content)
 
 

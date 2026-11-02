@@ -209,7 +209,6 @@ class TextcriticsUtils:  # pylint: disable=too-few-public-methods
         )
 
         comment_text = StrippingUtils.strip_tag_and_clean(columns_in_row[3], "td")
-        comment_text = ReplacementUtils.escape_curly_brackets(comment_text)
         comment_text = ReplacementUtils.add_report_fragment_links(comment_text)
         comment_text = ReplacementUtils.replace_glyphs(comment_text, self._glyphs)
         comment["comment"] = comment_text

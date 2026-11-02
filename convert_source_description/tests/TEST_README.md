@@ -142,7 +142,6 @@ The test module validates label discovery, basic content extraction, and sibling
 
 Tests for `replacement_utils.py` currently cover:
 - `add_report_fragment_links()`: adding report navigation anchors to bold text
-- `escape_curly_brackets()`: escaping curly brackets for template rendering
 - `replace_glyphs()`: replacing musical notation glyphs with styled span elements
 
 The test module validates text replacement behavior with the shared `glyphs` fixture on various glyph types (accidentals, notes, dynamics) and edge cases (HTML-escaped names like `[&gt;]`, partial matches, hyphen exclusions, names missing from the glyph data, empty glyph data).

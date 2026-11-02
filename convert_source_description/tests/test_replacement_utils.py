@@ -36,28 +36,6 @@ class TestAddReportFragmentLinks:
         assert ReplacementUtils.add_report_fragment_links(input_text) == expected_output
 
 
-class TestEscapeCurlyBrackets:
-    """Tests for the escape_curly_brackets function."""
-
-    def test_escape_single_curly_brackets(self):
-        """Test escaping single curly brackets."""
-        input_text = "This {text} has curly brackets"
-        expected_output = "This {{ '{' }}text{{ '}' }} has curly brackets"
-        assert ReplacementUtils.escape_curly_brackets(input_text) == expected_output
-
-    def test_escape_multiple_curly_brackets(self):
-        """Test escaping multiple curly brackets."""
-        input_text = "{open} and {close}"
-        expected_output = "{{ '{' }}open{{ '}' }} and {{ '{' }}close{{ '}' }}"
-        assert ReplacementUtils.escape_curly_brackets(input_text) == expected_output
-
-    def test_no_curly_brackets(self):
-        """Test text with no curly brackets."""
-        input_text = "This text has no special characters"
-        expected_output = "This text has no special characters"
-        assert ReplacementUtils.escape_curly_brackets(input_text) == expected_output
-
-
 class TestReplaceGlyphs:
     """Tests for the replace_glyphs function."""
 

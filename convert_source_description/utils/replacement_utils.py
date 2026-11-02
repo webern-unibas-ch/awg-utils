@@ -37,29 +37,6 @@ class ReplacementUtils:
         return text
 
     ############################################
-    # Public static method: escape_curly_brackets
-    ############################################
-    @staticmethod
-    def escape_curly_brackets(text: str) -> str:
-        """Escapes curly brackets in a given text.
-
-        Args:
-            text (str): The given text.
-
-        Returns:
-            str: The escaped text.
-        """
-        # Replace curly brackets with placeholders to avoid duplicated escaping
-        text = text.replace("{", "__LEFT_CURLY_BRACKET__").replace(
-            "}", "__RIGHT_CURLY_BRACKET__"
-        )
-        # Escape curly brackets
-        text = text.replace("__LEFT_CURLY_BRACKET__", "{{ '{' }}").replace(
-            "__RIGHT_CURLY_BRACKET__", "{{ '}' }}"
-        )
-        return text
-
-    ############################################
     # Public static method: replace_glyphs
     ############################################
     @staticmethod

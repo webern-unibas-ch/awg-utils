@@ -447,24 +447,19 @@ class TestProcessComment:
         assert comment["position"] == "left"
         assert comment["comment"] == "plain comment"
 
-    def test_process_comment_triggers_escape_curly_brackets(self):
-        """Test that escape_curly_brackets is triggered in _process_comment."""
+    def test_process_comment_keeps_curly_brackets(self):
+        """Test that _process_comment keeps curly brackets unescaped."""
         row_html = """
             <tr>
                 <td>10</td><td>S4</td><td>left</td>
-                <td><p>{x}</p></td>
+                <td><p>T. {1A}–3A</p></td>
             </tr>
         """
         columns = BeautifulSoup(row_html, "html.parser").find_all("td")
 
-        with patch.object(
-            ReplacementUtils,
-            "escape_curly_brackets",
-            wraps=ReplacementUtils.escape_curly_brackets,
-        ) as mock_escape:
-            TextcriticsUtils()._process_comment(columns)
+        comment = TextcriticsUtils()._process_comment(columns)
 
-        mock_escape.assert_called_once()
+        assert comment["comment"] == "T. {1A}–3A"
 
     def test_process_comment_triggers_replace_glyphs(self, glyphs):
         """Test that replace_glyphs is triggered in _process_comment."""

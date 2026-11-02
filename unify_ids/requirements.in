@@ -1,6 +1,6 @@
 # Windows-only dependency of pylint/pytest; pinned explicitly so lock files are identical on all platforms
 colorama>=0.4.6
 pylint>=4.1.3
-pytest>=9.1.1
+pytest>=9.2.0
 pytest-cov>=7.0.0
 pytest-mock>=3.17.0

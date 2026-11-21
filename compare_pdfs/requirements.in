@@ -1,6 +1,6 @@
 # Windows-only dependency of pylint; pinned explicitly so lock files are identical on all platforms
 colorama>=0.4.6
-numpy==2.5.4
+numpy==2.5.5
 opencv-python==5.0.0.93
 pillow==13.0.0
 pylint>=4.1.3
